@@ -279,7 +279,7 @@ export default function ProveedoresPage() {
                 <div>
                   <h2 className="text-2xl font-black flex items-center gap-2" style={{ fontFamily: 'var(--font-wise-sans)', color: 'var(--color-obsidian)' }}>
                     {selectedProvider.name}
-                    {selectedProvider.verified && <ShieldCheck size={20} className="text-green-600" title="Verificado" />}
+                    {selectedProvider.verified && <ShieldCheck size={20} className="text-green-600" />}
                   </h2>
                   <p className="text-sm font-medium mt-1" style={{ color: 'var(--color-pebble)' }}>{selectedProvider.category}</p>
                 </div>
