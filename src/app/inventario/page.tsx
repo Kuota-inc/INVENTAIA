@@ -1,21 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Plus, Settings, ChevronDown, ChevronUp, AlertCircle, ArrowDownToLine, SlidersHorizontal } from 'lucide-react';
+import { Search, Plus, SlidersHorizontal, ArrowDownToLine, AlertCircle, TrendingDown, DollarSign, Calculator, CalendarDays } from 'lucide-react';
+import Link from 'next/link';
 
-// Mock Data para la vista unificada de Producto + Inventario
+// Mock Data para Mi Almacén
 const mockProducts = [
   {
     id: 'p1',
     sku: 'SKU-001',
     name: 'Teclado Mecánico RGB',
     category: 'Periféricos',
-    price: 120.0,
-    totalStock: 45,
-    inventory: [
-      { branch: 'Sede Principal', stock: 30, minStock: 10 },
-      { branch: 'Almacén Norte', stock: 15, minStock: 20 } // Alerta: Incompleto
-    ]
+    price: 120.0, // PV
+    totalStock: 0,
+    minStock: 10,
+    status: 'quiebre', // quiebre o sobre_stock
+    deadInventoryValue: 0
   },
   {
     id: 'p2',
@@ -23,159 +23,232 @@ const mockProducts = [
     name: 'Monitor UltraWide 34"',
     category: 'Monitores',
     price: 450.0,
-    totalStock: 8,
-    inventory: [
-      { branch: 'Sede Principal', stock: 8, minStock: 5 },
-      { branch: 'Almacén Norte', stock: 0, minStock: 2 } // Alerta: Incompleto
-    ]
+    totalStock: 85,
+    minStock: 20,
+    status: 'sobre_stock',
+    deadInventoryValue: 12000 // Valor inmovilizado
+  },
+  {
+    id: 'p3',
+    sku: 'SKU-003',
+    name: 'Mouse Inalámbrico Pro',
+    category: 'Periféricos',
+    price: 80.0,
+    totalStock: 3,
+    minStock: 15,
+    status: 'quiebre',
+    deadInventoryValue: 0
   }
 ];
 
-export default function InventarioUnificadoPage() {
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+export default function MiAlmacenPage() {
+  const [filterState, setFilterState] = useState<'todos' | 'quiebre' | 'sobre_stock'>('quiebre'); // Por defecto quiebre
+  const [rematePercent, setRematePercent] = useState<number>(30); // 30% por defecto
+  
+  // Totales
+  const totalValue = mockProducts.reduce((acc, p) => acc + (p.price * p.totalStock), 0);
+  const totalProducts = mockProducts.length;
+  const totalVariants = 12; // Mock
+  const totalDeadInventory = mockProducts.reduce((acc, p) => acc + p.deadInventoryValue, 0);
 
-  const toggleRow = (id: string) => {
-    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
-  };
+  // Filtro
+  const filteredProducts = mockProducts
+    .filter(p => filterState === 'todos' ? true : p.status === filterState)
+    .sort((a, b) => a.status === 'quiebre' ? -1 : 1); // Priorizar quiebres siempre arriba
+
+  // Calculadora de Remate
+  const recoveredValue = totalDeadInventory * (rematePercent / 100);
+  const additionalDays = Math.floor(recoveredValue / 1500); // Simulando que el gasto diario promedio es 1500
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Productos e Inventario</h1>
-          <p className="text-gray-500 mt-1">
-            Gestiona tu catálogo de productos y el stock por sedes desde un solo lugar.
+          <h1 className="text-3xl font-black text-[var(--color-obsidian)]" style={{ fontFamily: 'var(--font-wise-sans)', letterSpacing: '-0.03em' }}>
+            Mi Almacén
+          </h1>
+          <p className="mt-1" style={{ color: 'var(--color-pebble)' }}>
+            Gestión de SKUs, subidas y análisis de inventario muerto.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Requisito: Importaciones es un botón de inventario */}
-          <button className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
-            <ArrowDownToLine size={20} />
-            Importar
+          <button className="wise-btn-outline !py-2">
+            <SlidersHorizontal size={18} /> Ajustes de Backlog
           </button>
-          
-          {/* Requisito: Ajustes es un botón dentro de inventario */}
-          <button className="bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
-            <SlidersHorizontal size={20} />
-            Ajustes
+          <button className="wise-btn-outline !py-2">
+            <ArrowDownToLine size={18} /> Subir SKUs
           </button>
-
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
-            <Plus size={20} />
-            Nuevo Producto
+          <button className="wise-btn-primary !py-2">
+            <Plus size={18} /> Nuevo Producto
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {/* Filtros */}
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input 
-              type="text" 
-              placeholder="Buscar por SKU o Nombre..." 
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-            />
+      {/* 4.3 Resumen Ejecutivo (Chips Superiores) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="wise-card !p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-slate)' }}>Valor Total a PV</p>
+            <h3 className="text-xl font-black mt-1" style={{ color: 'var(--color-obsidian)' }}>${totalValue.toLocaleString()}</h3>
+          </div>
+          <div className="p-2 rounded-full" style={{ background: 'var(--color-linen-mist)', color: 'var(--color-forest-ink)' }}><DollarSign size={20}/></div>
+        </div>
+        <div className="wise-card !p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-slate)' }}>Total SKUs</p>
+            <h3 className="text-xl font-black mt-1" style={{ color: 'var(--color-obsidian)' }}>{totalProducts}</h3>
+          </div>
+          <div className="p-2 rounded-full" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}><Search size={20}/></div>
+        </div>
+        <div className="wise-card !p-4 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-slate)' }}>Variantes Activas</p>
+            <h3 className="text-xl font-black mt-1" style={{ color: 'var(--color-obsidian)' }}>{totalVariants}</h3>
+          </div>
+          <div className="p-2 rounded-full" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}><Plus size={20}/></div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* 4.1 y 4.5 Listado y Filtros */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="wise-card !p-0 overflow-hidden">
+            <div className="p-4 border-b border-[var(--color-fog)] flex items-center justify-between">
+              
+              {/* Conmutador de Estado */}
+              <div className="flex p-1 rounded-lg" style={{ background: 'var(--color-fog)' }}>
+                <button 
+                  onClick={() => setFilterState('todos')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${filterState === 'todos' ? 'bg-white shadow-sm text-[var(--color-obsidian)]' : 'text-[var(--color-pebble)]'}`}
+                >
+                  Todos
+                </button>
+                <button 
+                  onClick={() => setFilterState('quiebre')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${filterState === 'quiebre' ? 'bg-white shadow-sm text-red-600' : 'text-[var(--color-pebble)]'}`}
+                >
+                  Quiebres
+                </button>
+                <button 
+                  onClick={() => setFilterState('sobre_stock')}
+                  className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${filterState === 'sobre_stock' ? 'bg-white shadow-sm text-amber-600' : 'text-[var(--color-pebble)]'}`}
+                >
+                  Sobre Stock
+                </button>
+              </div>
+
+            </div>
+
+            <table className="w-full text-left">
+              <thead className="text-sm border-b border-[var(--color-fog)]" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}>
+                <tr>
+                  <th className="px-6 py-4 font-semibold">SKU / Producto</th>
+                  <th className="px-6 py-4 font-semibold">Categoría</th>
+                  <th className="px-6 py-4 font-semibold text-right">Precio</th>
+                  <th className="px-6 py-4 font-semibold text-right">Cantidad</th>
+                  <th className="px-6 py-4 font-semibold text-center">Estado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--color-fog)]">
+                {filteredProducts.map((product) => (
+                  <tr key={product.id} className="hover:bg-[var(--color-fog)] transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="font-mono text-xs" style={{ color: 'var(--color-pebble)' }}>{product.sku}</div>
+                      <div className="font-bold mt-0.5" style={{ color: 'var(--color-obsidian)' }}>{product.name}</div>
+                    </td>
+                    <td className="px-6 py-4 text-sm" style={{ color: 'var(--color-charcoal)' }}>
+                      {product.category}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
+                      ${product.price.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
+                      {product.totalStock}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {product.status === 'quiebre' ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                          <AlertCircle size={14} /> Quiebre
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                          <TrendingDown size={14} /> Sobre Stock
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {filteredProducts.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-sm font-medium" style={{ color: 'var(--color-pebble)' }}>
+                      No hay productos en esta vista.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Tabla Unificada */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 text-gray-600 text-sm">
-              <tr>
-                <th className="px-6 py-4 font-medium w-10"></th>
-                <th className="px-6 py-4 font-medium">SKU / Producto</th>
-                <th className="px-6 py-4 font-medium">Categoría</th>
-                <th className="px-6 py-4 font-medium text-right">Precio Unitario</th>
-                <th className="px-6 py-4 font-medium text-right">Stock Total</th>
-                <th className="px-6 py-4 font-medium text-center">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {mockProducts.map((product) => {
-                const isExpanded = expandedRows[product.id];
-                const hasAlert = product.inventory.some(inv => inv.stock < inv.minStock);
+        {/* 4.4 Inventario Muerto y Remates */}
+        <div className="space-y-6">
+          <div className="wise-card-dark">
+            <h2 className="font-bold flex items-center gap-2 mb-4" style={{ color: 'var(--color-lime-voltage)' }}>
+              <TrendingDown size={20} />
+              Inventario Muerto
+            </h2>
+            <p className="text-sm mb-6 text-white opacity-80">Capital inmovilizado en productos de baja rotación.</p>
+            
+            <div className="mb-6">
+              <span className="text-3xl font-black" style={{ fontFamily: 'var(--font-wise-sans)', color: 'white' }}>
+                S/ {totalDeadInventory.toLocaleString()}
+              </span>
+            </div>
 
-                return (
-                  <React.Fragment key={product.id}>
-                    <tr 
-                      className={`hover:bg-gray-50/50 transition-colors cursor-pointer ${isExpanded ? 'bg-blue-50/30' : ''}`}
-                      onClick={() => toggleRow(product.id)}
-                    >
-                      <td className="px-6 py-4 text-gray-400">
-                        {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-mono text-xs text-gray-500">{product.sku}</div>
-                        <div className="font-medium text-gray-900 mt-0.5">{product.name}</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {product.category}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 text-right font-medium">
-                        ${product.price.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 text-right font-medium">
-                        {product.totalStock} unds
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {hasAlert ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700">
-                            <AlertCircle size={14} />
-                            Alerta Stock
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">
-                            Óptimo
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                    
-                    {/* Requisito: Inventario como desplegable de producto */}
-                    {isExpanded && (
-                      <tr className="bg-gray-50/50 border-t border-gray-50">
-                        <td colSpan={6} className="px-6 py-6">
-                          <div className="pl-10">
-                            <h4 className="text-sm font-semibold text-gray-900 mb-4">Desglose de Inventario por Sede</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {product.inventory.map((inv, idx) => (
-                                <div key={idx} className={`p-4 rounded-lg border ${inv.stock < inv.minStock ? 'border-red-200 bg-red-50/50' : 'border-gray-200 bg-white'}`}>
-                                  <div className="flex justify-between items-center mb-2">
-                                    <span className="font-medium text-sm text-gray-900">{inv.branch}</span>
-                                    {inv.stock < inv.minStock && (
-                                      <AlertCircle size={16} className="text-red-500" />
-                                    )}
-                                  </div>
-                                  <div className="flex justify-between text-sm mt-3">
-                                    <span className="text-gray-500">Stock Físico:</span>
-                                    <span className={`font-medium ${inv.stock < inv.minStock ? 'text-red-700' : 'text-gray-900'}`}>
-                                      {inv.stock} unds
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between text-xs mt-1">
-                                    <span className="text-gray-400">Min. Requerido:</span>
-                                    <span className="text-gray-500">{inv.minStock} unds</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="mt-4 flex gap-2">
-                              <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                                + Transferir Stock
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
+            <div className="pt-4 border-t border-white/10">
+              <h3 className="font-semibold text-sm mb-3 text-white flex items-center gap-2">
+                <Calculator size={16} style={{ color: 'var(--color-lime-voltage)' }} />
+                Calculadora de Remates
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-xs mb-1 text-white opacity-80">
+                    <span>Descuento de Remate</span>
+                    <span className="font-bold" style={{ color: 'var(--color-lime-voltage)' }}>{rematePercent}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="10" max="80" step="5"
+                    value={rematePercent}
+                    onChange={(e) => setRematePercent(parseInt(e.target.value))}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                    style={{ background: 'var(--color-spruce)' }}
+                  />
+                </div>
+
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-white opacity-80">Capital Recuperado:</span>
+                    <span className="font-bold text-white">S/ {recoveredValue.toLocaleString()}</span>
+                  </div>
+                  
+                  {/* Proyección Interactiva */}
+                  <div className="flex items-start gap-3 pt-3 border-t border-white/10">
+                    <CalendarDays size={24} style={{ color: 'var(--color-lime-voltage)' }} />
+                    <div>
+                      <span className="font-bold block" style={{ color: 'var(--color-lime-voltage)' }}>+{additionalDays} Días</span>
+                      <span className="text-xs text-white opacity-70 leading-tight block mt-1">
+                        De inventario sano adicional que podrías comprar hoy.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,378 +1,175 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import styles from './page.module.css';
-import { BatchApprovalModal } from '@/components/forms/BatchApprovalModal';
-import { BatchItemExecutionResult } from '@/services/BatchOrderApprovalService';
-import { triggerNotificationRefresh } from '@/context/NotificationContext';
+import React, { useState } from 'react';
+import { Search, AlertCircle, ShoppingCart, TrendingDown, ArrowRight, PackageX } from 'lucide-react';
+import Link from 'next/link';
 
-import { apiFetch } from '@/lib/apiFetch';
-interface RestockItem {
-  id: string;
-  sku: string;
-  name: string;
-  provider: string;
-  providerType: 'corporate' | 'traditional';
-  providerPhone?: string;
-  currentStock: number;
-  dailyVelocity: number;
-  leadTimeDays: number;
-  safetyStock: number;
-  rop: number;
-  coverageDays: number;
-  suggestedQty: number;
-  unitCost: number;
-  investment: number;
-  status: 'critical' | 'warning' | 'optimal';
-}
+// Mock Data para Alertas / Quiebres
+const mockAlerts = [
+  {
+    id: 'a1',
+    sku: 'SKU-001',
+    name: 'Teclado Mecánico RGB',
+    available: 0,
+    daysLeft: 0,
+    lostSalesRisk: 1200,
+    inventoryValue: 0,
+    status: 'quiebre'
+  },
+  {
+    id: 'a2',
+    sku: 'SKU-003',
+    name: 'Mouse Inalámbrico Pro',
+    available: 3,
+    daysLeft: 1.5,
+    lostSalesRisk: 450,
+    inventoryValue: 240,
+    status: 'quiebre'
+  },
+  {
+    id: 'a3',
+    sku: 'SKU-002',
+    name: 'Monitor UltraWide 34"',
+    available: 85,
+    daysLeft: 120,
+    lostSalesRisk: 0,
+    inventoryValue: 38250,
+    status: 'sobre_stock'
+  }
+];
 
-export default function ReabastecimientoPage() {
-  const [items, setItems] = useState<RestockItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  
-  // Execution states
-  const [processingId, setProcessingId] = useState<string | null>(null);
-  const [approvingAll, setApprovingAll] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [connectorsOk, setConnectorsOk] = useState<boolean | null>(null);
-  const [resultsModal, setResultsModal] = useState<{
-    open: boolean;
-    count: number;
-    summary: string;
-    results: BatchItemExecutionResult[];
-  } | null>(null);
+export default function StockAlertsPage() {
+  const [filterState, setFilterState] = useState<'quiebre' | 'sobre_stock'>('quiebre');
+  const [cart, setCart] = useState<string[]>([]); // Array of item IDs to buy
 
-  // Fetch real data from backend
-  const fetchRestockData = async () => {
-    try {
-      setLoading(true);
-      const res = await apiFetch('/api/dashboard/reabastecimiento', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.items) {
-          setItems(data.items);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching restock items:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filteredAlerts = mockAlerts.filter(a => a.status === filterState);
 
-  useEffect(() => {
-    fetchRestockData();
-    // Estado real de conectores (regla del core: mostrar "Pendiente de configuración")
-    apiFetch('/api/integraciones', { cache: 'no-store' })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        const list: Array<{ provider: string; status: string }> = data?.integrations || [];
-        const wa = list.find((i) => i.provider === 'whatsapp')?.status === 'ACTIVE';
-        const sap = list.find((i) => i.provider === 'sap')?.status === 'ACTIVE';
-        setConnectorsOk(wa && sap);
-      })
-      .catch(() => setConnectorsOk(false));
-  }, []);
-
-  // Filtered items
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchesSearch =
-        item.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.provider.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === 'all' || item.status === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    });
-  }, [items, searchQuery, statusFilter]);
-
-  // Dynamic KPIs
-  const totalCapitalRequired = useMemo(() => {
-    return filteredItems.reduce((acc, curr) => acc + curr.investment, 0);
-  }, [filteredItems]);
-
-  const criticalCount = useMemo(() => {
-    return filteredItems.filter((i) => i.status === 'critical').length;
-  }, [filteredItems]);
-
-  // Handle single PO generation
-  const handleGenerateOC = async (item: RestockItem) => {
-    try {
-      setProcessingId(item.id);
-      setErrorMessage(null);
-      const res = await apiFetch('/api/dashboard/reabastecimiento/oc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId: item.id }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setResultsModal({
-          open: true,
-          count: data.count,
-          summary: data.summary,
-          results: data.results,
-        });
-        triggerNotificationRefresh();
-        fetchRestockData();
-      } else {
-        setErrorMessage(data.error || 'Error al procesar la orden de compra.');
-      }
-    } catch (err: any) {
-      setErrorMessage(`Error de conexión: ${err.message}`);
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  // Handle Approve All (1-Click)
-  const handleApproveAll = async () => {
-    if (filteredItems.length === 0) return;
-    try {
-      setApprovingAll(true);
-      setErrorMessage(null);
-      const res = await apiFetch('/api/dashboard/reabastecimiento/oc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ approveAll: true }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setResultsModal({
-          open: true,
-          count: data.count,
-          summary: data.summary,
-          results: data.results,
-        });
-        triggerNotificationRefresh();
-        fetchRestockData();
-      } else {
-        setErrorMessage(data.error || 'Error al procesar las órdenes masivas.');
-      }
-    } catch (err: any) {
-      setErrorMessage(`Error de conexión: ${err.message}`);
-    } finally {
-      setApprovingAll(false);
-    }
+  const toggleCart = (id: string) => {
+    setCart(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
   };
 
   return (
-    <div className={`w-full max-w-full transition-all duration-300 ${styles.container}`}>
-      {/* Header y KPIs */}
-      <header className={styles.header}>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className={styles.title}>Reabastecimiento Inteligente</h1>
-          <p className={styles.subtitle}>
-            Sugerencias de compra calculadas con el Punto de Reorden (ROP) y velocidad de venta en tiempo real.
+          <h1 className="text-3xl font-black text-[var(--color-obsidian)]" style={{ fontFamily: 'var(--font-wise-sans)', letterSpacing: '-0.03em' }}>
+            Monitor de Riesgos y Quiebres
+          </h1>
+          <p className="mt-1" style={{ color: 'var(--color-pebble)' }}>
+            Detecta quiebres de inventario, estima pérdidas de ventas y genera órdenes de compra al instante.
           </p>
-          {connectorsOk !== null && (
-            <span
-              style={{
-                display: 'inline-block',
-                marginTop: '8px',
-                fontSize: '11px',
-                fontWeight: 700,
-                padding: '4px 10px',
-                borderRadius: '999px',
-                background: connectorsOk ? '#f0fdf4' : '#fffbeb',
-                color: connectorsOk ? '#15803d' : '#b45309',
-                border: connectorsOk ? '1px solid #bbf7d0' : '1px solid #fde68a',
-              }}
-            >
-              {connectorsOk
-                ? 'Conectores activos: WhatsApp + SAP'
-                : 'Integraciones: Pendiente de configuración (WhatsApp / SAP)'}
-            </span>
-          )}
         </div>
-        <div className={styles.headerStats}>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>
-              S/ {totalCapitalRequired.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-            <span className={styles.statLabel}>Capital Requerido Sugerido</span>
-          </div>
-          <div className={styles.statCard}>
-            <span className={styles.statValue}>{criticalCount} SKUs</span>
-            <span className={styles.statLabel}>En Quiebre Inminente (&lt;3.5d)</span>
-          </div>
-        </div>
-      </header>
-
-      {/* Banner de error elegante (sin alerts que rompen el flujo) */}
-      {errorMessage && (
-        <div
-          style={{
-            background: '#fef2f2',
-            border: '1px solid var(--color-alarm-red)',
-            color: '#991b1b',
-            padding: '12px 16px',
-            borderRadius: '10px',
-            fontSize: '13px',
-            fontWeight: 600,
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-          role="alert"
-        >
-          <span>{errorMessage}</span>
-          <button
-            type="button"
-            onClick={() => setErrorMessage(null)}
-            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#991b1b', cursor: 'pointer', fontWeight: 700 }}
-            aria-label="Cerrar error"
+        
+        {/* Carrito de Compras Flotante (Botón) */}
+        {cart.length > 0 && (
+          <Link 
+            href="/compras"
+            className="wise-btn-primary !py-3 flex items-center gap-2 animate-in slide-in-from-right"
           >
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* Barra de Herramientas */}
-      <div className={styles.actionsBar}>
-        <div className={styles.searchFilter}>
-          <div className={styles.searchWrapper}>
-            <input
-              type="text"
-              placeholder="Buscar por SKU, producto o proveedor..."
-              className={styles.input}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <select
-            className={styles.select}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">Todos los Estados</option>
-            <option value="critical">Crítico (&lt; 3.5 días)</option>
-            <option value="warning">Alerta (3.5 - 7 días)</option>
-            <option value="optimal">Normal (&gt; 7 días)</option>
-          </select>
-        </div>
-        <button
-          className={styles.btnPrimary}
-          onClick={handleApproveAll}
-          disabled={approvingAll || filteredItems.length === 0}
-        >
-          {approvingAll ? 'Transmitiendo Órdenes...' : 'Aprobar Todo (1-Clic)'}
-        </button>
+            <ShoppingCart size={20} />
+            Generar OC ({cart.length}) <ArrowRight size={18} />
+          </Link>
+        )}
       </div>
 
-      {/* Tabla de Datos (Data Grid) */}
-      <div className={`w-full overflow-x-auto ${styles.tableCard}`}>
-        <table className={`w-full ${styles.table}`}>
-          <thead>
+      <div className="wise-card !p-0 overflow-hidden">
+        <div className="p-4 border-b border-[var(--color-fog)] flex items-center justify-between">
+          
+          {/* Conmutador de Estado */}
+          <div className="flex p-1 rounded-lg" style={{ background: 'var(--color-fog)' }}>
+            <button 
+              onClick={() => setFilterState('quiebre')}
+              className={`px-6 py-2 rounded-md text-sm font-bold transition-all ${filterState === 'quiebre' ? 'bg-white shadow-sm text-[var(--color-alarm-red)]' : 'text-[var(--color-pebble)]'}`}
+            >
+              <div className="flex items-center gap-2"><PackageX size={16}/> Riesgo de Quiebre</div>
+            </button>
+            <button 
+              onClick={() => setFilterState('sobre_stock')}
+              className={`px-6 py-2 rounded-md text-sm font-bold transition-all ${filterState === 'sobre_stock' ? 'bg-white shadow-sm text-amber-600' : 'text-[var(--color-pebble)]'}`}
+            >
+               <div className="flex items-center gap-2"><TrendingDown size={16}/> Sobre Stock</div>
+            </button>
+          </div>
+
+          <div className="relative max-w-xs w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-pebble)' }} size={20} />
+            <input 
+              type="text" 
+              placeholder="Buscar SKU..." 
+              className="wise-input pl-10"
+            />
+          </div>
+        </div>
+
+        <table className="w-full text-left">
+          <thead className="text-sm border-b border-[var(--color-fog)]" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}>
             <tr>
-              <th>SKU / PRODUCTO</th>
-              <th>PROVEEDOR</th>
-              <th>STOCK ACTUAL</th>
-              <th>PUNTO REORDEN (ROP)</th>
-              <th>COBERTURA</th>
-              <th>COMPRA SUGERIDA</th>
-              <th>INVERSIÓN</th>
-              <th>ESTADO</th>
-              <th>ACCIÓN</th>
+              <th className="px-6 py-4 font-semibold">SKU / Producto</th>
+              <th className="px-6 py-4 font-semibold text-right">Cant. Disponible</th>
+              <th className="px-6 py-4 font-semibold text-right">Días Restantes</th>
+              <th className="px-6 py-4 font-semibold text-right">Valor Inventario</th>
+              {filterState === 'quiebre' && (
+                <th className="px-6 py-4 font-semibold text-right" style={{ color: 'var(--color-alarm-red)' }}>Riesgo Venta Perdida</th>
+              )}
+              <th className="px-6 py-4 font-semibold text-center">Acción rápida</th>
             </tr>
           </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={9} className={styles.emptyState}>
-                  Calculando algoritmo de Punto de Reorden (ROP) y cobertura...
-                </td>
-              </tr>
-            ) : filteredItems.length === 0 ? (
-              <tr>
-                <td colSpan={9} className={styles.emptyState}>
-                  No se encontraron productos coincidentes con los criterios de búsqueda.
-                </td>
-              </tr>
-            ) : (
-              filteredItems.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className={styles.skuInfo}>
-                      <span className={styles.skuName}>{item.name}</span>
-                      <span className={styles.skuCode}>{item.sku}</span>
-                    </div>
+          <tbody className="divide-y divide-[var(--color-fog)]">
+            {filteredAlerts.map((item) => {
+              const inCart = cart.includes(item.id);
+              
+              return (
+                <tr key={item.id} className="hover:bg-[var(--color-fog)] transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="font-mono text-xs" style={{ color: 'var(--color-pebble)' }}>{item.sku}</div>
+                    <div className="font-bold mt-0.5" style={{ color: 'var(--color-obsidian)' }}>{item.name}</div>
                   </td>
-                  <td className={styles.providerText}>{item.provider}</td>
-                  <td>
-                    <span className={styles.stockNumber}>
-                      {item.currentStock.toLocaleString()} u
-                    </span>
+                  <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
+                    {item.available} u.
                   </td>
-                  <td className={styles.ropNumber}>
-                    {item.rop.toLocaleString()} u
-                  </td>
-                  <td>
-                    <span
-                      className={
-                        item.status === 'critical'
-                          ? styles.coverageCritical
-                          : styles.coverageNormal
-                      }
-                    >
-                      {item.coverageDays.toFixed(1).replace('.0', '')} días
-                    </span>
-                  </td>
-                  <td>
-                    <span className={styles.suggestedQty}>
-                      {item.suggestedQty.toLocaleString()} u
-                    </span>
-                  </td>
-                  <td>
-                    <span className={styles.investmentAmount}>
-                      S/ {item.investment.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </td>
-                  <td>
-                    {item.status === 'critical' && (
-                      <span className={styles.badgeCritical}>Crítico</span>
-                    )}
-                    {item.status === 'warning' && (
-                      <span className={styles.badgeWarning}>Alerta</span>
-                    )}
-                    {item.status === 'optimal' && (
-                      <span className={styles.badgeOptimal}>Normal</span>
+                  <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
+                    {item.daysLeft <= 3 ? (
+                      <span className="text-[var(--color-alarm-red)]">{item.daysLeft} días</span>
+                    ) : (
+                      <span>{item.daysLeft} días</span>
                     )}
                   </td>
-                  <td>
-                    <button
-                      className={styles.btnTableAction}
-                      onClick={() => handleGenerateOC(item)}
-                      disabled={processingId === item.id || approvingAll}
-                    >
-                      {processingId === item.id ? 'Generando...' : 'Generar OC'}
-                    </button>
+                  <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
+                    S/ {item.inventoryValue.toLocaleString()}
+                  </td>
+                  {filterState === 'quiebre' && (
+                    <td className="px-6 py-4 text-sm font-black text-right" style={{ color: 'var(--color-alarm-red)' }}>
+                      - S/ {item.lostSalesRisk.toLocaleString()}
+                    </td>
+                  )}
+                  <td className="px-6 py-4 text-center">
+                    {filterState === 'quiebre' ? (
+                      <button 
+                        onClick={() => toggleCart(item.id)}
+                        className={`px-4 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2 justify-center w-full ${inCart ? 'bg-[var(--color-obsidian)] text-white' : 'wise-btn-outline'}`}
+                      >
+                        <ShoppingCart size={16} /> {inCart ? 'En carrito' : 'Añadir a OC'}
+                      </button>
+                    ) : (
+                      <button className="wise-btn-outline w-full !text-amber-700 !border-amber-200">
+                        Liquidar (Remate)
+                      </button>
+                    )}
                   </td>
                 </tr>
-              ))
+              );
+            })}
+            
+            {filteredAlerts.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center text-sm font-medium" style={{ color: 'var(--color-pebble)' }}>
+                  Excelente, no tienes alertas de {filterState === 'quiebre' ? 'quiebre de stock' : 'sobre stock'}.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
       </div>
-
-      {/* Modal de Feedback Visual y Auditoría */}
-      {resultsModal && (
-        <BatchApprovalModal
-          open={resultsModal.open}
-          onClose={() => setResultsModal(null)}
-          count={resultsModal.count}
-          summary={resultsModal.summary}
-          results={resultsModal.results}
-        />
-      )}
     </div>
   );
 }
