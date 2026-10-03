@@ -60,7 +60,7 @@ export const NAVIGATION_CONFIG: NavGroupConfig[] = [
       {
         id: 'resumen',
         label: 'Resumen',
-        href: '/panel/resumen',
+        href: '/panel',
         aliases: ['/panel/resumen', '/dashboard', '/'],
         icon: LayoutDashboard,
       },
@@ -97,7 +97,7 @@ export const NAVIGATION_CONFIG: NavGroupConfig[] = [
         // Inventario vive dentro del desplegable de Producto: un solo flujo.
         id: 'inventario-actual',
         label: 'Inventario',
-        href: '/inventory/inventory-items',
+        href: '/inventario',
         aliases: ['/dashboard/inventario', '/inventory'],
         icon: Boxes,
         badgeKey: 'inventarioInmovilizado',
@@ -155,7 +155,7 @@ export const NAVIGATION_CONFIG: NavGroupConfig[] = [
       {
         id: 'proveedores',
         label: 'Proveedores',
-        href: '/inventory/vendors',
+        href: '/proveedores',
         aliases: ['/entidades/proveedores', '/abastecimiento/proveedores-criticos'],
         icon: Store,
         badgeKey: 'proveedoresCriticos',
@@ -165,7 +165,7 @@ export const NAVIGATION_CONFIG: NavGroupConfig[] = [
         // El apartado Clientes pasa a ser el apartado Ventas.
         id: 'ventas',
         label: 'Ventas',
-        href: '/inventory/clients',
+        href: '/ventas',
         aliases: ['/entidades/clientes', '/ventas'],
         icon: User,
       },
@@ -176,6 +176,13 @@ export const NAVIGATION_CONFIG: NavGroupConfig[] = [
         href: '/inventory/branch-details',
         aliases: ['/entidades/sucursal', '/mi-almacen'],
         icon: Building2,
+      },
+      {
+        id: 'compras',
+        label: 'Compras',
+        href: '/compras',
+        aliases: ['/compras'],
+        icon: Repeat,
       },
     ],
   },
@@ -200,7 +207,7 @@ export const NAVIGATION_CONFIG: NavGroupConfig[] = [
       {
         id: 'financiamiento',
         label: 'Financiamiento',
-        href: '/dashboard/financiamiento',
+        href: '/financiamiento',
         aliases: ['/financiamiento', '/financing', '/complementos/planes', '/plans'],
         icon: Repeat,
       },
