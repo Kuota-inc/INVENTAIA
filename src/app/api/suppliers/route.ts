@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       // Asumiremos que el frontend pasará myProviders=true si quiere solo sus proveedores.
       // O podemos hacerlo con un query join. Para mantenerlo simple:
       
-      const session = auth.workspaceId || 'ws-default'; // TODO: get from auth properly
+      const session = auth.ctx.workspaceId || 'ws-default'; // TODO: get from auth properly
       
       const { data: wsData, error: wsError } = await supabase
         .from('workspace_suppliers')
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     const { createClient } = await import('@/utils/supabase/server');
     const supabase = await createClient();
     
-    const session = auth.workspaceId || 'ws-default';
+    const session = auth.ctx.workspaceId || 'ws-default';
     
     if (action === 'add') {
       await supabase.from('workspace_suppliers').insert({
