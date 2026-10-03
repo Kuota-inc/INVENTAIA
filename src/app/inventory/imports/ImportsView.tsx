@@ -278,7 +278,7 @@ export default function ImportsView() {
               </div>
               <button
                 type="button"
-                onClick={() => router.push('/inventory/locations')}
+                onClick={() => router.push('/inventory/branch-details')}
                 style={{ background: 'var(--color-lime-voltage)', color: 'var(--color-forest-ink)', border: 'none', borderRadius: '9999px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', minHeight: '44px' }}
               >
                 Crear ubicación

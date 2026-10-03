@@ -58,7 +58,7 @@ export function Sidebar({
   // el viewport sin scroll largo; el resto está a 1 clic (divulgación progresiva).
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
     NAVIGATION_CONFIG.reduce((acc, group) => {
-      acc[group.id] = group.id === 'panel' || group.id === 'inventario' || group.id === 'entidades';
+      acc[group.id] = group.id === 'panel' || group.id === 'producto' || group.id === 'entidades';
       return acc;
     }, {} as Record<string, boolean>)
   );

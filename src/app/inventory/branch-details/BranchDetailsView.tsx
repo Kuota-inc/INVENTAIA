@@ -15,6 +15,7 @@ import {
 import styles from './BranchDetails.module.css';
 
 import { apiFetch } from '@/lib/apiFetch';
+import LocationsIndex from '../locations/LocationsIndex';
 interface BranchProfile {
   code: string;
   name: string;
@@ -223,24 +224,28 @@ export default function BranchDetailsView() {
       )}
 
       {tab === 'ubicaciones' ? (
-        <div className={styles.card}>
-          <div className={styles.cardTitle}>UBICACIONES DE ESTA SUCURSAL</div>
-          {locations.length === 0 ? (
-            <p className={styles.muted}>Sin ubicaciones registradas.</p>
-          ) : (
-            <ul className={styles.locList}>
-              {locations.map((l) => (
-                <li key={l.ref}>
-                  <Link href="/inventory/locations" className={styles.locItem}>
-                    <MapPin size={15} />
-                    <span className={styles.locName}>{l.name}</span>
-                    <span className={styles.locMeta}>{l.ref} · {l.branch || ''}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <>
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>UBICACIONES DE ESTA SUCURSAL</div>
+            {locations.length === 0 ? (
+              <p className={styles.muted}>Sin ubicaciones registradas.</p>
+            ) : (
+              <ul className={styles.locList}>
+                {locations.map((l) => (
+                  <li key={l.ref}>
+                    <Link href={`/inventory/inventory-items?location_id=${encodeURIComponent(l.ref)}`} className={styles.locItem} title="Ver inventario de esta ubicación">
+                      <MapPin size={15} />
+                      <span className={styles.locName}>{l.name}</span>
+                      <span className={styles.locMeta}>{l.ref} · {l.branch || ''}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {/* Gestión completa (crear/editar/eliminar) unificada en Sedes */}
+          <LocationsIndex />
+        </>
       ) : (
         <form onSubmit={handleSave} className={styles.grid}>
           <div className={styles.col}>

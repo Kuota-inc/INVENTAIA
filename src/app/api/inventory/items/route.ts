@@ -40,8 +40,10 @@ export async function GET(req: NextRequest) {
     const hideZero = params.get('hideZero') === '1';
     const rawLocation = params.get('location_id') || params.get('locationId') || params.get('location') || '';
     const rawBranch = params.get('branch') || '';
+    const rawCategory = params.get('category') || '';
     const locationRef = rawLocation.trim() && rawLocation.trim() !== 'all' ? rawLocation.trim().toUpperCase() : null;
     const branchFilter = rawBranch.trim() && rawBranch.trim() !== 'all' ? rawBranch.trim() : null;
+    const categoryFilter = rawCategory.trim() && rawCategory.trim() !== 'all' ? rawCategory.trim() : null;
     const page = Math.max(1, Number(params.get('page')) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(params.get('pageSize')) || PAGE_SIZE_DEFAULT));
 
@@ -52,9 +54,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Sin workspace disponible.' }, { status: 404 });
     }
 
-    const [{ data: products }, { data: levels }, { data: ws }] = await Promise.all([
+    const [{ data: products }, { data: levels }, { data: ws }, { data: categories }] = await Promise.all([
       (() => {
-        let query = supabase.from('products').select('id,sku_code,name,unit_cost,status').eq('status', 'active');
+        let query = supabase.from('products').select('id,sku_code,name,unit_cost,unit_price,category_id,status').eq('status', 'active');
         if (q) {
           const pattern = `%${q.replace(/[,()]/g, '')}%`;
           query = query.or(`name.ilike.${pattern},sku_code.ilike.${pattern}`);
@@ -63,7 +65,19 @@ export async function GET(req: NextRequest) {
       })(),
       supabase.from('inventory_levels').select('product_id,physical_stock,safety_stock'),
       supabase.from('workspaces').select('settings').eq('id', workspaceId).maybeSingle(),
+      supabase.from('categories').select('id,name'),
     ]);
+
+    const catById = new Map(((categories as any[]) || []).map((c: any) => [c.id, c.name]));
+    const catByName = new Map(((categories as any[]) || []).map((c: any) => [String(c.name).toLowerCase(), c.id]));
+    let categoryIds: string[] | null = null;
+    if (categoryFilter) {
+      const byId = catById.has(categoryFilter) ? [categoryFilter] : [];
+      const byName = [...catByName.entries()]
+        .filter(([name]) => name.includes(categoryFilter.toLowerCase()))
+        .map(([, id]) => id);
+      categoryIds = [...new Set([...byId, ...byName])];
+    }
 
     const placement = ((ws?.settings as any)?.inventoryPlacement as Record<string, any>) || {};
     const levelByProduct = new Map((levels || []).map((l: any) => [l.product_id, l]));
@@ -71,22 +85,31 @@ export async function GET(req: NextRequest) {
     let items = (products || []).map((p: any) => {
       const level = levelByProduct.get(p.id) || {};
       const place = placement[p.id] || {};
+      const hasLevel = Boolean(level.product_id);
       return {
         id: p.id,
         sku: p.sku_code,
         name: p.name,
         qty: Number(level.physical_stock ?? 0),
         safety: Number(level.safety_stock ?? 0),
-        hasLevel: Boolean(level.product_id),
+        hasLevel,
         branch: place.branch || DEFAULT_BRANCH,
         locationRef: place.locationRef || DEFAULT_LOCATION,
         unitCost: Number(p.unit_cost) || 0,
+        categoryId: p.category_id || null,
+        category: catById.get(p.category_id) || null,
+        // Incompleto: sin categoría, sin costo/precio o sin nivel de stock.
+        incomplete: !p.category_id || !Number(p.unit_cost) || !Number(p.unit_price) || !hasLevel,
       };
     });
+
+    // Alerta global de incompletos (antes de filtros de vista).
+    const incomplete = items.filter((i) => i.incomplete).length;
 
     if (hideZero) items = items.filter((i) => i.qty > 0);
     if (locationRef) items = items.filter((i) => (i.locationRef || '').toUpperCase() === locationRef);
     if (branchFilter) items = items.filter((i) => i.branch === branchFilter);
+    if (categoryIds) items = items.filter((i) => i.categoryId && categoryIds!.includes(i.categoryId));
 
     const kpis = {
       totalQty: items.reduce((a, i) => a + i.qty, 0),
@@ -117,6 +140,8 @@ export async function GET(req: NextRequest) {
       pageSize,
       kpis,
       locationFilter: { locationRef, branch: branchFilter },
+      categories: ((categories as any[]) || []).map((c: any) => ({ id: c.id, name: c.name })),
+      incomplete,
       integrations: { pending: integrationsPending.length > 0, missing: integrationsPending },
     });
   } catch (error: any) {

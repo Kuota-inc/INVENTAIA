@@ -1,5 +1,6 @@
-import InventarioPage from '@/app/dashboard/inventario/page';
+import { redirect } from 'next/navigation';
 
+// Producto e inventario son un solo flujo: el catálogo canónico es /products/products.
 export default function ProductosPage() {
-  return <InventarioPage />;
+  redirect('/products/products');
 }

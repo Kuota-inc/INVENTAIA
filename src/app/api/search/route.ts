@@ -130,7 +130,7 @@ function searchLocationsSync(list: Array<{ ref: string; name: string; code?: str
         id: code,
         name: l.name,
         detail: `${code} · ${zone}`,
-        href: `/inventory/locations?q=${encodeURIComponent(l.name)}`,
+        href: `/inventory/branch-details`,
       };
     });
 }

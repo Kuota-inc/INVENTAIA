@@ -11,6 +11,9 @@ import {
   Image as ImageIcon,
   X,
   Loader2,
+  ArrowLeftRight,
+  Download,
+  Bell,
 } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { triggerNotificationRefresh } from '@/context/NotificationContext';
@@ -52,6 +55,10 @@ export default function InventoryItemsView() {
   // Divulgación progresiva + ubicación: toolbar principal mínima.
   const [selectedLocation, setSelectedLocation] = useState('all');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  // La categoría es un filtro de inventario (no una sección aparte).
+  const [category, setCategory] = useState('all');
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [incomplete, setIncomplete] = useState(0);
 
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -64,6 +71,12 @@ export default function InventoryItemsView() {
   const [fQty, setFQty] = useState('0');
   const [fBranch, setFBranch] = useState('Sede Lima Central');
   const [fLocation, setFLocation] = useState('LOC-00004');
+  // Alta unificada: crear el producto al vuelo sin salir de Inventario.
+  const [nSku, setNSku] = useState('');
+  const [nName, setNName] = useState('');
+  const [nPrice, setNPrice] = useState('');
+  const [nCost, setNCost] = useState('');
+  const isNewProduct = fProductId === '__new__';
 
   const debouncedQuery = useDebounce(query, 300);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -79,6 +92,7 @@ export default function InventoryItemsView() {
       });
       // Verdad de BD: la ubicación filtra stock, valor y rotación en el backend.
       if (selectedLocation !== 'all') params.set('location_id', selectedLocation);
+      if (category !== 'all') params.set('category', category);
       const res = await apiFetch(`/api/inventory/items?${params.toString()}`, { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
@@ -86,6 +100,8 @@ export default function InventoryItemsView() {
         setTotal(data.total || 0);
         setKpis(data.kpis || { totalQty: 0, totalValue: 0, uniqueProducts: 0, activeLocations: 0 });
         if (data.integrations) setIntegrations(data.integrations);
+        if (data.categories) setCategories(data.categories);
+        setIncomplete(Number(data.incomplete) || 0);
         setSelected((prev) => prev.filter((id) => (data.items || []).some((i: InventoryRow) => i.id === id)));
       }
     } catch (err) {
@@ -98,11 +114,11 @@ export default function InventoryItemsView() {
   useEffect(() => {
     fetchItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedQuery, hideZero, page, selectedLocation]);
+  }, [debouncedQuery, hideZero, page, selectedLocation, category]);
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedQuery, hideZero, selectedLocation]);
+  }, [debouncedQuery, hideZero, selectedLocation, category]);
 
   useEffect(() => {
     if (selected.length === 0) setConfirmBulk(false);
@@ -114,6 +130,10 @@ export default function InventoryItemsView() {
     setFQty('0');
     setFBranch('Sede Lima Central');
     setFLocation('LOC-00004');
+    setNSku('');
+    setNName('');
+    setNPrice('');
+    setNCost('');
     try {
       const [prodRes, locRes] = await Promise.all([
         apiFetch('/api/products?pageSize=100', { cache: 'no-store' }),
@@ -141,6 +161,31 @@ export default function InventoryItemsView() {
     setFormError(null);
     setSaving(true);
     try {
+      // Flujo único: si es producto nuevo se crea producto + nivel + ubicación
+      // en una sola llamada al creador canónico.
+      if (isNewProduct) {
+        const res = await apiFetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sku: nSku.trim(),
+            name: nName.trim(),
+            price: nPrice === '' ? NaN : Number(nPrice),
+            cost: nCost === '' ? 0 : Number(nCost),
+            stock: fQty === '' ? 0 : Math.floor(Number(fQty)),
+            safetyStock: 0,
+            branch: fBranch,
+            locationRef: fLocation,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.error || 'No se pudo crear el producto.');
+        setShowModal(false);
+        setBanner({ type: 'success', text: `Producto ${data?.item?.sku_code || nSku} creado con stock inicial.` });
+        triggerNotificationRefresh();
+        fetchItems();
+        return;
+      }
       const res = await apiFetch('/api/inventory/items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -190,7 +235,7 @@ export default function InventoryItemsView() {
     { label: 'UBICACIONES DE INVENTARIO TOTALES', value: String(kpis.activeLocations), caption: 'Ubicaciones de almacenamiento activas', color: 'var(--color-forest-ink)' },
   ];
 
-  const hasFilters = debouncedQuery.trim() !== '' || selectedLocation !== 'all';
+  const hasFilters = debouncedQuery.trim() !== '' || selectedLocation !== 'all' || category !== 'all';
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(total, page * PAGE_SIZE);
 
@@ -214,6 +259,25 @@ export default function InventoryItemsView() {
         >
           Pendiente de configuración: {integrations.missing.join(', ')}
         </span>
+      )}
+
+      {/* Alerta de ítems incompletos: sin categoría, costo, precio o nivel */}
+      {incomplete > 0 && (
+        <div
+          role="alert"
+          style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}
+        >
+          <span style={{ flex: '1 1 200px' }}>
+            {incomplete} artículo{incomplete === 1 ? '' : 's'} con datos incompletos (sin categoría, costo, precio o stock registrado).
+          </span>
+          <button
+            type="button"
+            onClick={() => router.push('/products/products')}
+            style={{ background: '#ffffff', border: '1px solid #f59e0b', color: '#92400e', borderRadius: '6px', padding: '7px 12px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            Completar en Productos
+          </button>
+        </div>
       )}
 
       {/* KPIs */}
@@ -271,6 +335,48 @@ export default function InventoryItemsView() {
           <SlidersHorizontal size={16} />
           <span style={{ whiteSpace: 'nowrap' }}>Filtros{hideZero ? ' · 1' : ''}</span>
         </button>
+        {/* La categoría es un filtro de inventario */}
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          aria-label="Filtrar por categoría"
+          title="Filtrar por categoría"
+          style={{ border: category !== 'all' ? '1px solid var(--color-forest-ink)' : '1px solid var(--color-fog)', background: category !== 'all' ? 'var(--color-linen-mist)' : '#ffffff', borderRadius: '9999px', padding: '9px 12px', cursor: 'pointer', color: 'var(--color-charcoal)', minHeight: '38px', fontSize: '13px', fontWeight: 600, maxWidth: '190px' }}
+        >
+          <option value="all">Todas las categorías</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        {/* Ajuste, Importaciones y Alertas son botones dentro de Inventario */}
+        <span style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap' }} role="group" aria-label="Acciones de inventario">
+          <button
+            type="button"
+            onClick={() => router.push('/inventory/stock-adjustments')}
+            title="Ajuste de inventario"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', border: '1px solid var(--color-fog)', background: '#ffffff', borderRadius: '9999px', padding: '9px 14px', cursor: 'pointer', color: 'var(--color-charcoal)', minHeight: '38px', fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap' }}
+          >
+            <ArrowLeftRight size={15} /> Ajuste
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/inventory/imports')}
+            title="Importaciones"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', border: '1px solid var(--color-fog)', background: '#ffffff', borderRadius: '9999px', padding: '9px 14px', cursor: 'pointer', color: 'var(--color-charcoal)', minHeight: '38px', fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap' }}
+          >
+            <Download size={15} /> Importar
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/stock-alerts')}
+            title="Alertas y reorders"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', border: '1px solid var(--color-fog)', background: '#ffffff', borderRadius: '9999px', padding: '9px 14px', cursor: 'pointer', color: 'var(--color-charcoal)', minHeight: '38px', fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap' }}
+          >
+            <Bell size={15} /> Alertas
+          </button>
+        </span>
         <button
           type="button"
           onClick={openCreate}
@@ -469,6 +575,7 @@ export default function InventoryItemsView() {
               Producto *
               <select value={fProductId} onChange={(e) => setFProductId(e.target.value)} required style={inputStyle}>
                 <option value="">Seleccionar producto…</option>
+                <option value="__new__">＋ Crear producto nuevo…</option>
                 {catalog.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.sku} · {p.name}{p.hasLevel ? ' (en inventario)' : ''}
@@ -476,6 +583,30 @@ export default function InventoryItemsView() {
                 ))}
               </select>
             </label>
+            {isNewProduct && (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <label style={labelStyle}>
+                    SKU nuevo *
+                    <input value={nSku} onChange={(e) => setNSku(e.target.value)} placeholder="SKU-XXX-000" required style={inputStyle} />
+                  </label>
+                  <label style={labelStyle}>
+                    Precio venta (PEN) *
+                    <input value={nPrice} onChange={(e) => setNPrice(e.target.value)} placeholder="0.00" inputMode="decimal" required style={inputStyle} />
+                  </label>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <label style={labelStyle}>
+                    Nombre *
+                    <input value={nName} onChange={(e) => setNName(e.target.value)} placeholder="Nombre del producto" required style={inputStyle} />
+                  </label>
+                  <label style={labelStyle}>
+                    Costo (PEN)
+                    <input value={nCost} onChange={(e) => setNCost(e.target.value)} placeholder="0.00" inputMode="decimal" style={inputStyle} />
+                  </label>
+                </div>
+              </>
+            )}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <label style={labelStyle}>
                 Cantidad inicial *

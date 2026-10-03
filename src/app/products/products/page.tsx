@@ -13,6 +13,7 @@ import {
   ChevronDown,
   X,
   Loader2,
+  Copy,
 } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchQuery } from '@/hooks/useSearchQuery';
@@ -30,6 +31,8 @@ interface ProductItem {
   categoryId: string | null;
   category: string | null;
   subcategory: string | null;
+  stock: number;
+  safetyStock: number;
 }
 
 interface Kpis {
@@ -167,6 +170,34 @@ function ProductsIndex() {
       setBanner({ type: 'error', text: `Error de conexión: ${err.message}` });
     } finally {
       setBulkLoading(false);
+    }
+  };
+
+  // Atajo de variante: duplica el producto como base editable de variante.
+  const handleDuplicateVariant = async (item: ProductItem) => {
+    setBanner(null);
+    try {
+      const res = await apiFetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sku: `${item.sku}-VAR`,
+          name: `${item.name} (Variante)`,
+          price: item.price,
+          cost: item.cost,
+          categoryId: item.categoryId || undefined,
+          stock: 0,
+          safetyStock: 0,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || 'No se pudo crear la variante.');
+      const newId = data?.item?.id;
+      setBanner({ type: 'success', text: `Variante ${data?.item?.sku_code || ''} creada. Complétala en su ficha.` });
+      fetchProducts();
+      if (newId) router.push(`/products/${newId}`);
+    } catch (err: any) {
+      setBanner({ type: 'error', text: err?.message || 'No se pudo crear la variante.' });
     }
   };
 
@@ -509,7 +540,7 @@ function ProductsIndex() {
               <th style={{ padding: '12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)' }}>NOMBRE</th>
               <th style={{ padding: '12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)' }}>PRECIO</th>
               <th style={{ padding: '12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)' }}>CATEGORÍA</th>
-              <th style={{ padding: '12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)' }}>SUBCATEGORÍA</th>
+              <th style={{ padding: '12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)' }}>STOCK</th>
               <th style={{ padding: '12px 18px 12px 12px', textAlign: 'right', color: 'var(--color-forest-ink)' }}>
                 <Zap size={15} />
               </th>
@@ -576,8 +607,18 @@ function ProductsIndex() {
                     {formatPEN(item.price)}
                   </td>
                   <td style={{ padding: '12px', color: 'var(--color-charcoal)' }}>{item.category || '—'}</td>
-                  <td style={{ padding: '12px', color: 'var(--color-pebble)' }}>{item.subcategory || '—'}</td>
-                  <td style={{ padding: '12px 18px 12px 12px', textAlign: 'right' }}>
+                  <td style={{ padding: '12px', fontWeight: 700, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', color: item.stock <= (item.safetyStock || 0) ? '#b45309' : 'var(--color-obsidian)' }} title={`Seguridad: ${item.safetyStock ?? 0}`}>
+                    {item.stock ?? 0}
+                  </td>
+                  <td style={{ padding: '12px 18px 12px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <button
+                      type="button"
+                      title={`Crear variante de ${item.sku}`}
+                      onClick={() => handleDuplicateVariant(item)}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-charcoal)', display: 'inline-flex', marginRight: '6px' }}
+                    >
+                      <Copy size={15} />
+                    </button>
                     <button
                       type="button"
                       title={`Ver ${item.sku} en inventario`}

@@ -1,10 +1,7 @@
-import { AppShell } from '@/components/layout/AppShell';
-import LocationsIndex from './LocationsIndex';
+import { redirect } from 'next/navigation';
 
+// Ubicaciones se elimina como sección y se unifica con Sedes (Mi almacén).
+// La API /api/locations sigue viva para el selector de ubicación.
 export default function LocationsPage() {
-  return (
-    <AppShell>
-      <LocationsIndex />
-    </AppShell>
-  );
+  redirect('/inventory/branch-details');
 }

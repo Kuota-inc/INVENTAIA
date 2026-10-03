@@ -62,7 +62,7 @@ model Product {
   created_at  DateTime      @default(now())
   updated_at  DateTime      @updatedAt
 
-  inventory           InventoryLevel?
+  inventories         InventoryLevel[]
   forecast_logs       ForecastAccuracyLog[]
   prevented_stockouts PreventedStockout[]
 
@@ -71,31 +71,58 @@ model Product {
   @@map("products")
 }
 
+model Branch {
+  id          String           @id @default(uuid())
+  name        String
+  address     String?
+  created_at  DateTime         @default(now())
+  inventories InventoryLevel[]
+  
+  @@map("branches")
+}
+
 model InventoryLevel {
   id             String   @id @default(uuid())
-  product_id     String   @unique
+  product_id     String
   product        Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  branch_id      String
+  branch         Branch   @relation(fields: [branch_id], references: [id], onDelete: Cascade)
   physical_stock Int      @default(0)
   safety_stock   Int      @default(0)
   last_synced_at DateTime @default(now())
 
+  @@unique([product_id, branch_id])
   @@index([product_id])
+  @@index([branch_id])
   @@index([physical_stock])
   @@map("inventory_levels")
 }
 
 model Supplier {
-  id               String          @id @default(uuid())
+  id               String            @id @default(uuid())
   name             String
-  contact_info     Json            @default("{}")
-  integration_type IntegrationType @default(traditional)
-  lead_time_days   Int             @default(5)
-  created_at       DateTime        @default(now())
-  updated_at       DateTime        @updatedAt
+  description      String?
+  contact_info     Json              @default("{}")
+  terms            String?
+  integration_type IntegrationType   @default(traditional)
+  lead_time_days   Int               @default(5)
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
 
-  purchase_orders  PurchaseOrder[]
+  purchase_orders   PurchaseOrder[]
+  supplier_products SupplierProduct[]
 
   @@map("suppliers")
+}
+
+model SupplierProduct {
+  id           String   @id @default(uuid())
+  supplier_id  String
+  supplier     Supplier @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  name         String
+  scale_prices Json     // e.g. [{ qty: 10, price: 100 }]
+  
+  @@map("supplier_products")
 }
 
 model PurchaseOrder {

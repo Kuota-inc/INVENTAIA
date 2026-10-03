@@ -97,7 +97,27 @@ export async function GET(req: NextRequest) {
       categoryId: r.category_id,
       category: catById.get(r.category_id) || null,
       subcategory: null,
+      // Stock unificado producto <-> inventario (una sola verdad).
+      stock: 0,
+      safetyStock: 0,
     }));
+
+    // Niveles de stock de la página (una sola consulta, sin asumir FK embebida).
+    const pageIds = items.map((i: any) => i.id);
+    if (pageIds.length > 0) {
+      const { data: levels } = await supabase
+        .from('inventory_levels')
+        .select('product_id,physical_stock,safety_stock')
+        .in('product_id', pageIds);
+      const levelByProduct = new Map((levels || []).map((l: any) => [l.product_id, l]));
+      for (const item of items) {
+        const lv = levelByProduct.get(item.id);
+        if (lv) {
+          item.stock = Number(lv.physical_stock) || 0;
+          item.safetyStock = Number(lv.safety_stock) || 0;
+        }
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -214,6 +234,40 @@ export async function POST(req: NextRequest) {
       physical_stock: stock,
       safety_stock: safetyStock,
     });
+
+    // Sede/ubicación inicial opcional: un solo flujo producto <-> inventario.
+    const branch =
+      typeof body?.branch === 'string' && body.branch.trim() ? body.branch.trim().slice(0, 120) : null;
+    const locationRef =
+      typeof body?.locationRef === 'string' && body.locationRef.trim()
+        ? body.locationRef.trim().slice(0, 20).toUpperCase()
+        : null;
+    if (branch || locationRef) {
+      try {
+        const { SessionManager } = await import('@/lib/session');
+        const session = await SessionManager.getSession().catch(() => null);
+        let workspaceId: string | null =
+          session?.workspaceId && session.workspaceId !== 'ws-default' ? session.workspaceId : null;
+        if (!workspaceId) {
+          const { data: first } = await supabase.from('workspaces').select('id').limit(1).maybeSingle();
+          workspaceId = first?.id || null;
+        }
+        if (workspaceId) {
+          const { data: ws } = await supabase.from('workspaces').select('settings').eq('id', workspaceId).maybeSingle();
+          const settings = { ...(((ws?.settings as any) || {}) as Record<string, any>) };
+          settings.inventoryPlacement = {
+            ...(settings.inventoryPlacement || {}),
+            [id]: {
+              branch: branch || 'Sede Lima Central',
+              locationRef: locationRef || 'LOC-00004',
+            },
+          };
+          await supabase.from('workspaces').update({ settings }).eq('id', workspaceId);
+        }
+      } catch {
+        // El producto ya quedó creado; la ubicación es accesoria.
+      }
+    }
 
     return NextResponse.json({ success: true, item: inserted }, { status: 201 });
   } catch (error: any) {

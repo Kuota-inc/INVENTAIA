@@ -1,10 +1,6 @@
-import { AppShell } from '@/components/layout/AppShell';
-import AddonsMarketplace from './AddonsMarketplace';
+import { redirect } from 'next/navigation';
 
+// Complementos vuela de momento: redirige a Financiamiento.
 export default function AddonsPage() {
-  return (
-    <AppShell>
-      <AddonsMarketplace />
-    </AppShell>
-  );
+  redirect('/dashboard/financiamiento');
 }

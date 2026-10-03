@@ -1,10 +1,6 @@
-import { AppShell } from '@/components/layout/AppShell';
-import PlansView from './PlansView';
+import { redirect } from 'next/navigation';
 
+// Comparar planes vuela: redirige a Financiamiento.
 export default function PlansPage() {
-  return (
-    <AppShell>
-      <PlansView />
-    </AppShell>
-  );
+  redirect('/dashboard/financiamiento');
 }
