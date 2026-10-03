@@ -24,29 +24,29 @@ export default function ProveedoresPage() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Proveedores</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-[var(--color-obsidian)]" style={{ fontFamily: "var(--font-wise-sans)" }}>Proveedores</h1>
+          <p className="mt-1" style={{ color: "var(--color-pebble)" }}>
             Gestiona tu red de proveedores, acuerdos comerciales y catálogos de precios.
           </p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+        <button className="wise-btn-primary">
           <PlusCircle size={20} />
           Nuevo Proveedor
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="wise-card overflow-hidden !p-0">
         {/* Barra de herramientas */}
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-4">
+        <div className="p-4 border-b border-[var(--color-fog)] flex items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--color-pebble)" }} size={20} />
             <input 
               type="text" 
               placeholder="Buscar proveedores..." 
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="wise-input pl-10"
             />
           </div>
-          <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+          <button className="wise-btn-outline !p-3">
             <Settings size={20} />
           </button>
         </div>
@@ -54,33 +54,33 @@ export default function ProveedoresPage() {
         {/* Lista de Proveedores */}
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 text-gray-600 text-sm">
+            <thead className="text-sm" style={{ background: "var(--color-fog)", color: "var(--color-charcoal)" }}>
               <tr>
-                <th className="px-6 py-4 font-medium">Nombre / Descripción</th>
-                <th className="px-6 py-4 font-medium">Términos Comerciales</th>
-                <th className="px-6 py-4 font-medium">Contacto</th>
-                <th className="px-6 py-4 font-medium text-right">Acciones</th>
+                <th className="px-6 py-4 font-semibold">Nombre / Descripción</th>
+                <th className="px-6 py-4 font-semibold">Términos Comerciales</th>
+                <th className="px-6 py-4 font-semibold">Contacto</th>
+                <th className="px-6 py-4 font-semibold text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[var(--color-fog)]">
               {mockProviders.map((provider) => (
-                <tr key={provider.id} className="hover:bg-gray-50/50 transition-colors group">
+                <tr key={provider.id} className="hover:bg-[var(--color-fog)] transition-colors group">
                   <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900">{provider.name}</div>
-                    <div className="text-sm text-gray-500 mt-0.5">{provider.description}</div>
+                    <div className="font-bold" style={{ color: "var(--color-obsidian)" }}>{provider.name}</div>
+                    <div className="text-sm mt-0.5" style={{ color: "var(--color-pebble)" }}>{provider.description}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-600 max-w-xs truncate">
+                    <div className="text-sm max-w-xs truncate" style={{ color: "var(--color-charcoal)" }}>
                       {provider.terms}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
+                  <td className="px-6 py-4 text-sm" style={{ color: "var(--color-charcoal)" }}>
                     {provider.contact}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Link 
                       href={`/proveedores/${provider.id}`} 
-                      className="text-blue-600 font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="wise-text-link opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       Ver Catálogo &rarr;
                     </Link>
@@ -91,7 +91,7 @@ export default function ProveedoresPage() {
           </table>
           
           {mockProviders.length === 0 && (
-            <div className="p-12 text-center text-gray-500">
+            <div className="p-12 text-center text-sm" style={{ color: "var(--color-pebble)" }}>
               No tienes proveedores registrados aún.
             </div>
           )}

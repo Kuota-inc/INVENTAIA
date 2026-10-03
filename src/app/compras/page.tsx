@@ -60,18 +60,18 @@ export default function ComprasPage() {
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Nueva Orden de Compra</h1>
-          <p className="text-gray-500 mt-1">Crea pedidos y envíalos directamente a tus proveedores.</p>
+          <h1 className="text-2xl font-bold text-[var(--color-obsidian)]" style={{ fontFamily: "var(--font-wise-sans)" }}>Nueva Orden de Compra</h1>
+          <p className="mt-1" style={{ color: "var(--color-pebble)" }}>Crea pedidos y envíalos directamente a tus proveedores.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Selección y Catálogo */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-            <h2 className="font-semibold text-gray-900 mb-4">1. Selecciona un Proveedor</h2>
+          <div className="wise-card">
+            <h2 className="font-bold mb-4" style={{ color: "var(--color-obsidian)" }}>1. Selecciona un Proveedor</h2>
             <select 
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500/20"
+              className="wise-input cursor-pointer"
               value={selectedProviderId}
               onChange={(e) => { setSelectedProviderId(e.target.value); setCart([]); }}
             >
@@ -83,20 +83,25 @@ export default function ComprasPage() {
           </div>
 
           {selectedProvider && (
-            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-              <h2 className="font-semibold text-gray-900 mb-4">2. Catálogo del Proveedor</h2>
+            <div className="wise-card">
+              <h2 className="font-bold mb-4" style={{ color: "var(--color-obsidian)" }}>2. Catálogo del Proveedor</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {selectedProvider.products.map(product => (
-                  <div key={product.id} className="p-4 border border-gray-100 rounded-lg hover:shadow-sm transition-shadow">
-                    <div className="font-medium text-gray-900">{product.name}</div>
-                    <div className="text-sm text-gray-500 mt-1 mb-4">
-                      {product.scalePrices.map((s, i) => (
-                        <div key={i}>&gt; {s.qty} unds: ${s.price}</div>
-                      ))}
+                  <div key={product.id} className="p-4 border border-[var(--color-fog)] rounded-xl hover:shadow-sm transition-shadow flex flex-col justify-between">
+                    <div>
+                      <div className="font-bold" style={{ color: "var(--color-charcoal)" }}>{product.name}</div>
+                      <div className="text-sm mt-2 mb-4" style={{ color: "var(--color-pebble)" }}>
+                        {product.scalePrices.map((s, i) => (
+                          <div key={i} className="flex justify-between border-b border-[var(--color-fog)] pb-1 mb-1 last:border-0">
+                            <span>A partir de {s.qty} unds</span>
+                            <span className="font-semibold" style={{ color: "var(--color-obsidian)" }}>${s.price}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <button 
                       onClick={() => handleAddProduct(product.id, product.name)}
-                      className="w-full py-2 bg-gray-50 hover:bg-blue-50 text-blue-600 rounded-md font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+                      className="wise-btn-outline w-full"
                     >
                       <Plus size={16} /> Añadir al pedido
                     </button>
@@ -108,49 +113,49 @@ export default function ComprasPage() {
         </div>
 
         {/* Resumen del Pedido */}
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-fit sticky top-6">
-          <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <ShoppingCart size={20}/>
+        <div className="wise-card h-fit sticky top-6">
+          <h2 className="font-bold mb-6 flex items-center gap-2" style={{ color: "var(--color-obsidian)" }}>
+            <ShoppingCart size={20} style={{ color: "var(--color-forest-ink)" }}/>
             Resumen del Pedido
           </h2>
           
           {cart.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 text-sm">
+            <div className="text-center py-8 text-sm" style={{ color: "var(--color-pebble)" }}>
               Tu pedido está vacío.
             </div>
           ) : (
             <div className="space-y-4">
               {cart.map((item, index) => (
-                <div key={index} className="flex justify-between items-start pb-4 border-b border-gray-50">
-                  <div className="flex-1">
-                    <div className="font-medium text-sm text-gray-900">{item.name}</div>
-                    <div className="text-xs text-gray-500 mt-1">
+                <div key={index} className="flex justify-between items-start pb-4 border-b border-[var(--color-fog)]">
+                  <div className="flex-1 pr-4">
+                    <div className="font-bold text-sm" style={{ color: "var(--color-charcoal)" }}>{item.name}</div>
+                    <div className="text-xs mt-1" style={{ color: "var(--color-pebble)" }}>
                       Precio Unitario: ${item.unitPrice}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2 w-20">
+                  <div className="flex flex-col items-end gap-2 w-24">
                     <input 
                       type="number" 
                       min="1"
                       value={item.qty}
                       onChange={(e) => handleQtyChange(index, parseInt(e.target.value) || 1)}
-                      className="w-full text-right px-2 py-1 text-sm border border-gray-200 rounded-md"
+                      className="wise-input px-2 py-1 text-center font-semibold"
                     />
-                    <div className="font-semibold text-sm text-gray-900">
+                    <div className="font-bold text-sm" style={{ color: "var(--color-obsidian)" }}>
                       ${(item.qty * item.unitPrice).toFixed(2)}
                     </div>
                   </div>
                 </div>
               ))}
 
-              <div className="pt-4 border-t border-gray-100 flex justify-between items-center text-lg font-bold">
+              <div className="pt-4 border-t border-[var(--color-fog)] flex justify-between items-center text-lg font-bold" style={{ color: "var(--color-obsidian)" }}>
                 <span>Total</span>
                 <span>${totalAmount.toFixed(2)}</span>
               </div>
 
               <button 
                 onClick={handleSendOrder}
-                className="w-full mt-6 py-3 bg-[#25D366] hover:bg-[#1ebd5a] text-white rounded-lg font-medium flex items-center justify-center gap-2 shadow-sm transition-colors"
+                className="wise-btn-primary w-full mt-6 flex items-center justify-center gap-2"
               >
                 <Send size={18} />
                 Enviar Orden por WhatsApp

@@ -27,8 +27,8 @@ export default function VentasPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Punto de Venta (POS)</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-[var(--color-obsidian)]" style={{ fontFamily: "var(--font-wise-sans)" }}>Punto de Venta (POS)</h1>
+          <p className="mt-1" style={{ color: "var(--color-pebble)" }}>
             Procesa tus ventas rápidas e intégralas con la pasarela de pagos.
           </p>
         </div>
@@ -36,16 +36,16 @@ export default function VentasPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
         {/* Simulación del carrito/venta */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
-            <ShoppingBag size={20} />
+        <div className="wise-card space-y-6">
+          <h2 className="text-xl font-bold flex items-center gap-2 border-b border-[var(--color-fog)] pb-3" style={{ color: "var(--color-obsidian)" }}>
+            <ShoppingBag size={20} style={{ color: "var(--color-forest-ink)" }} />
             Detalle de Venta
           </h2>
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <User size={16} className="text-gray-400" />
+              <label className="text-sm font-semibold flex items-center gap-2" style={{ color: "var(--color-charcoal)" }}>
+                <User size={16} style={{ color: "var(--color-pebble)" }} />
                 Cliente (Opcional)
               </label>
               <input 
@@ -53,20 +53,20 @@ export default function VentasPage() {
                 placeholder="Nombre o empresa..." 
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                className="wise-input"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Monto Total a Cobrar</label>
+              <label className="text-sm font-semibold" style={{ color: "var(--color-charcoal)" }}>Monto Total a Cobrar</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold" style={{ color: "var(--color-forest-ink)" }}>$</span>
                 <input 
                   type="number" 
                   min="0"
                   value={amount}
                   onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-200 text-lg font-semibold focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  className="wise-input pl-8 text-lg font-bold"
                 />
               </div>
             </div>
@@ -74,9 +74,9 @@ export default function VentasPage() {
         </div>
 
         {/* Pagos / Culqi */}
-        <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 space-y-6">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2 border-b border-gray-200 pb-3">
-            <CreditCard size={20} />
+        <div className="wise-card space-y-6" style={{ background: "var(--color-fog)" }}>
+          <h2 className="text-xl font-bold flex items-center gap-2 border-b border-[var(--color-pebble)] pb-3" style={{ color: "var(--color-obsidian)" }}>
+            <CreditCard size={20} style={{ color: "var(--color-forest-ink)" }} />
             Métodos de Pago
           </h2>
 
@@ -84,26 +84,26 @@ export default function VentasPage() {
             <button 
               onClick={handleCheckoutCulqi}
               disabled={amount <= 0}
-              className={`w-full py-4 rounded-xl font-bold text-white shadow-sm flex items-center justify-center gap-2 transition-all
-                ${amount > 0 ? 'bg-[#ff5d5b] hover:bg-[#e04a48]' : 'bg-gray-300 cursor-not-allowed'}`}
+              className="wise-btn-primary w-full py-4 flex items-center justify-center gap-2"
+              style={{ opacity: amount > 0 ? 1 : 0.5 }}
             >
               <CreditCard size={20} />
               Cobrar con Tarjeta (Culqi)
             </button>
-            <p className="text-xs text-center text-gray-500">
+            <p className="text-xs text-center" style={{ color: "var(--color-pebble)" }}>
               Esta acción abrirá el modal seguro de Culqi para procesar el pago con tarjeta de crédito/débito.
             </p>
 
             <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-gray-300"></div>
-              <span className="flex-shrink-0 mx-4 text-gray-400 text-sm">O</span>
-              <div className="flex-grow border-t border-gray-300"></div>
+              <div className="flex-grow border-t border-[var(--color-pebble)] opacity-30"></div>
+              <span className="flex-shrink-0 mx-4 text-sm" style={{ color: "var(--color-pebble)" }}>O</span>
+              <div className="flex-grow border-t border-[var(--color-pebble)] opacity-30"></div>
             </div>
 
             <button 
               disabled={amount <= 0}
-              className={`w-full py-3 rounded-xl font-semibold border-2 flex items-center justify-center gap-2 transition-all
-                ${amount > 0 ? 'border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white' : 'border-gray-200 text-gray-400 cursor-not-allowed'}`}
+              className="wise-btn-outline w-full py-3"
+              style={{ opacity: amount > 0 ? 1 : 0.5 }}
             >
               Registrar Pago en Efectivo
             </button>
