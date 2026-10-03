@@ -1,147 +1,102 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { toDTO } from '@/lib/suppliers';
-
 import { requireWorkspace } from '@/lib/requireWorkspace';
+
 export const dynamic = 'force-dynamic';
 
-const PAGE_SIZE_DEFAULT = 10;
-
-/**
- * GET /api/suppliers?q=&type=&country=&sort=&order=&page=&pageSize=
- * Directorio real desde Supabase + KPIs calculados sobre el filtrado.
- */
 export async function GET(req: NextRequest) {
   try {
     const auth = await requireWorkspace();
     if (auth.error) return auth.error;
+
     const params = req.nextUrl.searchParams;
-    const q = params.get('q')?.trim().replace(/\s+/g, ' ') || '';
-    const type = params.get('type') || 'all';
-    const country = params.get('country') || 'all';
-    const page = Math.max(1, Number(params.get('page')) || 1);
-    const pageSize = Math.min(100, Math.max(1, Number(params.get('pageSize')) || PAGE_SIZE_DEFAULT));
-    const order = params.get('order') === 'desc' ? 'desc' : 'asc';
+    const q = params.get('q')?.trim() || '';
+    const myProviders = params.get('myProviders') === 'true'; // Si es true, retorna solo los del workspace
 
     const { createClient } = await import('@/utils/supabase/server');
     const supabase = await createClient();
 
-    let query = supabase.from('suppliers').select('id,name,integration_type,lead_time_days,contact_info');
+    let query = supabase.from('suppliers').select('*');
+
     if (q) {
-      const pattern = `%${q.replace(/[,()]/g, '')}%`;
-      query = query.or(`name.ilike.${pattern},contact_info->>email.ilike.${pattern},contact_info->>ref.ilike.${pattern}`);
+      query = query.or(`name.ilike.%${q}%,category.ilike.%${q}%`);
     }
-    if (type === 'corporate' || type === 'traditional') query = query.eq('integration_type', type);
+
+    if (myProviders) {
+      // Necesitamos hacer join con workspace_suppliers
+      // Nota: Como 'workspace_suppliers' es una tabla separada, primero obtenemos los IDs
+      // Asumiremos que el frontend pasará myProviders=true si quiere solo sus proveedores.
+      // O podemos hacerlo con un query join. Para mantenerlo simple:
+      
+      const session = auth.workspaceId || 'ws-default'; // TODO: get from auth properly
+      
+      const { data: wsData, error: wsError } = await supabase
+        .from('workspace_suppliers')
+        .select('supplier_id')
+        .eq('workspace_id', session);
+        
+      if (wsError && wsError.code !== '42P01') { 
+        // 42P01 es table undefined (aún no corrieron la migración)
+        console.error(wsError);
+      }
+      
+      const supplierIds = wsData?.map(w => w.supplier_id) || [];
+      
+      if (supplierIds.length > 0) {
+        query = query.in('id', supplierIds);
+      } else {
+        // No tiene proveedores
+        return NextResponse.json({ success: true, items: [] });
+      }
+    }
 
     const { data, error } = await query;
+    
+    // Si la tabla no existe aún porque no han corrido el script SQL, mandamos data simulada
+    if (error && error.code === '42P01') {
+      return NextResponse.json({ 
+        success: true, 
+        items: [], 
+        warning: 'Por favor ejecuta el script de migración SQL en Supabase.' 
+      });
+    }
+    
     if (error) throw new Error(error.message);
 
-    let items = (data || []).map(toDTO);
-    if (country !== 'all') {
-      items = items.filter((i) => i.country.toLowerCase() === country.toLowerCase());
-    }
-    items.sort((a, b) => (order === 'asc' ? a.ref.localeCompare(b.ref) : b.ref.localeCompare(a.ref)));
+    return NextResponse.json({ success: true, items: data || [] });
 
-    const kpis = {
-      total: items.length,
-      withBranch: items.filter((i) => i.branch).length,
-      cities: new Set(items.map((i) => i.city).filter(Boolean)).size,
-      countries: new Set(items.map((i) => i.country).filter(Boolean)).size,
-    };
-
-    return NextResponse.json({
-      success: true,
-      items: items.slice((page - 1) * pageSize, page * pageSize),
-      total: items.length,
-      page,
-      pageSize,
-      kpis,
-      countries: [...new Set(items.map((i) => i.country).filter(Boolean))],
-    });
   } catch (error: any) {
     console.error('Error en GET /api/suppliers:', error);
     return NextResponse.json({ error: 'Error interno.' }, { status: 500 });
   }
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/**
- * POST /api/suppliers — crea un proveedor real (contact_info JSONB, sin DDL).
- */
 export async function POST(req: NextRequest) {
   try {
     const auth = await requireWorkspace();
     if (auth.error) return auth.error;
     const body = await req.json().catch(() => null);
-    const name = typeof body?.name === 'string' ? body.name.trim() : '';
-    if (!name) return NextResponse.json({ error: 'El nombre es obligatorio.' }, { status: 400 });
-    if (name.length > 160) return NextResponse.json({ error: 'El nombre no puede superar 160 caracteres.' }, { status: 400 });
-
-    const str = (v: unknown, max: number): string => {
-      if (typeof v !== 'string') return '';
-      return v.trim().slice(0, max);
-    };
-    const email = str(body?.email, 160);
-    if (email && !EMAIL_RE.test(email)) {
-      return NextResponse.json({ error: 'Correo electrónico inválido.' }, { status: 400 });
-    }
-    const type = body?.type === 'corporate' ? 'corporate' : 'traditional';
-    const leadTime = body?.leadTime === undefined || body?.leadTime === '' ? 5 : Math.floor(Number(body.leadTime));
-    if (!Number.isInteger(leadTime) || leadTime < 0 || leadTime > 365) {
-      return NextResponse.json({ error: 'Lead time inválido (0–365 días).' }, { status: 400 });
-    }
-
+    
+    const supplierId = body?.supplierId;
+    const action = body?.action; // 'add' | 'remove'
+    
     const { createClient } = await import('@/utils/supabase/server');
     const supabase = await createClient();
-
-    const slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '').slice(0, 24) || 'sup';
-    let id = `sup-${slug}`;
-    let suffix = 1;
-    while ((await supabase.from('suppliers').select('id').eq('id', id).maybeSingle()).data) {
-      suffix++;
-      id = `sup-${slug}-${suffix}`;
+    
+    const session = auth.workspaceId || 'ws-default';
+    
+    if (action === 'add') {
+      await supabase.from('workspace_suppliers').insert({
+        workspace_id: session,
+        supplier_id: supplierId
+      });
+    } else if (action === 'remove') {
+      await supabase.from('workspace_suppliers').delete()
+        .eq('workspace_id', session)
+        .eq('supplier_id', supplierId);
     }
-
-    const { data: existingRefs } = await supabase.from('suppliers').select('contact_info');
-    const usedRefs = new Set(
-      ((existingRefs || []) as any[]).map((r) => String(r.contact_info?.ref || '').toUpperCase())
-    );
-    let n = (existingRefs || []).length + 1;
-    let ref = `SUP-${String(n).padStart(2, '0')}`;
-    while (usedRefs.has(ref)) {
-      n++;
-      ref = `SUP-${String(n).padStart(2, '0')}`;
-    }
-
-    const { data: inserted, error } = await supabase
-      .from('suppliers')
-      .insert({
-        id,
-        name,
-        integration_type: type,
-        lead_time_days: leadTime,
-        contact_info: {
-          ref,
-          email,
-          phone: str(body?.phone, 40),
-          branch: str(body?.branch, 120) || 'Sede Lima Central',
-          address: str(body?.address, 200),
-          city: str(body?.city, 80),
-          country: str(body?.country, 80),
-          status: str(body?.status, 40) || 'Confiable',
-          skus: [],
-        },
-      })
-      .select('id,name,integration_type,lead_time_days,contact_info')
-      .single();
-
-    if (error || !inserted) {
-      console.error('Error al crear proveedor:', error);
-      return NextResponse.json({ error: 'No se pudo crear el proveedor.' }, { status: 500 });
-    }
-    return NextResponse.json({ success: true, item: toDTO(inserted) }, { status: 201 });
+    
+    return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error en POST /api/suppliers:', error);
     return NextResponse.json({ error: 'Error interno.' }, { status: 500 });
   }
 }

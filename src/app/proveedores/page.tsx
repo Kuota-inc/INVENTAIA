@@ -10,83 +10,71 @@ type Provider = {
   name: string;
   description: string;
   category: string;
-  minOrder: number;
-  paymentTerms: string;
-  logistics: string;
-  fiscalId: string;
+  min_order_amount: number;
+  payment_terms: string;
+  logistics_terms: string;
+  fiscal_id: string;
   verified: boolean;
   location: string;
-  products: string[];
+  products_offered: string[];
 };
-
-const MARKETPLACE_PROVIDERS: Provider[] = [
-  {
-    id: '1',
-    name: 'TechSolutions Mayorista',
-    description: 'Distribuidor oficial de componentes electrónicos y periféricos.',
-    category: 'Electrónica',
-    minOrder: 500,
-    paymentTerms: 'Crédito a 30 días',
-    logistics: 'Envío gratis nacional en 48h',
-    fiscalId: 'RUC 20543123456',
-    verified: true,
-    location: 'Lima, Perú',
-    products: ['Teclados Mecánicos', 'Monitores', 'Mouse Gamer']
-  },
-  {
-    id: '2',
-    name: 'Importaciones Globales',
-    description: 'Productos de oficina y suministros generales corporativos.',
-    category: 'Suministros',
-    minOrder: 150,
-    paymentTerms: 'Pago contra entrega',
-    logistics: 'Retiro en almacén',
-    fiscalId: 'RUC 10452345678',
-    verified: false,
-    location: 'Arequipa, Perú',
-    products: ['Sillas de Oficina', 'Papelería', 'Escritorios']
-  },
-  {
-    id: '3',
-    name: 'ElectroTech B2B',
-    description: 'Especialistas en hardware para servidores y redes.',
-    category: 'Infraestructura',
-    minOrder: 1500,
-    paymentTerms: '50% adelanto, 50% a 15 días',
-    logistics: 'Envío asegurado vía courier',
-    fiscalId: 'RUC 20987654321',
-    verified: true,
-    location: 'Bogotá, Colombia',
-    products: ['Servidores', 'Switches', 'Cables de Red']
-  }
-];
 
 export default function ProveedoresPage() {
   const [activeTab, setActiveTab] = useState<'marketplace' | 'mis_providers'>('marketplace');
-  const [myProviders, setMyProviders] = useState<string[]>(['1']); // IDs de los proveedores guardados
+  const [marketplaceProviders, setMarketplaceProviders] = useState<Provider[]>([]);
+  const [myProviders, setMyProviders] = useState<Provider[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
   // Estado para la Vista Detalle (Modal)
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
 
-  // Filtrado
-  const filteredMarketplace = MARKETPLACE_PROVIDERS.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.products.some(prod => prod.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  React.useEffect(() => {
+    fetchProviders();
+  }, [activeTab]);
 
-  const filteredMyProviders = MARKETPLACE_PROVIDERS.filter(p => myProviders.includes(p.id));
-
-  const handleAdd = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (!myProviders.includes(id)) {
-      setMyProviders([...myProviders, id]);
+  const fetchProviders = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/suppliers?myProviders=${activeTab === 'mis_providers'}`);
+      const data = await res.json();
+      if (data.items) {
+        if (activeTab === 'marketplace') setMarketplaceProviders(data.items);
+        else setMyProviders(data.items);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRemove = (e: React.MouseEvent, id: string) => {
+  const filteredMarketplace = marketplaceProviders.filter(p => 
+    p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.products_offered || []).some(prod => prod.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const filteredMyProviders = myProviders.filter(p => 
+    p.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAdd = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setMyProviders(myProviders.filter(pid => pid !== id));
+    await fetch('/api/suppliers', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'add', supplierId: id })
+    });
+    // Optimistic UI
+    if (activeTab === 'mis_providers') fetchProviders();
+  };
+
+  const handleRemove = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    await fetch('/api/suppliers', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'remove', supplierId: id })
+    });
+    setMyProviders(prev => prev.filter(p => p.id !== id));
   };
 
   return (
@@ -170,15 +158,15 @@ export default function ProveedoresPage() {
                   
                   <div className="space-y-2 mb-6">
                     <div className="flex items-center text-xs font-medium gap-2" style={{ color: 'var(--color-charcoal)' }}>
-                      <CreditCard size={14} style={{ color: 'var(--color-pebble)' }}/> {provider.paymentTerms}
+                      <CreditCard size={14} style={{ color: 'var(--color-pebble)' }}/> {provider.payment_terms}
                     </div>
                     <div className="flex items-center text-xs font-medium gap-2" style={{ color: 'var(--color-charcoal)' }}>
-                      <Package size={14} style={{ color: 'var(--color-pebble)' }}/> Pedido Mín: ${provider.minOrder}
+                      <Package size={14} style={{ color: 'var(--color-pebble)' }}/> Pedido Mín: ${provider.min_order_amount}
                     </div>
                   </div>
                 </div>
 
-                {myProviders.includes(provider.id) ? (
+                {myProviders.some(mp => mp.id === provider.id) ? (
                   <button disabled className="w-full py-2.5 rounded-lg text-sm font-bold bg-green-50 text-green-700 border border-green-200 flex items-center justify-center gap-2">
                     <ShieldCheck size={16} /> Ya en Mis Providers
                   </button>
@@ -195,7 +183,7 @@ export default function ProveedoresPage() {
             
             {filteredMarketplace.length === 0 && (
               <div className="col-span-full py-12 text-center" style={{ color: 'var(--color-pebble)' }}>
-                No se encontraron proveedores en el marketplace.
+                {isLoading ? 'Cargando proveedores del Marketplace...' : 'No se encontraron proveedores en el marketplace.'}
               </div>
             )}
           </div>
@@ -231,10 +219,10 @@ export default function ProveedoresPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>{provider.location}</div>
-                      <div className="text-xs font-mono mt-1" style={{ color: 'var(--color-pebble)' }}>{provider.fiscalId}</div>
+                      <div className="text-xs font-mono mt-1" style={{ color: 'var(--color-pebble)' }}>{provider.fiscal_id}</div>
                     </td>
                     <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>
-                      {provider.paymentTerms}
+                      {provider.payment_terms}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <Link 
@@ -257,7 +245,7 @@ export default function ProveedoresPage() {
                 {filteredMyProviders.length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-sm font-medium" style={{ color: 'var(--color-pebble)' }}>
-                      Aún no has agregado proveedores a tu red. Explora el Marketplace.
+                      {isLoading ? 'Cargando tus proveedores...' : 'Aún no has agregado proveedores a tu red. Explora el Marketplace.'}
                     </td>
                   </tr>
                 )}
@@ -301,7 +289,7 @@ export default function ProveedoresPage() {
                 <div className="p-4 rounded-xl border border-[var(--color-fog)] bg-[var(--color-fog)] bg-opacity-30">
                   <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-slate)' }}>Datos Fiscales</div>
                   <div className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--color-obsidian)' }}>
-                    <ShieldCheck size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.fiscalId}
+                    <ShieldCheck size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.fiscal_id}
                   </div>
                   <div className="text-sm font-medium flex items-center gap-2 mt-2" style={{ color: 'var(--color-obsidian)' }}>
                     <MapPin size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.location}
@@ -311,10 +299,10 @@ export default function ProveedoresPage() {
                 <div className="p-4 rounded-xl border border-[var(--color-fog)] bg-[var(--color-fog)] bg-opacity-30">
                   <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-slate)' }}>Condiciones</div>
                   <div className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--color-obsidian)' }}>
-                    <CreditCard size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.paymentTerms}
+                    <CreditCard size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.payment_terms}
                   </div>
                   <div className="text-sm font-medium flex items-center gap-2 mt-2" style={{ color: 'var(--color-obsidian)' }}>
-                    <Package size={16} style={{ color: 'var(--color-pebble)' }} /> Pedido Mínimo: ${selectedProvider.minOrder}
+                    <Package size={16} style={{ color: 'var(--color-pebble)' }} /> Pedido Mínimo: ${selectedProvider.min_order_amount}
                   </div>
                 </div>
               </div>
@@ -322,14 +310,14 @@ export default function ProveedoresPage() {
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--color-slate)' }}>Logística</div>
                 <div className="text-sm font-medium px-4 py-3 rounded-xl border border-[var(--color-fog)]" style={{ color: 'var(--color-charcoal)' }}>
-                  {selectedProvider.logistics}
+                  {selectedProvider.logistics_terms}
                 </div>
               </div>
 
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--color-slate)' }}>Catálogo Ofrecido</div>
                 <div className="flex flex-wrap gap-2">
-                  {selectedProvider.products.map(prod => (
+                  {(selectedProvider.products_offered || []).map((prod: string) => (
                     <span key={prod} className="px-3 py-1.5 rounded-full text-xs font-bold bg-[var(--color-fog)] text-[var(--color-obsidian)] border border-gray-200">
                       {prod}
                     </span>
@@ -345,7 +333,7 @@ export default function ProveedoresPage() {
               >
                 Cerrar
               </button>
-              {myProviders.includes(selectedProvider.id) ? (
+              {myProviders.some(mp => mp.id === selectedProvider.id) ? (
                 <Link href={`/compras?provider=${selectedProvider.id}`} className="wise-btn-primary px-6 flex items-center gap-2">
                   Ir a Comprar <ChevronRight size={16} />
                 </Link>

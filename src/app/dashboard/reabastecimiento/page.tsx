@@ -4,45 +4,43 @@ import React, { useState } from 'react';
 import { Search, AlertCircle, ShoppingCart, TrendingDown, ArrowRight, PackageX } from 'lucide-react';
 import Link from 'next/link';
 
-// Mock Data para Alertas / Quiebres
-const mockAlerts = [
-  {
-    id: 'a1',
-    sku: 'SKU-001',
-    name: 'Teclado Mecánico RGB',
-    available: 0,
-    daysLeft: 0,
-    lostSalesRisk: 1200,
-    inventoryValue: 0,
-    status: 'quiebre'
-  },
-  {
-    id: 'a2',
-    sku: 'SKU-003',
-    name: 'Mouse Inalámbrico Pro',
-    available: 3,
-    daysLeft: 1.5,
-    lostSalesRisk: 450,
-    inventoryValue: 240,
-    status: 'quiebre'
-  },
-  {
-    id: 'a3',
-    sku: 'SKU-002',
-    name: 'Monitor UltraWide 34"',
-    available: 85,
-    daysLeft: 120,
-    lostSalesRisk: 0,
-    inventoryValue: 38250,
-    status: 'sobre_stock'
-  }
-];
+// La data ahora proviene del backend (Supabase) a través del API.
+
 
 export default function StockAlertsPage() {
   const [filterState, setFilterState] = useState<'quiebre' | 'sobre_stock'>('quiebre');
   const [cart, setCart] = useState<string[]>([]); // Array of item IDs to buy
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredAlerts = mockAlerts.filter(a => a.status === filterState);
+  React.useEffect(() => {
+    fetch('/api/dashboard/reabastecimiento')
+      .then(res => res.json())
+      .then(data => {
+        if (data.items) {
+          // Si el backend no envía los nuevos campos de MVP v1.0, simulamos fallback por ahora 
+          // hasta que corran el SQL de migración y se actualice el servicio de restock
+          const formatted = data.items.map((item: any) => ({
+            id: item.id,
+            sku: item.sku,
+            name: item.name,
+            available: item.currentStock || 0,
+            daysLeft: item.daysLeft || item.coverageDays || 0,
+            lostSalesRisk: item.lostSalesRisk || (item.status === 'critical' ? 1500 : 0),
+            inventoryValue: item.inventoryValue || item.investment || 0,
+            status: item.status === 'critical' || item.coverageDays <= 5 ? 'quiebre' : 'sobre_stock'
+          }));
+          setAlerts(formatted);
+        }
+        setIsLoading(false);
+      })
+      .catch(e => {
+        console.error(e);
+        setIsLoading(false);
+      });
+  }, []);
+
+  const filteredAlerts = alerts.filter(a => a.status === filterState);
 
   const toggleCart = (id: string) => {
     setCart(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
