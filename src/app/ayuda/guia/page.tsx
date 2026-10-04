@@ -30,7 +30,7 @@ export default function GuiaPage() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>Guía del Usuario · INVENTA.AI</h1>
+          <h1 className={styles.title}>Guía del Usuario · KUOTA</h1>
           <p className={styles.subtitle}>
             Manual rápido para maximizar la rentabilidad de compras, reducir mermas y eliminar quiebres de stock.
           </p>
@@ -62,3 +62,5 @@ export default function GuiaPage() {
     </div>
   );
 }
+
+

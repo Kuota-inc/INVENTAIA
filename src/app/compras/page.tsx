@@ -526,12 +526,20 @@ function ComprasContent() {
                 Cerrar
               </button>
               {selectedOC.status === 'enviada' && (
-                <button 
-                  onClick={() => { alert('OC Aprobada'); setSelectedOC(null); }}
-                  className="wise-btn-primary px-4 bg-[var(--color-spruce)]"
-                >
-                  <CheckCircle2 size={16} className="inline mr-2" /> Aprobar OC
-                </button>
+                <>
+                  <button 
+                    onClick={() => { alert('Función: Enviar mensaje de ajuste al comprador'); setSelectedOC(null); }}
+                    className="wise-btn-outline px-4 flex items-center gap-2"
+                  >
+                    Solicitar Modificación
+                  </button>
+                  <button 
+                    onClick={() => { alert('OC Aprobada'); setSelectedOC(null); }}
+                    className="wise-btn-primary px-4 bg-[var(--color-spruce)]"
+                  >
+                    <CheckCircle2 size={16} className="inline mr-2" /> Aprobar OC
+                  </button>
+                </>
               )}
             </div>
           </div>

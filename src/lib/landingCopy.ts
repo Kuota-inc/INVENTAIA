@@ -6,7 +6,7 @@
 
 export type LandingLang = 'es' | 'en';
 
-export const LANDING_LANG_KEY = 'inventa_lang';
+export const LANDING_LANG_KEY = 'KUOTA_lang';
 
 const es = {
   nav_plataforma: 'Plataforma',
@@ -19,7 +19,7 @@ const es = {
   nav_soluciones: 'Soluciones',
   nav_dist: 'Para Distribuidores & Mayoristas',
   nav_dist_desc: 'Eliminación de quiebres de stock',
-  nav_fin: 'Financiamiento de Inventario',
+  nav_fin: 'Financiamiento de inventario',
   nav_fin_desc: 'Líneas de crédito rotativas B2B',
   nav_consorcios: 'Consorcios de Compra',
   nav_consorcios_desc: 'Descuentos por volumen agrupado',
@@ -28,8 +28,8 @@ const es = {
   nav_guide: 'Guía de usuario',
   nav_learn: 'Aprender',
   nav_lang_label: 'Seleccionar idioma',
-  acc_tagline: 'Inventario, pronóstico, reabastecimiento y finanzas',
-  acc_cap1: 'Inventario',
+  acc_tagline: 'inventario, pronóstico, reabastecimiento y finanzas',
+  acc_cap1: 'inventario',
   acc_cap2: 'Pronóstico',
   acc_cap3: 'Reabastecimiento',
   acc_cap4: 'Financiamiento',
@@ -42,7 +42,7 @@ const es = {
   acc_trial: 'Iniciar prueba gratis de 7 días',
   acc_lang_es: 'Español',
   acc_lang_en: 'English',
-  acc_footer_left: 'INVENTA.AI Operaciones',
+  acc_footer_left: 'KUOTA Operaciones',
   acc_help: 'Ayuda',
   acc_support: 'Soporte',
   nav_login: 'Iniciar sesión',
@@ -61,15 +61,15 @@ const es = {
   hero_trust2: 'Facturación Essential mensual o anual',
   hero_trust3: '14 días de gracia al bajar de plan',
   mockup_search: 'Buscar productos, stock, almacenes, órdenes...',
-  mockup_live: 'INVENTA Core',
-  mockup_crumb: 'INVENTA.AI › Overview',
+  mockup_live: 'KUOTA Core',
+  mockup_crumb: 'KUOTA › Overview',
   mockup_heading: 'Overview',
   mockup_sub: 'El algoritmo operó los últimos 30 días',
   mockup_insight:
     'El inventario está en buen estado general, con un puntaje de salud de 85. Muy por debajo de la tasa de quiebre de 1.2% (objetivo <3%). Demanda pronosticada a 30 días: 12,847 unidades en 4 almacenes.',
   mockup_kpi1: 'Stock Valorizado',
   mockup_kpi2: 'Pedidos Sincronizados',
-  mockup_kpi3: 'Salud de Inventario',
+  mockup_kpi3: 'Salud de inventario',
   mockup_kpi4: 'Sedes Conectadas',
   mockup_chart: 'Demanda Real vs Pronóstico IA',
   mockup_real: 'Real',
@@ -104,7 +104,7 @@ const es = {
   prob_3: 'Comprar solo como empresa individual te obliga a aceptar los precios más altos del fabricante.',
   prob_4t: 'Desconexión con finanzas:',
   prob_4: 'El área de compras pide sin visibilidad de las líneas de crédito ni del flujo de caja proyectado.',
-  sol_badge: 'Con INVENTA.AI',
+  sol_badge: 'Con KUOTA',
   sol_h: 'Operación Autónoma & Predictiva',
   sol_1t: 'Forecast con 94.5% de exactitud:',
   sol_1: 'Algoritmos de Machine Learning anticipan la demanda a 30, 60 y 180 días considerando estacionalidad y tendencias.',
@@ -112,7 +112,7 @@ const es = {
   sol_2: 'Órdenes de compra generadas automáticamente en el momento exacto para no acumular inventario innecesario.',
   sol_3t: 'Poder de Compra Consolidada:',
   sol_3: 'Agrupación algorítmica de compras con otras empresas para acceder a descuentos por escala de hasta 18%.',
-  sol_4t: 'Financiamiento de Inventario:',
+  sol_4t: 'Financiamiento de inventario:',
   sol_4: 'Desbloqueo de líneas de crédito rotativas vinculadas directamente a la rotación de tus productos.',
   feat_pre: 'PILARES TECNOLÓGICOS',
   feat_title: 'Tres módulos diseñados para maximizar tu rentabilidad',
@@ -130,7 +130,7 @@ const es = {
   feat2_a: 'Hasta 18% ahorro en costo de producto',
   feat2_b: 'Negociación directa con fabricantes',
   feat2_c: 'Reducción de costos de flete',
-  feat3_t: 'Financiamiento de Inventarios',
+  feat3_t: 'Financiamiento de inventarios',
   feat3_d:
     'Líneas de crédito rotativas de capital de trabajo aprobadas en tiempo real en función de la rotación comprobada de tus SKUs y tus órdenes de compra en firme. Paga el inventario a medida que lo vendes.',
   feat3_a: 'Evaluación crediticia con datos de venta',
@@ -139,11 +139,11 @@ const es = {
   roi_pre: 'IMPACTO MEDIBLE Y COMPROBADO',
   roi_title: 'Retorno de inversión garantizado desde el primer mes',
   roi_sub:
-    'Métricas auditadas de empresas que reemplazaron hojas de cálculo por el motor de compras autónomo de INVENTA.AI.',
+    'Métricas auditadas de empresas que reemplazaron hojas de cálculo por el motor de compras autónomo de KUOTA.',
   roi1_t: 'Ahorro Promedio Generado (30d)',
   roi1_d:
     'Ahorro directo derivado de compras consolidadas, eliminación de fletes urgentes y optimización de capital inmovilizado.',
-  roi2_t: 'Inventario Muerto',
+  roi2_t: 'inventario Muerto',
   roi2_d:
     'Reducción de productos estancados en bodega gracias al rebalanceo preventivo y ajustes automáticos de lote económico.',
   roi3_t: 'Precisión de Forecast',
@@ -153,7 +153,7 @@ const es = {
   case_company: 'Grupo Logístico Nacional S.A.C.',
   case_cat: 'Distribución de Consumo Masivo · 1,200 SKUs · 4 Almacenes',
   case_quote:
-    '“Antes de INVENTA.AI perdíamos ventas todas las semanas por quiebres en nuestros 40 productos estrella, mientras teníamos S/ 300,000 atrapados en productos de baja rotación. En menos de 90 días redujimos los quiebres en 52% y liberamos S/ 120,000 en liquidez inmediata.”',
+    '“Antes de KUOTA perdíamos ventas todas las semanas por quiebres en nuestros 40 productos estrella, mientras teníamos S/ 300,000 atrapados en productos de baja rotación. En menos de 90 días redujimos los quiebres en 52% y liberamos S/ 120,000 en liquidez inmediata.”',
   case_stat1: 'Quiebres de Stock',
   case_stat2: 'Liquidez Liberada',
   case_stat3: 'Tiempo de Adopción',
@@ -189,10 +189,10 @@ const es = {
   foot_terms: 'Términos de Servicio',
   foot_priv: 'Política de Privacidad',
   foot_status: 'Estado del Sistema (Status)',
-  foot_rights: '© 2026 INVENTA.AI Technologies Inc. Todos los derechos reservados.',
+  foot_rights: '© 2026 KUOTA Technologies Inc. Todos los derechos reservados.',
   foot_built: 'Desarrollado con estándares Enterprise B2B.',
   modal_pre: 'SESIÓN ESTRATÉGICA 1:1',
-  modal_title: 'Solicitar Demo de INVENTA.AI',
+  modal_title: 'Solicitar Demo de KUOTA',
   modal_sub: 'Descubre en 15 minutos cómo optimizar tu inventario y acceder a financiamiento rotativo.',
   modal_nombre: 'Nombre y Apellido *',
   modal_nombre_ph: 'Ej: Carlos Mendoza',
@@ -200,7 +200,7 @@ const es = {
   modal_empresa: 'Empresa *',
   modal_empresa_ph: 'Nombre de tu empresa',
   modal_tel: 'Teléfono / WhatsApp *',
-  modal_vol: 'Volumen Mensual de Compras de Inventario',
+  modal_vol: 'Volumen Mensual de Compras de inventario',
   modal_submit: 'Confirmar y Agendar Demo 1:1',
   modal_priv: 'Respetamos tu privacidad. Tus datos están protegidos con cifrado y nunca serán compartidos con terceros.',
   modal_ok: '¡Solicitud Recibida con Éxito!',
@@ -250,7 +250,7 @@ const en: LandingCopy = {
   acc_trial: 'Start a 7-day free trial',
   acc_lang_es: 'Español',
   acc_lang_en: 'English',
-  acc_footer_left: 'INVENTA.AI Operations',
+  acc_footer_left: 'KUOTA Operations',
   acc_help: 'Help',
   acc_support: 'Support',
   nav_login: 'Log in',
@@ -269,8 +269,8 @@ const en: LandingCopy = {
   hero_trust2: 'Essential monthly or annual billing',
   hero_trust3: '14-day grace period when downgrading',
   mockup_search: 'Search products, stock, warehouses, orders...',
-  mockup_live: 'INVENTA Core',
-  mockup_crumb: 'INVENTA.AI › Overview',
+  mockup_live: 'KUOTA Core',
+  mockup_crumb: 'KUOTA › Overview',
   mockup_heading: 'Overview',
   mockup_sub: 'The algorithm ran the last 30 days',
   mockup_insight:
@@ -312,7 +312,7 @@ const en: LandingCopy = {
   prob_3: 'Buying alone forces you to accept the manufacturer’s highest prices.',
   prob_4t: 'Disconnected from finance:',
   prob_4: 'Purchasing asks for budget with no visibility into credit lines or projected cash flow.',
-  sol_badge: 'With INVENTA.AI',
+  sol_badge: 'With KUOTA',
   sol_h: 'Autonomous & Predictive Operation',
   sol_1t: '94.5% accurate forecast:',
   sol_1: 'Machine Learning algorithms anticipate demand at 30, 60 and 180 days, factoring seasonality and trends.',
@@ -347,7 +347,7 @@ const en: LandingCopy = {
   roi_pre: 'MEASURED AND PROVEN IMPACT',
   roi_title: 'Guaranteed ROI from month one',
   roi_sub:
-    'Audited metrics from companies that replaced spreadsheets with INVENTA.AI’s autonomous buying engine.',
+    'Audited metrics from companies that replaced spreadsheets with KUOTA’s autonomous buying engine.',
   roi1_t: 'Average Savings Generated (30d)',
   roi1_d: 'Direct savings from consolidated buying, rush-freight elimination and idle-capital optimization.',
   roi2_t: 'Dead Inventory',
@@ -358,7 +358,7 @@ const en: LandingCopy = {
   case_company: 'Grupo Logístico Nacional S.A.C.',
   case_cat: 'Mass Consumer Distribution · 1,200 SKUs · 4 Warehouses',
   case_quote:
-    '“Before INVENTA.AI we lost sales every week to stockouts on our 40 star products, while holding S/ 300,000 in slow movers. In under 90 days we cut stockouts 52% and freed S/ 120,000 in immediate liquidity.”',
+    '“Before KUOTA we lost sales every week to stockouts on our 40 star products, while holding S/ 300,000 in slow movers. In under 90 days we cut stockouts 52% and freed S/ 120,000 in immediate liquidity.”',
   case_stat1: 'Stockouts',
   case_stat2: 'Freed Liquidity',
   case_stat3: 'Adoption Time',
@@ -393,10 +393,10 @@ const en: LandingCopy = {
   foot_terms: 'Terms of Service',
   foot_priv: 'Privacy Policy',
   foot_status: 'System Status',
-  foot_rights: '© 2026 INVENTA.AI Technologies Inc. All rights reserved.',
+  foot_rights: '© 2026 KUOTA Technologies Inc. All rights reserved.',
   foot_built: 'Built to Enterprise B2B standards.',
   modal_pre: '1:1 STRATEGY SESSION',
-  modal_title: 'Request an INVENTA.AI Demo',
+  modal_title: 'Request an KUOTA Demo',
   modal_sub: 'Discover in 15 minutes how to optimize inventory and unlock revolving financing.',
   modal_nombre: 'Full Name *',
   modal_nombre_ph: 'E.g.: Carlos Mendoza',
@@ -419,3 +419,5 @@ const en: LandingCopy = {
 };
 
 export const LANDING_COPY: Record<LandingLang, LandingCopy> = { es, en };
+
+

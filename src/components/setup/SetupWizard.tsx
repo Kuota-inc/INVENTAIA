@@ -535,7 +535,7 @@ export function SetupWizard() {
             <div>
               <h2 className={styles.stepTitle}>¡Configuración Completada con Éxito!</h2>
               <p className={styles.stepSubtitle}>
-                Tu espacio de trabajo en INVENTA.AI ha sido preparado con todas las especificaciones operativas.
+                Tu espacio de trabajo en KUOTA ha sido preparado con todas las especificaciones operativas.
               </p>
 
               <div className={styles.checklist}>
@@ -627,7 +627,7 @@ export function SetupWizard() {
                   disabled={saving}
                   className={styles.btnComplete}
                 >
-                  <span>{saving ? 'Guardando...' : 'Comenzar a usar INVENTA.AI'}</span>
+                  <span>{saving ? 'Guardando...' : 'Comenzar a usar KUOTA'}</span>
                   <ChevronRight size={18} />
                 </button>
               )}
@@ -640,3 +640,5 @@ export function SetupWizard() {
 }
 
 export default SetupWizard;
+
+

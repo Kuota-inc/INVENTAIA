@@ -1,8 +1,8 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Política de Privacidad | INVENTA.AI',
-  description: 'Cómo INVENTA.AI recolecta, usa y protege tus datos.',
+  title: 'Política de Privacidad | KUOTA',
+  description: 'Cómo KUOTA recolecta, usa y protege tus datos.',
 };
 
 const BLOCKS: Array<{ h: string; p: string }> = [
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
         Política de Privacidad
       </h1>
       <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '32px' }}>
-        Última actualización: septiembre 2026 · INVENTA.AI Technologies Inc.
+        Última actualización: septiembre 2026 · KUOTA Technologies Inc.
       </p>
       {BLOCKS.map((b) => (
         <section key={b.h} style={{ marginBottom: '24px' }}>
@@ -57,3 +57,5 @@ export default function PrivacyPage() {
     </main>
   );
 }
+
+

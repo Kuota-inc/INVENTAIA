@@ -10,7 +10,7 @@ export interface AccessFooterLink {
 }
 
 interface AccessLandingProps {
-  /** Tagline mono junto al isotipo, p. ej. "Inventario, pronóstico, …". */
+  /** Tagline mono junto al isotipo, p. ej. "inventario, pronóstico, …". */
   tagline: string;
   /** Titular grande del panel de marca. */
   headline: React.ReactNode;
@@ -34,7 +34,7 @@ interface AccessLandingProps {
   children: React.ReactNode;
   /** Línea legal bajo el cuerpo (términos, prueba gratis, …). */
   footerNote?: React.ReactNode;
-  /** Texto inferior izquierdo ("INVENTA.AI Operaciones"). */
+  /** Texto inferior izquierdo ("KUOTA Operaciones"). */
   footerLeft: string;
   footerLinks: AccessFooterLink[];
   /** Variante clara del landing (oscuro por defecto, como la referencia). */
@@ -129,3 +129,5 @@ export function AccessLanding({
 }
 
 export default AccessLanding;
+
+

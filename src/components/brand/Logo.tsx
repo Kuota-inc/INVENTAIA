@@ -22,7 +22,7 @@ export function Logo({ variant = 'full', height = 36, className = '', title = 'K
   if (variant === 'mark') {
     return (
       <img
-        src="/icon.png"
+        src="/kuota-logo-new.png"
         alt={title}
         height={height}
         style={{ height: `${height}px`, width: 'auto', objectFit: 'contain' }}
@@ -33,7 +33,7 @@ export function Logo({ variant = 'full', height = 36, className = '', title = 'K
 
   return (
     <img
-      src="/logo-navbar.png"
+      src="/kuota-logo-new.png"
       alt={title}
       height={height}
       style={{ height: `${height}px`, width: 'auto', objectFit: 'contain' }}
@@ -43,3 +43,4 @@ export function Logo({ variant = 'full', height = 36, className = '', title = 'K
 }
 
 export default Logo;
+

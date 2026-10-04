@@ -10,7 +10,7 @@ import landingStyles from '@/components/landing/AccessLanding.module.css';
 import styles from './page.module.css';
 
 const CAPABILITIES = [
-  'Inventario',
+  'inventario',
   'Pronóstico',
   'Reabastecimiento',
   'Financiamiento',
@@ -76,9 +76,9 @@ function VerifyContent() {
 
   return (
     <AccessLanding
-      tagline="Inventario, pronóstico, reabastecimiento y finanzas"
+      tagline="inventario, pronóstico, reabastecimiento y finanzas"
       headline="Gestione todo el inventario, no solo el almacén."
-      description="INVENTA.AI conecta inventario, pronóstico, órdenes de compra y financiamiento en cada sucursal y proveedor. Un único registro en vivo, desde la orden de compra hasta el cobro."
+      description="KUOTA conecta inventario, pronóstico, órdenes de compra y financiamiento en cada sucursal y proveedor. Un único registro en vivo, desde la orden de compra hasta el cobro."
       capabilities={CAPABILITIES}
       topbar={null}
       eyebrow="Seguridad de la cuenta"
@@ -105,7 +105,7 @@ function VerifyContent() {
           ← Volver al inicio de sesión
         </Link>
       }
-      footerLeft="INVENTA.AI Operaciones"
+      footerLeft="KUOTA Operaciones"
       footerLinks={[
         { href: '/ayuda/guia', label: 'Ayuda' },
         { href: '/ayuda/soporte', label: 'Soporte' },
@@ -135,7 +135,7 @@ function VerifyContent() {
         <button type="submit" disabled={verifying || !code.trim()} className={landingStyles.btnPrimary}>
           {verifying ? (
             <>
-              <Loader2 size={18} style={{ animation: 'inventa-spin 1s linear infinite' }} />
+              <Loader2 size={18} style={{ animation: 'KUOTA-spin 1s linear infinite' }} />
               <span>Verificando…</span>
             </>
           ) : (
@@ -166,8 +166,10 @@ function VerifyContent() {
 export default function Verify2FAPage() {
   return (
     <Suspense fallback={<div className={landingStyles.formWrap} style={{ minHeight: '100dvh' }} />}>
-      <style>{`@keyframes inventa-spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes KUOTA-spin { to { transform: rotate(360deg); } }`}</style>
       <VerifyContent />
     </Suspense>
   );
 }
+
+

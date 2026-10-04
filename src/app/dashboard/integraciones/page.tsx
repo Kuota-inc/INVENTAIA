@@ -173,7 +173,7 @@ export default function IntegracionesPage() {
 
   // WhatsApp send test state
   const [waTo, setWaTo] = useState('+51');
-  const [waMessage, setWaMessage] = useState('ALERTA INVENTA.AI: Quiebre inminente en SKU-ALI-001 (1.9 días de stock restante).');
+  const [waMessage, setWaMessage] = useState('ALERTA KUOTA: Quiebre inminente en SKU-ALI-001 (1.9 días de stock restante).');
   const [waSending, setWaSending] = useState(false);
   const [waResult, setWaResult] = useState<{ success: boolean; text: string } | null>(null);
 
@@ -1168,7 +1168,7 @@ export default function IntegracionesPage() {
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Ruta de Sincronización Inventa.AI</label>
+                    <label className={styles.formLabel}>Ruta de Sincronización KUOTA</label>
                     <input 
                       type="text" 
                       value={selectedConnector.syncEndpoint} 
@@ -1182,10 +1182,10 @@ export default function IntegracionesPage() {
               {drawerTab === 'webhooks' && (
                 <>
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Webhook Ingest Listener (Inventa.AI)</label>
+                    <label className={styles.formLabel}>Webhook Ingest Listener (KUOTA)</label>
                     <input 
                       type="text" 
-                      value={`https://inventa-ai-nine.vercel.app/api/webhooks/${selectedConnector.id}`} 
+                      value={`https://KUOTA-ai-nine.vercel.app/api/webhooks/${selectedConnector.id}`} 
                       readOnly 
                       className={styles.formInput} 
                     />
@@ -1300,3 +1300,5 @@ export default function IntegracionesPage() {
     </div>
   );
 }
+
+

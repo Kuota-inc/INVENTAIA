@@ -15,7 +15,7 @@ export default function CompanySettingsForm() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Datos de la empresa
-  const [companyName, setCompanyName] = useState('INVENTA COMERCIAL S.A.C.');
+  const [companyName, setCompanyName] = useState('KUOTA COMERCIAL S.A.C.');
   const [ruc, setRuc] = useState('20601234567');
   const [address, setAddress] = useState('Av. Javier Prado Este 4200, Santiago de Surco, Lima');
   const [currency, setCurrency] = useState('PEN');
@@ -348,3 +348,5 @@ export default function CompanySettingsForm() {
       </div>
   );
 }
+
+

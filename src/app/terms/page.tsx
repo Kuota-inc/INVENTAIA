@@ -1,14 +1,14 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Términos de Servicio | INVENTA.AI',
-  description: 'Términos de Servicio de la plataforma INVENTA.AI.',
+  title: 'Términos de Servicio | KUOTA',
+  description: 'Términos de Servicio de la plataforma KUOTA.',
 };
 
 const BLOCKS: Array<{ h: string; p: string }> = [
   {
     h: '1. Objeto del servicio',
-    p: 'INVENTA.AI provee una plataforma B2B de gestión de inventario, pronóstico de demanda, órdenes de compra y financiamiento de capital de trabajo. Al crear una cuenta aceptas estos términos.',
+    p: 'KUOTA provee una plataforma B2B de gestión de inventario, pronóstico de demanda, órdenes de compra y financiamiento de capital de trabajo. Al crear una cuenta aceptas estos términos.',
   },
   {
     h: '2. Cuentas y acceso',
@@ -50,7 +50,7 @@ export default function TermsPage() {
         Términos de Servicio
       </h1>
       <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '32px' }}>
-        Última actualización: septiembre 2026 · INVENTA.AI Technologies Inc.
+        Última actualización: septiembre 2026 · KUOTA Technologies Inc.
       </p>
       {BLOCKS.map((b) => (
         <section key={b.h} style={{ marginBottom: '24px' }}>
@@ -61,3 +61,5 @@ export default function TermsPage() {
     </main>
   );
 }
+
+

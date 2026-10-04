@@ -6,6 +6,7 @@ import { useSession, signIn } from 'next-auth/react';
 import { Globe, Moon, Sun, Menu, X, Search, TrendingUp, Users, Wallet, ShieldCheck, Plug, FileCheck } from 'lucide-react';
 import { GoogleMark } from '@/components/landing/GoogleMark';
 import { LANDING_COPY, LANDING_LANG_KEY, LandingLang } from '@/lib/landingCopy';
+import { Logo } from '@/components/brand/Logo';
 import styles from './page.module.css';
 
 /** Tema local del landing (no toca el tema global): Wise es light por defecto. */
@@ -135,13 +136,8 @@ export default function LandingPage() {
       {/* ------------------------------------------------ Top Navigation Bar */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link href="/" className={styles.brand} aria-label="INVENTA.AI">
-            <svg viewBox="0 0 64 64" width="26" height="26" aria-hidden="true">
-              <rect x="8" y="34" width="12" height="20" rx="2" fill="#054d28" />
-              <rect x="26" y="22" width="12" height="32" rx="2" fill="#163300" />
-              <rect x="44" y="10" width="12" height="44" rx="2" fill="#9fe870" />
-            </svg>
-            <span className={styles.wordmark}>INVENTA<span className={styles.wordmarkAi}>.AI</span></span>
+          <Link href="/" className={styles.brand} aria-label="KUOTA">
+            <Logo height={32} />
           </Link>
 
           <nav className={styles.segments} aria-label={t.nav_menu}>
@@ -435,7 +431,7 @@ export default function LandingPage() {
         <div className={styles.container}>
           <div className={styles.footerGrid}>
             <div>
-              <span className={styles.wordmark}>INVENTA<span className={styles.wordmarkAi}>.AI</span></span>
+              <Logo height={28} />
               <p className={styles.footerTagline}>{t.foot_tagline}</p>
             </div>
             <div>
@@ -565,3 +561,5 @@ export default function LandingPage() {
     </div>
   );
 }
+
+
