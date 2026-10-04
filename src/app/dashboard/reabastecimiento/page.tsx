@@ -12,6 +12,7 @@ export default function StockAlertsPage() {
   const [cart, setCart] = useState<string[]>([]); // Array of item IDs to buy
   const [alerts, setAlerts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
     fetch('/api/dashboard/reabastecimiento')
