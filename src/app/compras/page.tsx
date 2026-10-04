@@ -477,11 +477,16 @@ function ComprasContent() {
               <span className="text-xs text-[var(--color-slate)]">{selectedOC.date}</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="p-4 rounded-xl border border-[var(--color-fog)] bg-[var(--color-fog)]">
                 <p className="text-xs font-bold text-[var(--color-slate)] mb-1">PROVEEDOR</p>
                 <p className="text-sm font-semibold text-[var(--color-obsidian)] flex items-center gap-2"><Building2 size={14} className="text-[var(--color-forest-ink)]" /> {selectedOC.provider}</p>
-                <p className="text-xs text-[var(--color-charcoal)] mt-1">RUC: 20100055237</p>
+                <p className="text-xs text-[var(--color-charcoal)] mt-1">Contacto Registrado</p>
+              </div>
+              <div className="p-4 rounded-xl border border-[var(--color-fog)] bg-white">
+                <p className="text-xs font-bold text-[var(--color-slate)] mb-1">COMPRADOR (TÚ)</p>
+                <p className="text-sm font-semibold text-[var(--color-obsidian)]">RUC: 20543189912</p>
+                <p className="text-xs text-[var(--color-charcoal)] mt-1">Av. Javier Prado Este 456, San Isidro</p>
               </div>
               <div className="p-4 rounded-xl border border-[var(--color-fog)] bg-[var(--color-fog)]">
                 <p className="text-xs font-bold text-[var(--color-slate)] mb-1">CONDICIÓN Y LOGÍSTICA</p>
