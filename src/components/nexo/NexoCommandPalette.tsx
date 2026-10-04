@@ -582,7 +582,7 @@ export function NexoCommandPalette() {
         }}
         title="Nexo AI · Cmd+K"
         aria-label="Abrir Asistente Nexo"
-        className="fixed bottom-6 right-6 z-50 w-20 h-20 rounded-full p-0 border-0 bg-transparent cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        className="group fixed bottom-6 right-6 z-50 w-20 h-20 rounded-full p-0 border-0 bg-transparent cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -603,7 +603,7 @@ export function NexoCommandPalette() {
           alt="Nexo AI"
           width={76}
           height={76}
-          className="rounded-full object-contain pointer-events-none"
+          className="rounded-full object-contain pointer-events-none group-hover:scale-110 transition-transform duration-300"
           style={{ animation: 'nexo-float 3s ease-in-out infinite' }}
         />
       </button>
@@ -1036,7 +1036,7 @@ export function NexoCommandPalette() {
       <style>{`
         @keyframes nexo-float {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
+          50% { transform: translateY(-8px); }
         }
         @keyframes nexo-drawer-up {
           from { transform: translateY(100%); opacity: 0.8; }
@@ -1062,6 +1062,8 @@ export function NexoCommandPalette() {
 }
 
 export default NexoCommandPalette;
+
+
 
 
 
