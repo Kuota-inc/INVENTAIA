@@ -582,27 +582,27 @@ export function NexoCommandPalette() {
         }}
         title="Nexo AI · Cmd+K"
         aria-label="Abrir Asistente Nexo"
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full p-0 border-0 bg-transparent cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+        className="fixed bottom-6 right-6 z-50 w-20 h-20 rounded-full p-0 border-0 bg-transparent cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         style={{
           position: 'fixed',
           bottom: '24px',
           right: '24px',
           zIndex: 50,
-          width: '56px',
-          height: '56px',
+          width: '76px',
+          height: '76px',
           borderRadius: '50%',
           border: 'none',
           padding: 0,
           background: 'transparent',
           cursor: 'pointer',
-          filter: 'drop-shadow(0 8px 24px rgba(37, 99, 235, 0.4)) drop-shadow(0 0 10px rgba(56, 189, 248, 0.3))',
+          filter: 'drop-shadow(0 8px 24px rgba(31, 94, 69, 0.4)) drop-shadow(0 0 10px rgba(143, 214, 148, 0.4))',
         }}
       >
         <Image
           src="/nexo-orb.png"
           alt="Nexo AI"
-          width={56}
-          height={56}
+          width={76}
+          height={76}
           className="rounded-full object-contain pointer-events-none"
           style={{ animation: 'nexo-float 3s ease-in-out infinite' }}
         />
@@ -810,8 +810,7 @@ export function NexoCommandPalette() {
                 <Image
                   src="/nexo-orb.png"
                   alt="Nexo"
-                  width={44}
-                  height={44}
+                  width={64} height={64}
                   className="rounded-full mx-auto mb-3 block"
                   style={{ animation: 'nexo-float 3s ease-in-out infinite' }}
                 />
@@ -868,8 +867,7 @@ export function NexoCommandPalette() {
                     <Image
                       src="/nexo-orb.png"
                       alt=""
-                      width={18}
-                      height={18}
+                      width={24} height={24}
                       className="rounded-full object-contain flex-shrink-0"
                     />
                     <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
@@ -969,7 +967,7 @@ export function NexoCommandPalette() {
             {isLoading && (
               <div className="self-start flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-emerald-600 mr-auto">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <Image src="/nexo-orb.png" alt="" width={15} height={15} className="rounded-full object-contain" />
+                <Image src="/nexo-orb.png" alt="" width={20} height={20} className="rounded-full object-contain" />
                 <span>{loadingText}</span>
               </div>
             )}
@@ -1021,8 +1019,7 @@ export function NexoCommandPalette() {
             <Image
               src="/nexo-orb.png"
               alt="Nexo"
-              width={16}
-              height={16}
+              width={22} height={22}
               className="rounded-full object-contain"
             />
             <span className="font-semibold text-emerald-600">
@@ -1065,5 +1062,7 @@ export function NexoCommandPalette() {
 }
 
 export default NexoCommandPalette;
+
+
 
 
