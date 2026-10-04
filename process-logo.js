@@ -11,7 +11,7 @@ const Jimp = require('jimp');
     await topFull.writeAsync('public/logo-full.png');
     
     // Bottom logo without slogan seems to be around y: 350
-    const bottomSmall = image.clone().crop(200, 380, 500, 150);
+    const bottomSmall = image.clone().crop(200, 380, 550, 150);
     await bottomSmall.writeAsync('public/logo-navbar.png');
     
     // Just the K (icon) is in the bottom left
