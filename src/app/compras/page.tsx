@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation';
 
 export default function ComprasPage() {
   const searchParams = useSearchParams();
-  const preSelectedProviderId = searchParams.get('provider');
+  const preSelectedProviderId = searchParams?.get('provider') || '';
 
   const [providers, setProviders] = useState<any[]>([]);
   const [selectedProviderId, setSelectedProviderId] = useState<string>(preSelectedProviderId || '');
