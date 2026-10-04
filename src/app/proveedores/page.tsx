@@ -158,10 +158,12 @@ export default function ProveedoresPage() {
                   
                   <div className="space-y-2 mb-6">
                     <div className="flex items-center text-xs font-medium gap-2" style={{ color: 'var(--color-charcoal)' }}>
-                      <CreditCard size={14} style={{ color: 'var(--color-pebble)' }}/> {provider.payment_terms}
+                      <CreditCard size={14} style={{ color: 'var(--color-pebble)' }}/> 
+                      {provider.payment_terms || 'Pago a convenir'}
                     </div>
                     <div className="flex items-center text-xs font-medium gap-2" style={{ color: 'var(--color-charcoal)' }}>
-                      <Package size={14} style={{ color: 'var(--color-pebble)' }}/> Pedido Mín: ${provider.min_order_amount}
+                      <Package size={14} style={{ color: 'var(--color-pebble)' }}/> 
+                      Pedido Mín: ${provider.min_order_amount || '0 (Sin mínimo)'}
                     </div>
                   </div>
                 </div>
@@ -218,11 +220,11 @@ export default function ProveedoresPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>{provider.location}</div>
-                      <div className="text-xs font-mono mt-1" style={{ color: 'var(--color-pebble)' }}>{provider.fiscal_id}</div>
+                      <div className="text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>{provider.location || 'No especificada'}</div>
+                      <div className="text-xs font-mono mt-1" style={{ color: 'var(--color-pebble)' }}>{provider.fiscal_id || '-'}</div>
                     </td>
                     <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>
-                      {provider.payment_terms}
+                      {provider.payment_terms || 'A convenir'}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <Link 
@@ -289,20 +291,20 @@ export default function ProveedoresPage() {
                 <div className="p-4 rounded-xl border border-[var(--color-fog)] bg-[var(--color-fog)] bg-opacity-30">
                   <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-slate)' }}>Datos Fiscales</div>
                   <div className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--color-obsidian)' }}>
-                    <ShieldCheck size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.fiscal_id}
+                    <ShieldCheck size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.fiscal_id || '-'}
                   </div>
                   <div className="text-sm font-medium flex items-center gap-2 mt-2" style={{ color: 'var(--color-obsidian)' }}>
-                    <MapPin size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.location}
+                    <MapPin size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.location || 'No especificada'}
                   </div>
                 </div>
                 
                 <div className="p-4 rounded-xl border border-[var(--color-fog)] bg-[var(--color-fog)] bg-opacity-30">
                   <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-slate)' }}>Condiciones</div>
                   <div className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--color-obsidian)' }}>
-                    <CreditCard size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.payment_terms}
+                    <CreditCard size={16} style={{ color: 'var(--color-pebble)' }} /> {selectedProvider.payment_terms || 'A convenir'}
                   </div>
                   <div className="text-sm font-medium flex items-center gap-2 mt-2" style={{ color: 'var(--color-obsidian)' }}>
-                    <Package size={16} style={{ color: 'var(--color-pebble)' }} /> Pedido Mínimo: ${selectedProvider.min_order_amount}
+                    <Package size={16} style={{ color: 'var(--color-pebble)' }} /> Pedido Mínimo: ${selectedProvider.min_order_amount || '0 (Sin mínimo)'}
                   </div>
                 </div>
               </div>

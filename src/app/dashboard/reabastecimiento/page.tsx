@@ -11,15 +11,13 @@ export default function StockAlertsPage() {
   const [filterState, setFilterState] = useState<'quiebre' | 'sobre_stock'>('quiebre');
   const [cart, setCart] = useState<string[]>([]); // Array of item IDs to buy
   const [alerts, setAlerts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   React.useEffect(() => {
     fetch('/api/dashboard/reabastecimiento')
       .then(res => res.json())
       .then(data => {
         if (data.items) {
-          // Si el backend no envía los nuevos campos de MVP v1.0, simulamos fallback por ahora 
-          // hasta que corran el SQL de migración y se actualice el servicio de restock
           const formatted = data.items.map((item: any) => ({
             id: item.id,
             sku: item.sku,
@@ -40,14 +38,19 @@ export default function StockAlertsPage() {
       });
   }, []);
 
-  const filteredAlerts = alerts.filter(a => a.status === filterState);
+  const filteredAlerts = alerts
+    .filter(a => a.status === filterState)
+    .filter(a => 
+      a.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      a.sku.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   const toggleCart = (id: string) => {
     setCart(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black text-[var(--color-obsidian)]" style={{ fontFamily: 'var(--font-wise-sans)', letterSpacing: '-0.03em' }}>
@@ -61,7 +64,7 @@ export default function StockAlertsPage() {
         {/* Carrito de Compras Flotante (Botón) */}
         {cart.length > 0 && (
           <Link 
-            href="/compras"
+            href={`/compras?items=${cart.join(',')}`}
             className="wise-btn-primary !py-3 flex items-center gap-2 animate-in slide-in-from-right"
           >
             <ShoppingCart size={20} />
@@ -93,7 +96,9 @@ export default function StockAlertsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-pebble)' }} size={20} />
             <input 
               type="text" 
-              placeholder="Buscar SKU..." 
+              placeholder="Buscar SKU o nombre..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="wise-input pl-10"
             />
           </div>
@@ -126,7 +131,9 @@ export default function StockAlertsPage() {
                     {item.available} u.
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
-                    {item.daysLeft <= 3 ? (
+                    {item.daysLeft >= 999 ? (
+                      <span className="text-[var(--color-pebble)] font-medium text-xs bg-gray-100 px-2 py-1 rounded">Sin historial</span>
+                    ) : item.daysLeft <= 3 ? (
                       <span className="text-[var(--color-alarm-red)]">{item.daysLeft} días</span>
                     ) : (
                       <span>{item.daysLeft} días</span>
