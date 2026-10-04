@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Tag,
   Search,
@@ -45,7 +46,7 @@ interface Kpis {
 const PAGE_SIZE = 10;
 
 function formatPEN(n: number): string {
-  return `PEN ${n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `S/ ${n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function ProductsPage() {
@@ -99,6 +100,8 @@ function ProductsIndex() {
   const debouncedQuery = useDebounce(query, 300);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const atCap = kpis.total >= planLimit;
+  const from = total > 0 ? (page - 1) * PAGE_SIZE + 1 : 0;
+  const to = Math.min(total, page * PAGE_SIZE);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -173,7 +176,6 @@ function ProductsIndex() {
     }
   };
 
-  // Atajo de variante: duplica el producto como base editable de variante.
   const handleDuplicateVariant = async (item: ProductItem) => {
     setBanner(null);
     try {
@@ -249,383 +251,190 @@ function ProductsIndex() {
 
   const kpiCards = useMemo(
     () => [
-      { label: 'PRODUCTOS TOTALES', value: String(kpis.total), caption: 'Productos en el catálogo' },
-      { label: 'CATEGORÍAS', value: String(kpis.categories), caption: 'Categorías de productos' },
-      { label: 'PRECIO MEDIO', value: formatPEN(kpis.avgPrice), caption: 'precio medio de venta' },
-      { label: 'PRODUCTOS ACTIVOS', value: String(kpis.active), caption: 'Actualmente activo' },
+      { label: 'Total Productos', value: String(kpis.total) },
+      { label: 'Categorías', value: String(kpis.categories) },
+      { label: 'Promedio Venta', value: formatPEN(kpis.avgPrice) },
+      { label: 'Tasa Activos', value: kpis.total > 0 ? `${Math.round((kpis.active / kpis.total) * 100)}%` : '0%' },
     ],
     [kpis]
   );
 
-  const hasFilters = debouncedQuery.trim() !== '' || category !== 'all' || status !== 'all';
-  const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const to = Math.min(total, page * PAGE_SIZE);
-
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      {/* Header */}
-      <div style={{ background: '#ffffff', border: '1px solid var(--color-fog)', borderRadius: '10px', padding: '20px 22px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <span
-          style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '10px',
-            background: 'var(--color-fog)',
-            border: '1px solid var(--color-fog)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--color-charcoal)',
-            flexShrink: 0,
-          }}
-        >
-          <Tag size={20} />
-        </span>
-        <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-obsidian)', margin: 0 }}>Productos</h1>
+    <div className="max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-black mb-2" style={{ fontFamily: 'var(--font-wise-sans)', color: 'var(--color-obsidian)', letterSpacing: '-0.02em' }}>
+            Catálogo General
+          </h1>
+          <p className="text-lg" style={{ color: 'var(--color-charcoal)' }}>
+            Administra tus productos, variantes y precios base.
+          </p>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '13px', color: 'var(--color-slate)' }}>
-          Descripción General del Catálogo de Productos ({kpis.total} producto{kpis.total === 1 ? '' : 's'})
-        </span>
-        <span
-          style={{
-            fontSize: '11px',
-            fontWeight: 600,
-            background: 'var(--color-fog)',
-            border: '1px solid var(--color-fog)',
-            color: 'var(--color-charcoal)',
-            padding: '3px 10px',
-            borderRadius: '999px',
-          }}
-        >
-          Productos: {kpis.total} / {planLimit} (Light)
-        </span>
-      </div>
+      {banner && (
+        <div className={`p-4 rounded-[10px] text-sm font-semibold flex items-center justify-between ${banner.type === 'error' ? 'bg-[#fef2f2] text-[#991b1b] border border-[var(--color-alarm-red)]' : 'bg-[var(--color-linen-mist)] text-[var(--color-spruce)] border border-[var(--color-forest-ink)]'}`}>
+          {banner.text}
+          <button onClick={() => setBanner(null)}><X size={16} /></button>
+        </div>
+      )}
 
       {/* KPIs */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          background: '#ffffff',
-          border: '1px solid var(--color-fog)',
-          borderRadius: '10px',
-          overflow: 'hidden',
-        }}
-      >
-        {kpiCards.map((k, idx) => (
-          <div key={k.label} style={{ padding: '18px 20px', borderLeft: idx === 0 ? 'none' : '1px solid var(--color-fog)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--color-charcoal)' }}>
-              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--color-forest-ink)' }} />
-              {k.label}
-            </div>
-            <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-obsidian)', marginTop: '6px', fontVariantNumeric: 'tabular-nums' }}>
-              {k.value}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-slate)', marginTop: '6px' }}>{k.caption}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {kpiCards.map((kpi, i) => (
+          <div key={i} className="wise-card !p-4 flex flex-col justify-center">
+            <span className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-slate)' }}>{kpi.label}</span>
+            <span className="text-xl font-black" style={{ color: 'var(--color-obsidian)' }}>{kpi.value}</span>
           </div>
         ))}
       </div>
 
-      {/* Banner */}
-      {banner && (
-        <div
-          role={banner.type === 'error' ? 'alert' : 'status'}
-          style={{
-            background: banner.type === 'success' ? '#f0fdf4' : '#fef2f2',
-            border: banner.type === 'success' ? '1px solid #bbf7d0' : '1px solid var(--color-alarm-red)',
-            color: banner.type === 'success' ? '#166534' : '#991b1b',
-            padding: '12px 16px',
-            borderRadius: '10px',
-            fontSize: '13px',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <span style={{ flex: 1 }}>{banner.text}</span>
-          <button
-            type="button"
-            onClick={() => setBanner(null)}
-            aria-label="Cerrar aviso"
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 700 }}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
       {/* Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+      <div className="flex items-center gap-3 mt-6">
+        <div className="relative flex-1 max-w-sm">
           <input
-            type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por nombre, referencia o categoría..."
-            aria-label="Buscar productos"
-            style={{
-              width: '100%',
-              border: '1px solid var(--color-fog)',
-              background: 'var(--color-paper)',
-              borderRadius: '10px',
-              padding: '9px 36px 9px 12px',
-              fontSize: '13px',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
+            placeholder="Buscar por SKU o nombre…"
+            className="w-full wise-input pl-4 pr-10 !py-2.5"
           />
-          <Search size={16} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-pebble)' }} />
+          <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-pebble)' }} />
         </div>
-        <div style={{ position: 'relative' }}>
+        
+        <div className="relative">
           <button
             type="button"
             onClick={() => setShowFilters((v) => !v)}
-            aria-label="Filtros"
-            aria-expanded={showFilters}
-            style={{
-              border: '1px solid var(--color-fog)',
+            className="flex items-center justify-center p-2.5 rounded-xl border transition-colors"
+            style={{ 
               background: category !== 'all' || status !== 'all' ? 'var(--color-linen-mist)' : '#ffffff',
               borderColor: category !== 'all' || status !== 'all' ? 'var(--color-forest-ink)' : 'var(--color-fog)',
-              borderRadius: '10px',
-              padding: '9px 12px',
-              cursor: 'pointer',
-              color: 'var(--color-charcoal)',
-              display: 'flex',
+              color: 'var(--color-charcoal)' 
             }}
           >
-            <SlidersHorizontal size={16} />
+            <SlidersHorizontal size={18} />
           </button>
+          
           {showFilters && (
-            <div
-              style={{
-                position: 'absolute',
-                right: 0,
-                top: 'calc(100% + 6px)',
-                background: '#ffffff',
-                border: '1px solid var(--color-fog)',
-                borderRadius: '10px',
-                boxShadow: '0 12px 32px -8px rgba(15,23,42,0.18)',
-                padding: '12px',
-                zIndex: 50,
-                minWidth: '220px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-              }}
-            >
-              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-charcoal)' }}>
-                CATEGORÍA
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  style={{ display: 'block', width: '100%', marginTop: '4px', padding: '8px', borderRadius: '6px', border: '1px solid var(--color-pebble)', fontSize: '13px' }}
-                >
+            <div className="absolute right-0 top-full mt-2 bg-white border border-[var(--color-fog)] rounded-[10px] shadow-xl p-4 z-50 w-64 space-y-4">
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>CATEGORÍA</label>
+                <select value={category} onChange={(e) => setCategory(e.target.value)} className="wise-input w-full !py-2">
                   <option value="all">Todas</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
+                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-              </label>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-charcoal)' }}>
-                ESTADO
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  style={{ display: 'block', width: '100%', marginTop: '4px', padding: '8px', borderRadius: '6px', border: '1px solid var(--color-pebble)', fontSize: '13px' }}
-                >
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>ESTADO</label>
+                <select value={status} onChange={(e) => setStatus(e.target.value)} className="wise-input w-full !py-2">
                   <option value="all">Todos</option>
                   <option value="active">Activos</option>
                   <option value="paused">Pausados</option>
                 </select>
-              </label>
+              </div>
             </div>
           )}
         </div>
+
         <button
-          type="button"
-          onClick={() => {
-            resetForm();
-            setShowModal(true);
-          }}
+          onClick={() => { resetForm(); setShowModal(true); }}
           disabled={atCap}
-          title={atCap ? `Límite del plan Light alcanzado (${planLimit} productos)` : 'Crear un nuevo producto'}
-          style={{
-            marginLeft: 'auto',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: atCap ? 'var(--color-pebble)' : 'var(--color-forest-ink)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '9px 16px',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: atCap ? 'not-allowed' : 'pointer',
-          }}
+          className="wise-btn-primary ml-auto flex items-center gap-2"
+          style={atCap ? { background: 'var(--color-pebble)', cursor: 'not-allowed' } : {}}
         >
-          <Plus size={15} /> Nuevo Producto
+          <Plus size={16} /> <span className="hidden sm:inline">Nuevo Producto</span>
         </button>
       </div>
 
-      {/* Barra de selección */}
+      {/* Barra de Selección Masiva */}
       {selected.length > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            background: 'var(--color-linen-mist)',
-            border: '1px solid var(--color-forest-ink)',
-            borderRadius: '10px',
-            padding: '9px 14px',
-            fontSize: '13px',
-            fontWeight: 600,
-            color: '#1d4ed8',
-          }}
-        >
-          <span>{selected.length} seleccionado{selected.length === 1 ? '' : 's'}</span>
+        <div className="flex items-center gap-4 bg-[var(--color-linen-mist)] border border-[var(--color-forest-ink)] rounded-[10px] p-3 text-sm font-bold text-[var(--color-forest-ink)]">
+          <span>{selected.length} seleccionado{selected.length !== 1 && 's'}</span>
           <button
-            type="button"
             onClick={handleBulkOC}
             disabled={bulkLoading}
-            style={{
-              background: 'var(--color-obsidian)',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '7px 12px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: bulkLoading ? 'not-allowed' : 'pointer',
-            }}
+            className="px-4 py-1.5 rounded-full text-white ml-2 text-xs transition-opacity hover:opacity-90"
+            style={{ background: 'var(--color-obsidian)', cursor: bulkLoading ? 'not-allowed' : 'pointer' }}
           >
-            {bulkLoading ? 'Generando…' : `Generar OC (${selected.length})`}
+            {bulkLoading ? 'Generando...' : 'Generar OC'}
           </button>
-          <button
-            type="button"
-            onClick={() => setSelected([])}
-            style={{ background: 'transparent', border: 'none', color: '#1d4ed8', fontSize: '12px', fontWeight: 600, cursor: 'pointer', marginLeft: 'auto' }}
-          >
-            Limpiar
-          </button>
+          <button onClick={() => setSelected([])} className="ml-auto text-xs hover:underline">Limpiar</button>
         </div>
       )}
 
       {/* Tabla */}
-      <div style={{ background: '#ffffff', border: '1px solid var(--color-fog)', borderRadius: '10px', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--color-fog)', textAlign: 'left' }}>
-              <th style={{ padding: '12px 12px 12px 18px', width: '36px' }}>
-                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} aria-label="Seleccionar todos" style={{ accentColor: 'var(--color-forest-ink)', width: '15px', height: '15px', cursor: 'pointer' }} />
+      <div className="wise-card !p-0 overflow-x-auto">
+        <table className="w-full text-left">
+          <thead className="bg-[var(--color-fog)] border-b border-[var(--color-fog)]">
+            <tr>
+              <th className="px-5 py-4 w-10">
+                <input 
+                  type="checkbox" checked={allSelected} onChange={toggleSelectAll} 
+                  className="w-4 h-4 cursor-pointer accent-[var(--color-forest-ink)]" 
+                />
               </th>
-              <th style={{ padding: '12px' }}>
+              <th className="px-4 py-4">
                 <button
-                  type="button"
-                  onClick={() => setSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'))}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)', display: 'inline-flex', alignItems: 'center', gap: '4px', padding: 0 }}
+                  onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}
+                  className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider hover:text-[var(--color-obsidian)] transition-colors"
+                  style={{ color: 'var(--color-slate)' }}
                 >
-                  REFERENCIA {sortOrder === 'asc' ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  REFERENCIA {sortOrder === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
               </th>
-              <th style={{ padding: '12px', width: '40px', color: 'var(--color-pebble)' }}>
-                <ImageIcon size={15} />
-              </th>
-              <th style={{ padding: '12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)' }}>NOMBRE</th>
-              <th style={{ padding: '12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)' }}>PRECIO</th>
-              <th style={{ padding: '12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)' }}>CATEGORÍA</th>
-              <th style={{ padding: '12px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-charcoal)' }}>STOCK</th>
-              <th style={{ padding: '12px 18px 12px 12px', textAlign: 'right', color: 'var(--color-forest-ink)' }}>
-                <Zap size={15} />
-              </th>
+              <th className="px-4 py-4 w-12 text-[var(--color-pebble)]"><ImageIcon size={18} /></th>
+              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>Nombre</th>
+              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>Precio</th>
+              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>Categoría</th>
+              <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>Stock</th>
+              <th className="px-4 py-4 text-right text-[var(--color-forest-ink)]"><Zap size={18} className="ml-auto" /></th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-[var(--color-fog)]">
             {loading ? (
-              <tr>
-                <td colSpan={8} style={{ padding: '32px', textAlign: 'center', color: 'var(--color-pebble)' }}>
-                  Cargando catálogo…
-                </td>
-              </tr>
+              <tr><td colSpan={8} className="text-center py-12 text-sm font-medium" style={{ color: 'var(--color-pebble)' }}>Cargando catálogo...</td></tr>
             ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={8} style={{ padding: 0 }}>
-                  <div style={{ margin: '12px', border: '1px solid var(--color-fog)', borderLeft: '3px solid var(--color-forest-ink)', borderRadius: '10px', background: 'var(--color-paper)', padding: '14px 16px', fontSize: '13px', color: 'var(--color-obsidian)' }}>
-                    {total === 0 && !hasFilters
-                      ? 'No hay productos para mostrar. Añade un nuevo producto haciendo clic en NUEVO PRODUCTO arriba.'
-                      : 'Sin coincidencias para los filtros aplicados.'}
-                  </div>
-                </td>
-              </tr>
+              <tr><td colSpan={8} className="text-center py-12 text-sm font-medium" style={{ color: 'var(--color-pebble)' }}>No se encontraron productos.</td></tr>
             ) : (
               items.map((item) => (
-                <tr key={item.id} style={{ borderBottom: '1px solid var(--color-fog)' }}>
-                  <td style={{ padding: '12px 12px 12px 18px' }}>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(item.sku)}
-                      onChange={() => toggleSelect(item.sku)}
-                      aria-label={`Seleccionar ${item.sku}`}
-                      style={{ accentColor: 'var(--color-forest-ink)', width: '15px', height: '15px', cursor: 'pointer' }}
+                <tr key={item.id} className="hover:bg-[var(--color-fog)] transition-colors group">
+                  <td className="px-5 py-3">
+                    <input 
+                      type="checkbox" checked={selected.includes(item.sku)} onChange={() => toggleSelect(item.sku)}
+                      className="w-4 h-4 cursor-pointer accent-[var(--color-forest-ink)]" 
                     />
                   </td>
-                  <td style={{ padding: '12px', fontWeight: 700, color: 'var(--color-obsidian)', whiteSpace: 'nowrap' }}>{item.sku}</td>
-                  <td style={{ padding: '12px' }}>
-                    <span
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '10px',
-                        background: 'var(--color-fog)',
-                        border: '1px solid var(--color-fog)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--color-pebble)',
-                      }}
-                    >
-                      <ImageIcon size={15} />
+                  <td className="px-4 py-3">
+                    <span className="inline-block px-2 py-1 rounded-md text-xs font-mono font-bold bg-[var(--color-fog)] text-[var(--color-charcoal)]">
+                      {item.sku}
                     </span>
                   </td>
-                  <td style={{ padding: '12px', color: 'var(--color-obsidian)' }}>
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/products/${item.id}`)}
-                      title={`Abrir ficha de ${item.sku}`}
-                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#1d4ed8', fontWeight: 600, fontSize: '13px', textAlign: 'left' }}
-                    >
-                      {item.name}
-                    </button>
+                  <td className="px-4 py-3">
+                    <div className="w-10 h-10 rounded-lg bg-[var(--color-fog)] border border-[var(--color-pebble)]/20 flex items-center justify-center text-[var(--color-pebble)]">
+                      <Tag size={16} />
+                    </div>
                   </td>
-                  <td style={{ padding: '12px', fontWeight: 600, color: 'var(--color-obsidian)', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                  <td className="px-4 py-3 font-bold text-sm" style={{ color: 'var(--color-obsidian)' }}>
+                    <Link href={`/products/${item.id}`} className="hover:underline">{item.name}</Link>
+                  </td>
+                  <td className="px-4 py-3 font-bold text-sm" style={{ color: 'var(--color-obsidian)' }}>
                     {formatPEN(item.price)}
                   </td>
-                  <td style={{ padding: '12px', color: 'var(--color-charcoal)' }}>{item.category || '—'}</td>
-                  <td style={{ padding: '12px', fontWeight: 700, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums', color: item.stock <= (item.safetyStock || 0) ? '#b45309' : 'var(--color-obsidian)' }} title={`Seguridad: ${item.safetyStock ?? 0}`}>
-                    {item.stock ?? 0}
+                  <td className="px-4 py-3 text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>
+                    {item.category || '—'}
                   </td>
-                  <td style={{ padding: '12px 18px 12px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                  <td className="px-4 py-3 text-sm font-bold" style={{ color: 'var(--color-obsidian)' }}>
+                    {item.stock}
+                  </td>
+                  <td className="px-4 py-3 text-right">
                     <button
-                      type="button"
-                      title={`Crear variante de ${item.sku}`}
                       onClick={() => handleDuplicateVariant(item)}
-                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-charcoal)', display: 'inline-flex', marginRight: '6px' }}
+                      title="Crear variante a partir de este"
+                      className="p-2 rounded-full hover:bg-white text-[var(--color-slate)] hover:text-[var(--color-forest-ink)] transition-colors inline-flex"
                     >
-                      <Copy size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      title={`Ver ${item.sku} en inventario`}
-                      onClick={() => router.push(`/inventory/inventory-items?q=${encodeURIComponent(item.sku)}`)}
-                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-forest-ink)', display: 'inline-flex' }}
-                    >
-                      <Zap size={15} />
+                      <Copy size={16} />
                     </button>
                   </td>
                 </tr>
@@ -633,154 +442,108 @@ function ProductsIndex() {
             )}
           </tbody>
         </table>
+        
         {/* Paginación */}
         {!loading && total > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 18px', borderTop: '1px solid var(--color-fog)', fontSize: '12px', color: 'var(--color-slate)' }}>
-            <span>
-              Mostrando {from}–{to} de {total}
-            </span>
-            <span style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+          <div className="flex items-center justify-between px-6 py-4 border-t border-[var(--color-fog)] text-sm font-medium" style={{ color: 'var(--color-slate)' }}>
+            <span>Mostrando {from}–{to} de {total}</span>
+            <div className="flex gap-2">
               <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                style={{ border: '1px solid var(--color-fog)', background: '#ffffff', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, cursor: page <= 1 ? 'not-allowed' : 'pointer', color: page <= 1 ? 'var(--color-pebble)' : 'var(--color-charcoal)' }}
+                className="px-4 py-2 rounded-lg border bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ borderColor: 'var(--color-fog)', color: 'var(--color-charcoal)' }}
               >
                 Anterior
               </button>
               <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                style={{ border: '1px solid var(--color-fog)', background: '#ffffff', borderRadius: '6px', padding: '6px 12px', fontSize: '12px', fontWeight: 600, cursor: page >= totalPages ? 'not-allowed' : 'pointer', color: page >= totalPages ? 'var(--color-pebble)' : 'var(--color-charcoal)' }}
+                className="px-4 py-2 rounded-lg border bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                style={{ borderColor: 'var(--color-fog)', color: 'var(--color-charcoal)' }}
               >
                 Siguiente
               </button>
-            </span>
+            </div>
           </div>
         )}
       </div>
 
       {/* Modal Nuevo Producto */}
       {showModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Nuevo producto"
-          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 80, padding: '16px' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !saving) setShowModal(false);
-          }}
-        >
-          <form
-            onSubmit={handleCreate}
-            style={{ background: '#ffffff', borderRadius: '10px', padding: '24px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--color-obsidian)', margin: 0, flex: 1 }}>Nuevo Producto</h2>
-              <button
-                type="button"
-                onClick={() => !saving && setShowModal(false)}
-                aria-label="Cerrar"
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-slate)', display: 'flex' }}
-              >
-                <X size={18} />
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget && !saving) setShowModal(false); }}>
+          <form onSubmit={handleCreate} className="wise-card w-full max-w-lg shadow-2xl animate-in zoom-in-95 p-6 flex flex-col gap-4">
+            
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-bold" style={{ color: 'var(--color-obsidian)' }}>Nuevo Producto</h2>
+              <button type="button" onClick={() => !saving && setShowModal(false)} className="text-[var(--color-slate)] hover:text-[var(--color-obsidian)]">
+                <X size={20} />
               </button>
             </div>
 
             {formError && (
-              <div role="alert" style={{ background: '#fef2f2', border: '1px solid var(--color-alarm-red)', color: '#991b1b', padding: '10px 12px', borderRadius: '10px', fontSize: '13px', fontWeight: 600 }}>
+              <div className="p-3 rounded-xl text-sm font-bold bg-[#fef2f2] text-[#991b1b] border border-[var(--color-alarm-red)]">
                 {formError}
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Referencia (SKU) *
-                <input value={fSku} onChange={(e) => setFSku(e.target.value)} placeholder="SKU-XXX-000" required
-                  style={inputStyle} />
-              </label>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Precio venta (PEN) *
-                <input value={fPrice} onChange={(e) => setFPrice(e.target.value)} placeholder="0.00" inputMode="decimal" required
-                  style={inputStyle} />
-              </label>
-            </div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-              Nombre *
-              <input value={fName} onChange={(e) => setFName(e.target.value)} placeholder="Nombre del producto" required
-                style={inputStyle} />
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Categoría
-                <select value={fCategoryId} onChange={(e) => setFCategoryId(e.target.value)} style={inputStyle}>
-                  <option value="">Seleccionar…</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Nueva categoría
-                <input value={fNewCategory} onChange={(e) => setFNewCategory(e.target.value)} placeholder="O crea una nueva" disabled={!!fCategoryId}
-                  style={inputStyle} />
-              </label>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Costo (PEN)
-                <input value={fCost} onChange={(e) => setFCost(e.target.value)} placeholder="0.00" inputMode="decimal"
-                  style={inputStyle} />
-              </label>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Stock inicial
-                <input value={fStock} onChange={(e) => setFStock(e.target.value)} placeholder="0" inputMode="numeric"
-                  style={inputStyle} />
-              </label>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Stock seguridad
-                <input value={fSafety} onChange={(e) => setFSafety(e.target.value)} placeholder="0" inputMode="numeric"
-                  style={inputStyle} />
-              </label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>Referencia (SKU) *</label>
+                <input value={fSku} onChange={e => setFSku(e.target.value)} placeholder="SKU-001" required className="wise-input w-full" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>Precio (S/) *</label>
+                <input value={fPrice} onChange={e => setFPrice(e.target.value)} placeholder="0.00" required className="wise-input w-full" />
+              </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '4px' }}>
-              <button
-                type="button"
-                onClick={() => !saving && setShowModal(false)}
-                style={{ background: '#ffffff', border: '1px solid var(--color-pebble)', borderRadius: '9999px', padding: '9px 16px', fontSize: '13px', fontWeight: 600, color: 'var(--color-charcoal)', cursor: saving ? 'not-allowed' : 'pointer' }}
-              >
+            <div>
+              <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>Nombre del Producto *</label>
+              <input value={fName} onChange={e => setFName(e.target.value)} placeholder="Ej. Zapatillas Running" required className="wise-input w-full" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>Categoría</label>
+                <select value={fCategoryId} onChange={e => setFCategoryId(e.target.value)} className="wise-input w-full">
+                  <option value="">Seleccionar...</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>Nueva Categoría</label>
+                <input value={fNewCategory} onChange={e => setFNewCategory(e.target.value)} placeholder="O crear..." disabled={!!fCategoryId} className="wise-input w-full disabled:opacity-50" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>Costo</label>
+                <input value={fCost} onChange={e => setFCost(e.target.value)} placeholder="0.00" className="wise-input w-full" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>Stock inicial</label>
+                <input value={fStock} onChange={e => setFStock(e.target.value)} placeholder="0" className="wise-input w-full" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--color-charcoal)' }}>Stock mínimo</label>
+                <input value={fSafety} onChange={e => setFSafety(e.target.value)} placeholder="5" className="wise-input w-full" />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 mt-4">
+              <button type="button" onClick={() => !saving && setShowModal(false)} className="wise-btn-outline px-6">
                 Cancelar
               </button>
-              <button
-                type="submit"
-                disabled={saving}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: saving ? 'var(--color-pebble)' : 'var(--color-forest-ink)', color: '#ffffff', border: 'none', borderRadius: '9999px', padding: '9px 16px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}
-              >
-                {saving && <Loader2 size={15} style={{ animation: 'inventa-spin 1s linear infinite' }} />}
-                {saving ? 'Guardando…' : 'Crear producto'}
+              <button type="submit" disabled={saving} className="wise-btn-primary px-6 flex items-center gap-2">
+                {saving && <Loader2 size={16} className="animate-spin" />}
+                {saving ? 'Guardando...' : 'Crear Producto'}
               </button>
             </div>
           </form>
         </div>
       )}
-      <style>{`@keyframes inventa-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  display: 'block',
-  width: '100%',
-  marginTop: '4px',
-  padding: '9px 12px',
-  borderRadius: '10px',
-  border: '1px solid var(--color-pebble)',
-  fontSize: '14px',
-  outline: 'none',
-  boxSizing: 'border-box',
-  fontWeight: 400,
-};

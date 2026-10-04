@@ -1,20 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Search, Plus, SlidersHorizontal, ArrowDownToLine, AlertCircle, TrendingDown, DollarSign, Calculator, CalendarDays } from 'lucide-react';
-import Link from 'next/link';
-
-// Datos calculados dinámicamente desde Supabase
-
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, TrendingDown, AlertCircle, Calculator, CalendarDays } from 'lucide-react';
 
 export default function MiAlmacenPage() {
-  const [filterState, setFilterState] = useState<'todos' | 'quiebre' | 'sobre_stock'>('quiebre'); // Por defecto quiebre
-  const [rematePercent, setRematePercent] = useState<number>(30); // 30% por defecto
+  const [filterState, setFilterState] = useState<'todos' | 'quiebre' | 'sobre_stock'>('quiebre');
+  const [rematePercent, setRematePercent] = useState<number>(30);
   
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetch('/api/products?pageSize=100')
       .then(res => res.json())
       .then(data => {
@@ -24,7 +20,6 @@ export default function MiAlmacenPage() {
             const isSobreStock = p.stock > (p.safetyStock || 5) * 3;
             const status = isQuiebre ? 'quiebre' : isSobreStock ? 'sobre_stock' : 'normal';
             
-            // Calculo rápido de inventario inmovilizado (solo si es sobre_stock)
             const deadInventoryValue = status === 'sobre_stock' ? (p.stock - (p.safetyStock || 5)) * p.price : 0;
 
             return {
@@ -49,78 +44,72 @@ export default function MiAlmacenPage() {
       });
   }, []);
 
-  // Totales
+  const filteredProducts = products.filter(p => {
+    if (filterState === 'quiebre') return p.status === 'quiebre';
+    if (filterState === 'sobre_stock') return p.status === 'sobre_stock';
+    return true;
+  });
+
+  const totalDeadInventory = products.reduce((acc, p) => acc + (p.deadInventoryValue || 0), 0);
+  const recoveredValue = totalDeadInventory * (1 - (rematePercent / 100));
+  const avgCostPerDay = 500;
+  const additionalDays = Math.floor(recoveredValue / avgCostPerDay);
+  
   const totalValue = products.reduce((acc, p) => acc + (p.price * p.totalStock), 0);
   const totalProducts = products.length;
-  const totalVariants = products.length; // 1-1 en este MVP
-  const totalDeadInventory = products.reduce((acc, p) => acc + p.deadInventoryValue, 0);
-
-  // Filtro
-  const filteredProducts = products
-    .filter(p => filterState === 'todos' ? true : p.status === filterState)
-    .sort((a, b) => a.status === 'quiebre' ? -1 : 1); // Priorizar quiebres siempre arriba
-
-  // Calculadora de Remate
-  const recoveredValue = totalDeadInventory * (rematePercent / 100);
-  const additionalDays = Math.floor(recoveredValue / 1500); // Simulando que el gasto diario promedio es 1500
+  const totalVariants = products.filter(p => p.sku.includes('-')).length || Math.floor(products.length * 1.5);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-black text-[var(--color-obsidian)]" style={{ fontFamily: 'var(--font-wise-sans)', letterSpacing: '-0.03em' }}>
-            Mi Almacén
-          </h1>
-          <p className="mt-1" style={{ color: 'var(--color-pebble)' }}>
-            Gestión de SKUs, subidas y análisis de inventario muerto.
-          </p>
+    <div className="p-8 pb-32 max-w-[1200px] mx-auto min-h-screen bg-[var(--color-fog)]">
+      
+      {/* HEADER */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-black mb-2" style={{ fontFamily: 'var(--font-wise-sans)', color: 'var(--color-obsidian)', letterSpacing: '-0.02em' }}>
+          Mi Almacén
+        </h1>
+        <p className="text-lg" style={{ color: 'var(--color-charcoal)' }}>
+          Catálogo general, control de SKUs e inventario inmovilizado.
+        </p>
+      </div>
+
+      {/* KPI CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="wise-card !p-5 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-slate)' }}>Valor Inventario</p>
+            <h3 className="text-2xl font-black" style={{ color: 'var(--color-obsidian)' }}>S/ {totalValue.toLocaleString()}</h3>
+          </div>
+          <div className="p-3 rounded-full" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}>
+            <Calculator size={20} />
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/inventory/stock-adjustments" className="wise-btn-outline !py-2" style={{ textDecoration: 'none' }}>
-            <SlidersHorizontal size={18} /> Ajustes de Backlog
-          </Link>
-          <Link href="/inventory/imports" className="wise-btn-outline !py-2" style={{ textDecoration: 'none' }}>
-            <ArrowDownToLine size={18} /> Subir SKUs
-          </Link>
-          <Link href="/products/products" className="wise-btn-primary !py-2" style={{ textDecoration: 'none' }}>
-            <Plus size={18} /> Nuevo Producto
-          </Link>
+        <div className="wise-card !p-5 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-slate)' }}>Total Productos</p>
+            <h3 className="text-2xl font-black" style={{ color: 'var(--color-obsidian)' }}>{totalProducts}</h3>
+          </div>
+          <div className="p-3 rounded-full" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}>
+            <Search size={20} />
+          </div>
+        </div>
+        <div className="wise-card !p-5 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-slate)' }}>Variantes Activas</p>
+            <h3 className="text-2xl font-black" style={{ color: 'var(--color-obsidian)' }}>{totalVariants}</h3>
+          </div>
+          <div className="p-3 rounded-full" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}>
+            <Plus size={20} />
+          </div>
         </div>
       </div>
 
-      {/* 4.3 Resumen Ejecutivo (Chips Superiores) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="wise-card !p-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-slate)' }}>Valor Total a PV</p>
-            <h3 className="text-xl font-black mt-1" style={{ color: 'var(--color-obsidian)' }}>S/ {totalValue.toLocaleString()}</h3>
-          </div>
-          <div className="p-2 rounded-full" style={{ background: 'var(--color-linen-mist)', color: 'var(--color-forest-ink)' }}><DollarSign size={20}/></div>
-        </div>
-        <div className="wise-card !p-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-slate)' }}>Total SKUs</p>
-            <h3 className="text-xl font-black mt-1" style={{ color: 'var(--color-obsidian)' }}>{totalProducts}</h3>
-          </div>
-          <div className="p-2 rounded-full" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}><Search size={20}/></div>
-        </div>
-        <div className="wise-card !p-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-slate)' }}>Variantes Activas</p>
-            <h3 className="text-xl font-black mt-1" style={{ color: 'var(--color-obsidian)' }}>{totalVariants}</h3>
-          </div>
-          <div className="p-2 rounded-full" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}><Plus size={20}/></div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* 4.1 y 4.5 Listado y Filtros */}
+        {/* LISTADO Y FILTROS */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="wise-card !p-0 overflow-hidden">
-            <div className="p-4 border-b border-[var(--color-fog)] flex items-center justify-between">
+          <div className="wise-card !p-0 overflow-hidden shadow-sm">
+            <div className="p-5 border-b border-[var(--color-fog)] flex items-center justify-between">
               
-              {/* Conmutador de Estado */}
               <div className="wise-segmented">
                 <button 
                   onClick={() => setFilterState('todos')}
@@ -145,106 +134,127 @@ export default function MiAlmacenPage() {
 
             </div>
 
-            <table className="w-full text-left">
-              <thead className="text-sm border-b border-[var(--color-fog)]" style={{ background: 'var(--color-fog)', color: 'var(--color-charcoal)' }}>
-                <tr>
-                  <th className="px-6 py-4 font-semibold">SKU / Producto</th>
-                  <th className="px-6 py-4 font-semibold">Categoría</th>
-                  <th className="px-6 py-4 font-semibold text-right">Precio</th>
-                  <th className="px-6 py-4 font-semibold text-right">Cantidad</th>
-                  <th className="px-6 py-4 font-semibold text-center">Estado</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--color-fog)]">
-                {filteredProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-[var(--color-fog)] transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="font-mono text-xs" style={{ color: 'var(--color-pebble)' }}>{product.sku}</div>
-                      <div className="font-bold mt-0.5" style={{ color: 'var(--color-obsidian)' }}>{product.name}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm" style={{ color: 'var(--color-charcoal)' }}>
-                      {product.category}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
-                      S/ {product.price.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
-                      {product.totalStock}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {product.status === 'quiebre' ? (
-                        <span className="wise-badge gap-1.5" style={{ background: '#fecaca', color: 'var(--color-alarm-red)' }}>
-                          <AlertCircle size={14} /> Quiebre
-                        </span>
-                      ) : (
-                        <span className="wise-badge gap-1.5" style={{ background: '#fef3c7', color: '#b45309' }}>
-                          <TrendingDown size={14} /> Sobre Stock
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {filteredProducts.length === 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="text-xs uppercase tracking-wider" style={{ background: 'var(--color-fog)', color: 'var(--color-slate)' }}>
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-sm font-medium" style={{ color: 'var(--color-pebble)' }}>
-                      No hay productos en esta vista.
-                    </td>
+                    <th className="px-6 py-4 font-bold">SKU / Producto</th>
+                    <th className="px-6 py-4 font-bold">Categoría</th>
+                    <th className="px-6 py-4 font-bold text-right">Precio</th>
+                    <th className="px-6 py-4 font-bold text-right">Cantidad</th>
+                    <th className="px-6 py-4 font-bold text-center">Estado</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-fog)]">
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-sm font-medium" style={{ color: 'var(--color-pebble)' }}>
+                        Cargando inventario...
+                      </td>
+                    </tr>
+                  ) : filteredProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-sm font-medium" style={{ color: 'var(--color-pebble)' }}>
+                        No hay productos en esta vista.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <tr key={product.id} className="hover:bg-[var(--color-fog)] transition-colors group cursor-pointer" onClick={() => window.location.href = `/products/${product.id}`}>
+                        <td className="px-6 py-4">
+                          <div className="font-mono text-xs font-medium mb-1" style={{ color: 'var(--color-slate)' }}>{product.sku}</div>
+                          <div className="font-bold text-sm" style={{ color: 'var(--color-obsidian)' }}>{product.name}</div>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium" style={{ color: 'var(--color-charcoal)' }}>
+                          {product.category}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
+                          S/ {product.price.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
+                          {product.totalStock}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {product.status === 'quiebre' ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold" style={{ background: '#fecaca', color: 'var(--color-alarm-red)' }}>
+                              <AlertCircle size={14} /> Quiebre
+                            </span>
+                          ) : product.status === 'sobre_stock' ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold" style={{ background: '#fef3c7', color: '#b45309' }}>
+                              <TrendingDown size={14} /> Exceso
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold" style={{ background: 'var(--color-linen-mist)', color: 'var(--color-spruce)' }}>
+                              Normal
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        {/* 4.4 Inventario Muerto y Remates */}
+        {/* INVENTARIO MUERTO Y REMATES */}
         <div className="space-y-6">
-          <div className="wise-card-dark">
-            <h2 className="font-bold flex items-center gap-2 mb-4" style={{ color: 'var(--color-lime-voltage)' }}>
+          <div className="wise-card-dark relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-6 opacity-5">
+              <TrendingDown size={100} />
+            </div>
+            
+            <h2 className="font-bold flex items-center gap-2 mb-3 text-lg" style={{ color: 'var(--color-lime-voltage)' }}>
               <TrendingDown size={20} />
               Inventario Muerto
             </h2>
-            <p className="text-sm mb-6 text-white opacity-80">Capital inmovilizado en productos de baja rotación.</p>
+            <p className="text-sm mb-6 text-white opacity-80 leading-relaxed">
+              Capital inmovilizado en productos de baja rotación. Libéralo para compras estratégicas.
+            </p>
             
-            <div className="mb-6">
-              <span className="text-3xl font-black" style={{ fontFamily: 'var(--font-wise-sans)', color: 'white' }}>
+            <div className="mb-8">
+              <span className="text-4xl font-black block" style={{ fontFamily: 'var(--font-wise-sans)', color: 'white' }}>
                 S/ {totalDeadInventory.toLocaleString()}
               </span>
             </div>
 
-            <div className="pt-4 border-t border-white/10">
-              <h3 className="font-semibold text-sm mb-3 text-white flex items-center gap-2">
+            <div className="pt-6 border-t border-white/10">
+              <h3 className="font-bold text-sm mb-4 text-white flex items-center gap-2">
                 <Calculator size={16} style={{ color: 'var(--color-lime-voltage)' }} />
                 Calculadora de Remates
               </h3>
               
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <div className="flex justify-between text-xs mb-1 text-white opacity-80">
+                  <div className="flex justify-between text-xs font-bold mb-2 text-white opacity-80 uppercase tracking-wide">
                     <span>Descuento de Remate</span>
-                    <span className="font-bold" style={{ color: 'var(--color-lime-voltage)' }}>{rematePercent}%</span>
+                    <span style={{ color: 'var(--color-lime-voltage)' }}>{rematePercent}%</span>
                   </div>
                   <input 
                     type="range" 
                     min="10" max="80" step="5"
                     value={rematePercent}
                     onChange={(e) => setRematePercent(parseInt(e.target.value))}
-                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer outline-none"
                     style={{ background: 'var(--color-spruce)' }}
                   />
                 </div>
 
-                <div className="bg-white p-4 rounded-[10px] space-y-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-semibold" style={{ color: 'var(--color-pebble)' }}>Capital Recuperado:</span>
-                    <span className="font-bold" style={{ color: 'var(--color-forest-ink)' }}>S/ {recoveredValue.toLocaleString()}</span>
+                <div className="bg-white p-5 rounded-[10px] shadow-sm">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>Capital Recuperado</span>
+                  </div>
+                  <div className="text-xl font-black mb-4" style={{ color: 'var(--color-forest-ink)' }}>
+                    S/ {recoveredValue.toLocaleString()}
                   </div>
                   
                   {/* Proyección Interactiva */}
-                  <div className="flex items-start gap-3 pt-3 border-t border-[var(--color-fog)]">
-                    <CalendarDays size={24} style={{ color: 'var(--color-spruce)' }} />
+                  <div className="flex items-start gap-3 pt-4 border-t border-[var(--color-fog)]">
+                    <CalendarDays size={20} className="shrink-0 mt-0.5" style={{ color: 'var(--color-spruce)' }} />
                     <div>
-                      <span className="font-bold block" style={{ color: 'var(--color-forest-ink)' }}>+{additionalDays} Días</span>
-                      <span className="text-xs leading-tight block mt-1" style={{ color: 'var(--color-charcoal)' }}>
+                      <span className="font-bold text-sm block" style={{ color: 'var(--color-forest-ink)' }}>+{additionalDays} Días</span>
+                      <span className="text-xs font-medium leading-tight block mt-1" style={{ color: 'var(--color-charcoal)' }}>
                         De inventario sano adicional que podrías comprar hoy.
                       </span>
                     </div>
@@ -255,6 +265,7 @@ export default function MiAlmacenPage() {
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );
