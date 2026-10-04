@@ -1,271 +1,475 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Plus, Send, Search, CheckCircle2, Building2, Package, MapPin, Truck, ExternalLink } from 'lucide-react';
-import { generateWhatsAppLink } from '@/lib/whatsapp';
+import React, { useState, useMemo, Suspense } from 'react';
+import {
+  ShoppingCart, Plus, Send, Search, CheckCircle2, Building2,
+  Package, Truck, ExternalLink, Minus, Trash2, ChevronRight,
+  Landmark, FileText, Clock, AlertCircle, Star, X
+} from 'lucide-react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
-export default function ComprasPage() {
+// ── Datos Mock ────────────────────────────────────────────────────────────────
+const MOCK_PROVIDERS = [
+  {
+    id: 'sup-001', name: 'Alicorp S.A.A.', category: 'Alimentos', verified: true,
+    location: 'Lima', min_order_amount: 5000, payment_terms: 'Crédito 30 días', lead_time_days: 3,
+    products: [
+      { sku: 'ALC-001', name: 'Aceite Primor Premium 1L', unit: 'caja x 12', price: 98.50 },
+      { sku: 'ALC-002', name: 'Harina Blanca Nieve 1kg', unit: 'bolsa x 25kg', price: 62.00 },
+      { sku: 'ALC-003', name: 'Fideos Don Vittorio Spaghetti 500g', unit: 'caja x 20', price: 54.00 },
+      { sku: 'ALC-004', name: 'Galletas Casino Chocolate', unit: 'caja x 24', price: 38.40 },
+      { sku: 'ALC-005', name: 'Margarina Manty 500g', unit: 'caja x 12', price: 45.60 },
+      { sku: 'ALC-006', name: 'Salsa de Tomate AlaCena 200g', unit: 'caja x 24', price: 72.00 },
+    ],
+  },
+  {
+    id: 'sup-002', name: 'Procter & Gamble Perú', category: 'Higiene', verified: true,
+    location: 'Lima', min_order_amount: 3000, payment_terms: 'Contado', lead_time_days: 4,
+    products: [
+      { sku: 'PG-001', name: 'Ariel Líquido Doble Poder 2L', unit: 'caja x 6', price: 132.00 },
+      { sku: 'PG-002', name: 'Pampers Recién Nacido x 40', unit: 'caja x 4', price: 148.00 },
+      { sku: 'PG-003', name: 'Head & Shoulders Anti-Caspa 400ml', unit: 'caja x 12', price: 156.00 },
+      { sku: 'PG-004', name: 'Gillette Prestobarba x 5', unit: 'display x 24', price: 84.00 },
+    ],
+  },
+  {
+    id: 'sup-003', name: 'Nestlé Perú S.A.', category: 'Alimentos', verified: true,
+    location: 'Lima', min_order_amount: 8000, payment_terms: 'Crédito 60 días', lead_time_days: 5,
+    products: [
+      { sku: 'NST-001', name: 'Milo Actigen-E 400g', unit: 'caja x 12', price: 108.00 },
+      { sku: 'NST-002', name: 'Nescafé Tradición 200g', unit: 'caja x 12', price: 192.00 },
+      { sku: 'NST-003', name: 'Maggi Sazonador x 100un', unit: 'bolsa x 100', price: 38.00 },
+      { sku: 'NST-004', name: 'Kit Kat 4 Fingers 41.5g', unit: 'display x 24', price: 76.80 },
+      { sku: 'NST-005', name: 'Leche Gloria Evaporada 400g', unit: 'caja x 24', price: 115.20 },
+    ],
+  },
+];
+
+const MOCK_ORDERS = [
+  {
+    id: 'OC-2026-097', provider: 'Nestlé Perú S.A.', amount: 45000,
+    status: 'aprobada', date: '2026-10-03', items: 5, paymentTerms: '60 días'
+  },
+  {
+    id: 'OC-2026-094', provider: 'Procter & Gamble Perú', amount: 8250,
+    status: 'enviada', date: '2026-10-02', items: 3, paymentTerms: 'Contado'
+  },
+  {
+    id: 'OC-2026-091', provider: 'Alicorp S.A.A.', amount: 15400,
+    status: 'recibida', date: '2026-09-28', items: 6, paymentTerms: '30 días'
+  },
+  {
+    id: 'OC-2026-088', provider: 'Alicorp S.A.A.', amount: 9800,
+    status: 'financiada', date: '2026-09-20', items: 4, paymentTerms: 'Línea KUOTA'
+  },
+];
+
+type CartItem = { sku: string; name: string; unit: string; unitPrice: number; qty: number };
+
+const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
+  aprobada:   { label: 'Aprobada',   bg: 'var(--color-linen-mist)',  color: 'var(--color-spruce)' },
+  enviada:    { label: 'Enviada',    bg: '#dbeafe',                   color: '#1d4ed8' },
+  recibida:   { label: 'Recibida',   bg: 'var(--color-fog)',           color: 'var(--color-forest-ink)' },
+  financiada: { label: 'Financiada', bg: 'var(--color-forest-ink)',   color: 'var(--color-lime-voltage)' },
+};
+
+// ── Inner Component ───────────────────────────────────────────────────────────
+function ComprasContent() {
   const searchParams = useSearchParams();
-  const preSelectedProviderId = searchParams?.get('provider') || '';
+  const preSelectedId = searchParams?.get('provider') || '';
 
-  const [providers, setProviders] = useState<any[]>([]);
-  const [selectedProviderId, setSelectedProviderId] = useState<string>(preSelectedProviderId || '');
-  const [cart, setCart] = useState<{ name: string, qty: number, unitPrice: number }[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'nueva' | 'historial'>('nueva');
+  const [selectedProviderId, setSelectedProviderId] = useState(preSelectedId || MOCK_PROVIDERS[0].id);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [ocSent, setOcSent] = useState(false);
 
-  useEffect(() => {
-    // Fetch Mis Proveedores
-    fetch('/api/suppliers?myProviders=true')
-      .then(res => res.json())
-      .then(data => {
-        if (data.items) setProviders(data.items);
-        setIsLoading(false);
-      });
-  }, []);
+  const selectedProvider = MOCK_PROVIDERS.find(p => p.id === selectedProviderId)!;
 
-  const selectedProvider = providers.find(p => p.id === selectedProviderId);
+  const filteredProducts = useMemo(() =>
+    selectedProvider.products.filter(p =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.sku.toLowerCase().includes(searchQuery.toLowerCase())
+    ), [selectedProvider, searchQuery]
+  );
 
-  const handleAddProduct = (name: string) => {
-    // Si ya existe, aumentar cantidad
-    const existingIndex = cart.findIndex(c => c.name === name);
-    if (existingIndex >= 0) {
-      handleQtyChange(existingIndex, cart[existingIndex].qty + 1);
-    } else {
-      setCart([...cart, { name, qty: 1, unitPrice: 0 }]); // Precio referencial es 0 hasta que pongan un precio negociado
-    }
+  const totalAmount = cart.reduce((acc, item) => acc + item.qty * item.unitPrice, 0);
+  const meetsMinOrder = totalAmount >= selectedProvider.min_order_amount;
+  const formatCurrency = (v: number) => `S/ ${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const addToCart = (product: (typeof selectedProvider.products)[0]) => {
+    setCart(prev => {
+      const idx = prev.findIndex(c => c.sku === product.sku);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
+        return next;
+      }
+      return [...prev, { sku: product.sku, name: product.name, unit: product.unit, unitPrice: product.price, qty: 1 }];
+    });
   };
 
-  const handleQtyChange = (index: number, newQty: number) => {
-    const newCart = [...cart];
-    newCart[index].qty = Math.max(1, newQty);
-    setCart(newCart);
+  const updateQty = (sku: string, delta: number) => {
+    setCart(prev => prev.map(c => c.sku === sku
+      ? { ...c, qty: Math.max(1, c.qty + delta) }
+      : c
+    ));
   };
 
-  const handlePriceChange = (index: number, newPrice: number) => {
-    const newCart = [...cart];
-    newCart[index].unitPrice = Math.max(0, newPrice);
-    setCart(newCart);
+  const removeItem = (sku: string) => setCart(prev => prev.filter(c => c.sku !== sku));
+
+  const handleSend = () => {
+    if (cart.length === 0 || !meetsMinOrder) return;
+    // In production: POST /api/dashboard/ordenes
+    setOcSent(true);
+    setTimeout(() => { setOcSent(false); setCart([]); setActiveTab('historial'); }, 2000);
   };
-
-  const handleRemoveItem = (index: number) => {
-    setCart(cart.filter((_, i) => i !== index));
-  };
-
-  const totalAmount = cart.reduce((acc, item) => acc + (item.qty * item.unitPrice), 0);
-
-  const handleSendOrder = () => {
-    if (!selectedProvider) return;
-    
-    // Asumiendo que el contacto viene en phone o email
-    const contactInfo = selectedProvider.contact_info || {};
-    const phone = contactInfo.phone || '999999999'; // Fallback
-    
-    // Parsear el carrito para el link de WP
-    const link = generateWhatsAppLink(phone, selectedProvider.name, cart.map(c => ({
-      productId: c.name,
-      name: c.name,
-      qty: c.qty,
-      unitPrice: c.unitPrice
-    })), totalAmount);
-    
-    window.open(link, '_blank');
-  };
-
-  const filteredProducts = selectedProvider?.products_offered?.filter((p: string) => 
-    p.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in">
-      <div>
-        <h1 className="text-3xl font-black text-[var(--color-obsidian)]" style={{ fontFamily: "var(--font-wise-sans)", letterSpacing: '-0.03em' }}>
-          Nueva Orden de Compra
-        </h1>
-        <p className="mt-2 text-base" style={{ color: "var(--color-pebble)" }}>
-          Gestiona pedidos de reposición y envíalos directamente a tus proveedores vía WhatsApp.
-        </p>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-[var(--color-obsidian)]"
+            style={{ fontFamily: 'var(--font-wise-sans)', letterSpacing: '-0.03em' }}>
+            Órdenes de Compra
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--color-pebble)' }}>
+            Crea y gestiona tus pedidos a proveedores en un solo lugar.
+          </p>
+        </div>
+        <Link href="/financiamiento" className="wise-btn-outline flex items-center gap-2 !text-sm">
+          <Landmark size={16} /> Financiar una OC
+        </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Lado Izquierdo: Selección y Catálogo */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="wise-card">
-            <h2 className="font-bold mb-4 flex items-center gap-2" style={{ color: "var(--color-obsidian)" }}>
-              <Building2 size={20} style={{ color: 'var(--color-forest-ink)' }} /> 
-              Selecciona tu Proveedor
-            </h2>
-            
-            {isLoading ? (
-              <div className="h-12 bg-gray-100 rounded-xl animate-pulse"></div>
-            ) : (
-              <select 
-                className="wise-input cursor-pointer font-medium text-[var(--color-charcoal)]"
-                value={selectedProviderId}
-                onChange={(e) => { 
-                  setSelectedProviderId(e.target.value); 
-                  setCart([]); 
-                  setSearchQuery('');
-                }}
-              >
-                <option value="">-- Elige de tu red de proveedores --</option>
-                {providers.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.payment_terms})</option>
-                ))}
-              </select>
-            )}
-            
-            {!isLoading && providers.length === 0 && (
-              <p className="text-sm mt-3 text-red-500 font-medium">
-                No tienes proveedores en tu red. Ve al <a href="/proveedores" className="underline">Marketplace</a> para añadir uno.
-              </p>
-            )}
-          </div>
+      {/* Tabs */}
+      <div className="wise-segmented">
+        <button className={activeTab === 'nueva' ? 'active' : ''} onClick={() => setActiveTab('nueva')}>
+          Nueva Orden
+        </button>
+        <button className={activeTab === 'historial' ? 'active' : ''} onClick={() => setActiveTab('historial')}>
+          Historial ({MOCK_ORDERS.length})
+        </button>
+      </div>
 
-          {selectedProvider && (
-            <div className="wise-card !p-0 overflow-hidden animate-in slide-in-from-bottom-4">
-              <div className="p-6 border-b border-[var(--color-fog)] bg-[var(--color-fog)] bg-opacity-30 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h2 className="font-bold text-lg text-[var(--color-obsidian)] flex items-center gap-2">
-                    Catálogo Disponible
-                    {selectedProvider.verified && <CheckCircle2 size={16} className="text-green-600" />}
-                  </h2>
-                  <div className="flex gap-4 mt-2 text-sm text-[var(--color-charcoal)] font-medium">
-                    <span className="flex items-center gap-1.5"><Truck size={14} style={{ color: 'var(--color-pebble)' }}/> Mínimo: ${selectedProvider.min_order_amount}</span>
-                    <span className="flex items-center gap-1.5"><MapPin size={14} style={{ color: 'var(--color-pebble)' }}/> {selectedProvider.location}</span>
-                  </div>
+      {/* ── NUEVA ORDEN ───────────────────────────────────────────────────── */}
+      {activeTab === 'nueva' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left: Selector + Catálogo */}
+          <div className="lg:col-span-7 space-y-5">
+
+            {/* Selector de Proveedor */}
+            <div className="wise-card !p-0 overflow-hidden">
+              <div className="px-5 py-3 border-b border-[var(--color-fog)]" style={{ background: 'var(--color-fog)' }}>
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>
+                  Proveedor
+                </span>
+              </div>
+              <div className="p-4 flex flex-wrap gap-2">
+                {MOCK_PROVIDERS.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => { setSelectedProviderId(p.id); setCart([]); setSearchQuery(''); }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition-all"
+                    style={selectedProviderId === p.id
+                      ? { background: 'var(--color-forest-ink)', color: 'var(--color-paper)', borderColor: 'var(--color-forest-ink)' }
+                      : { background: 'transparent', color: 'var(--color-charcoal)', borderColor: 'var(--color-fog)' }
+                    }
+                  >
+                    <Building2 size={14} />
+                    {p.name}
+                    {p.verified && <CheckCircle2 size={12} style={{ color: selectedProviderId === p.id ? 'var(--color-lime-voltage)' : '#16a34a' }} />}
+                  </button>
+                ))}
+              </div>
+              {selectedProvider && (
+                <div className="px-5 py-3 border-t border-[var(--color-fog)] flex flex-wrap gap-4 text-xs" style={{ color: 'var(--color-pebble)' }}>
+                  <span className="flex items-center gap-1"><Truck size={12} /> Lead Time: {selectedProvider.lead_time_days} días</span>
+                  <span className="flex items-center gap-1"><Package size={12} /> Mínimo: {formatCurrency(selectedProvider.min_order_amount)}</span>
+                  <span className="flex items-center gap-1"><FileText size={12} /> {selectedProvider.payment_terms}</span>
                 </div>
-                <div className="relative w-full md:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: "var(--color-pebble)" }} />
-                  <input 
-                    type="text"
-                    placeholder="Buscar SKU o nombre..."
+              )}
+            </div>
+
+            {/* Catálogo */}
+            <div className="wise-card !p-0 overflow-hidden">
+              <div className="p-4 border-b border-[var(--color-fog)] flex items-center gap-3" style={{ background: 'var(--color-fog)' }}>
+                <div className="relative flex-1">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-pebble)' }} />
+                  <input
+                    type="search"
+                    placeholder="Buscar SKU o producto…"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="wise-input pl-10 text-sm"
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="wise-input pl-9 !py-2 !text-sm"
                   />
                 </div>
+                <span className="wise-badge !text-xs">{selectedProvider.products.length} SKUs</span>
               </div>
 
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto">
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((prodName: string, i: number) => (
-                    <div key={i} className="p-4 border border-[var(--color-fog)] rounded-xl hover:border-[var(--color-forest-ink)] transition-colors flex items-center justify-between bg-white group">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-[var(--color-fog)]">
-                          <Package size={18} style={{ color: 'var(--color-charcoal)' }} />
-                        </div>
-                        <span className="font-bold text-sm text-[var(--color-obsidian)] group-hover:text-[var(--color-forest-ink)] transition-colors">
-                          {prodName}
-                        </span>
+              <div className="divide-y divide-[var(--color-fog)]">
+                {filteredProducts.map(product => {
+                  const inCart = cart.find(c => c.sku === product.sku);
+                  return (
+                    <div key={product.sku} className="flex items-center gap-4 px-5 py-3.5 hover:bg-[var(--color-fog)] transition-colors group">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--color-fog)' }}>
+                        <Package size={16} style={{ color: 'var(--color-forest-ink)' }} />
                       </div>
-                      <button 
-                        onClick={() => handleAddProduct(prodName)}
-                        className="p-2 rounded-lg hover:bg-[var(--color-forest-ink)] hover:text-white text-[var(--color-forest-ink)] transition-colors bg-[var(--color-fog)]"
-                        title="Añadir a OC"
-                      >
-                        <Plus size={18} />
-                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate" style={{ color: 'var(--color-obsidian)' }}>{product.name}</div>
+                        <div className="text-xs mt-0.5" style={{ color: 'var(--color-pebble)' }}>
+                          {product.sku} · {product.unit}
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-black text-sm" style={{ color: 'var(--color-obsidian)' }}>{formatCurrency(product.price)}</div>
+                        <div className="text-xs" style={{ color: 'var(--color-pebble)' }}>por {product.unit}</div>
+                      </div>
+                      {inCart ? (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button onClick={() => updateQty(product.sku, -1)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'var(--color-fog)' }}>
+                            <Minus size={12} />
+                          </button>
+                          <span className="w-6 text-center font-bold text-sm">{inCart.qty}</span>
+                          <button onClick={() => updateQty(product.sku, 1)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: 'var(--color-lime-voltage)' }}>
+                            <Plus size={12} style={{ color: 'var(--color-forest-ink)' }} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => addToCart(product)}
+                          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all opacity-0 group-hover:opacity-100"
+                          style={{ background: 'var(--color-forest-ink)', color: 'var(--color-paper)' }}
+                        >
+                          <Plus size={16} />
+                        </button>
+                      )}
                     </div>
-                  ))
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Carrito / Resumen OC */}
+          <div className="lg:col-span-5">
+            <div className="wise-card !p-0 overflow-hidden sticky top-6 shadow-xl">
+              {/* Cart Header */}
+              <div className="p-5 flex items-center gap-3" style={{ background: 'var(--color-forest-ink)' }}>
+                <ShoppingCart size={20} style={{ color: 'var(--color-lime-voltage)' }} />
+                <h2 className="font-bold text-lg" style={{ color: 'var(--color-paper)' }}>
+                  Resumen de Orden
+                </h2>
+                {cart.length > 0 && (
+                  <span className="ml-auto wise-badge !text-xs" style={{ background: 'var(--color-lime-voltage)', color: 'var(--color-forest-ink)' }}>
+                    {cart.length} SKUs
+                  </span>
+                )}
+              </div>
+
+              {/* Cart Body */}
+              <div className="p-5">
+                {cart.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ShoppingCart size={40} className="mx-auto mb-3" style={{ color: 'var(--color-pebble)', opacity: 0.3 }} />
+                    <p className="text-sm font-medium" style={{ color: 'var(--color-pebble)' }}>
+                      Agrega productos del catálogo<br />para comenzar tu orden.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="col-span-full py-12 text-center text-sm font-medium text-[var(--color-pebble)]">
-                    No se encontraron productos en el catálogo que coincidan con la búsqueda.
+                  <div className="space-y-4">
+                    {/* Items */}
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                      {cart.map(item => (
+                        <div key={item.sku} className="flex items-start gap-3 pb-3 border-b border-[var(--color-fog)]">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm leading-tight" style={{ color: 'var(--color-obsidian)' }}>
+                              {item.name}
+                            </div>
+                            <div className="text-xs mt-0.5" style={{ color: 'var(--color-pebble)' }}>
+                              {item.unit} · {formatCurrency(item.unitPrice)} c/u
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button onClick={() => updateQty(item.sku, -1)} className="w-6 h-6 rounded-full text-xs flex items-center justify-center" style={{ background: 'var(--color-fog)' }}>
+                              <Minus size={10} />
+                            </button>
+                            <span className="w-5 text-center font-bold text-sm">{item.qty}</span>
+                            <button onClick={() => updateQty(item.sku, 1)} className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: 'var(--color-lime-voltage)' }}>
+                              <Plus size={10} style={{ color: 'var(--color-forest-ink)' }} />
+                            </button>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="font-black text-sm" style={{ color: 'var(--color-obsidian)' }}>
+                              {formatCurrency(item.qty * item.unitPrice)}
+                            </div>
+                            <button onClick={() => removeItem(item.sku)} className="text-[10px] mt-0.5 font-semibold" style={{ color: 'var(--color-alarm-red)' }}>
+                              Quitar
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Totales */}
+                    <div className="pt-3 space-y-2">
+                      <div className="flex justify-between text-sm" style={{ color: 'var(--color-pebble)' }}>
+                        <span>Subtotal ({cart.reduce((a, c) => a + c.qty, 0)} unidades)</span>
+                        <span className="font-semibold">{formatCurrency(totalAmount)}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-black pt-2 border-t border-[var(--color-fog)]" style={{ color: 'var(--color-obsidian)' }}>
+                        <span>TOTAL</span>
+                        <span>{formatCurrency(totalAmount)}</span>
+                      </div>
+                    </div>
+
+                    {/* Aviso pedido mínimo */}
+                    {!meetsMinOrder && totalAmount > 0 && (
+                      <div className="p-3 rounded-xl flex items-start gap-2" style={{ background: '#fff7ed', color: '#9a3412' }}>
+                        <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+                        <p className="text-xs font-semibold leading-tight">
+                          Pedido mínimo: {formatCurrency(selectedProvider.min_order_amount)}. Te faltan {formatCurrency(selectedProvider.min_order_amount - totalAmount)}.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* CTA Financiamiento */}
+                    {meetsMinOrder && (
+                      <div className="p-3 rounded-xl flex items-center justify-between" style={{ background: 'var(--color-linen-mist)' }}>
+                        <div className="flex items-center gap-2">
+                          <Landmark size={16} style={{ color: 'var(--color-forest-ink)' }} />
+                          <span className="text-xs font-semibold" style={{ color: 'var(--color-charcoal)' }}>
+                            ¿Necesitas financiar este pedido?
+                          </span>
+                        </div>
+                        <Link href="/financiamiento" className="text-xs font-bold flex items-center gap-1" style={{ color: 'var(--color-forest-ink)' }}>
+                          Ver opciones <ChevronRight size={12} />
+                        </Link>
+                      </div>
+                    )}
+
+                    {/* Submit */}
+                    {ocSent ? (
+                      <div className="wise-btn-primary w-full justify-center !bg-[var(--color-spruce)] cursor-default">
+                        <CheckCircle2 size={18} /> ¡OC Enviada Exitosamente!
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleSend}
+                        disabled={!meetsMinOrder || cart.length === 0}
+                        className="wise-btn-primary w-full justify-center"
+                        style={{ opacity: (!meetsMinOrder || cart.length === 0) ? 0.5 : 1 }}
+                      >
+                        <Send size={16} /> Generar Orden de Compra
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
             </div>
-          )}
+          </div>
         </div>
+      )}
 
-        {/* Lado Derecho: Resumen del Pedido (Sticky) */}
-        <div className="lg:col-span-4">
-          <div className="wise-card sticky top-6 !p-0 overflow-hidden shadow-xl shadow-[var(--color-fog)]">
-            <div className="p-6 border-b border-[var(--color-fog)] bg-[var(--color-forest-ink)]">
-              <h2 className="font-bold flex items-center gap-2 text-white text-lg">
-                <ShoppingCart size={20} />
-                Orden de Compra
-              </h2>
+      {/* ── HISTORIAL ─────────────────────────────────────────────────────── */}
+      {activeTab === 'historial' && (
+        <div className="space-y-4">
+          {/* KPIs */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: 'OCs Este Mes', value: '4', sub: '+1 vs. mes anterior' },
+              { label: 'Total Invertido', value: 'S/ 78,450', sub: 'Oct 2026' },
+              { label: 'OCs Financiadas', value: '1', sub: 'Línea KUOTA activa' },
+              { label: 'Prom. Lead Time', value: '4.2 días', sub: 'Todos los proveedores' },
+            ].map(kpi => (
+              <div key={kpi.label} className="wise-card !p-4">
+                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>{kpi.label}</p>
+                <p className="text-2xl font-black mt-1" style={{ color: 'var(--color-obsidian)', fontFamily: 'var(--font-wise-sans)' }}>{kpi.value}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--color-pebble)' }}>{kpi.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Tabla de OCs */}
+          <div className="wise-card !p-0 overflow-hidden">
+            <div className="px-6 py-4 border-b border-[var(--color-fog)]" style={{ background: 'var(--color-fog)' }}>
+              <h3 className="font-bold" style={{ color: 'var(--color-obsidian)' }}>Órdenes de Compra Recientes</h3>
             </div>
-            
-            <div className="p-6">
-              {cart.length === 0 ? (
-                <div className="text-center py-12 text-sm" style={{ color: "var(--color-pebble)" }}>
-                  <ShoppingCart size={40} className="mx-auto mb-4 opacity-20" />
-                  No has añadido ningún producto. <br/>Selecciona artículos del catálogo para comenzar.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {cart.map((item, index) => (
-                    <div key={index} className="flex justify-between items-start pb-4 border-b border-[var(--color-fog)]">
-                      <div className="flex-1 pr-4">
-                        <div className="font-bold text-sm" style={{ color: "var(--color-obsidian)" }}>{item.name}</div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs font-medium text-[var(--color-pebble)]">Unit. $</span>
-                          <input 
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={item.unitPrice || ''}
-                            placeholder="0.00"
-                            onChange={(e) => handlePriceChange(index, parseFloat(e.target.value) || 0)}
-                            className="wise-input !py-1 !px-2 text-sm w-20"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2 w-24">
-                        <div className="flex items-center border border-[var(--color-fog)] rounded-lg overflow-hidden">
-                          <button onClick={() => handleQtyChange(index, item.qty - 1)} className="px-2 py-1 bg-gray-50 hover:bg-gray-100 font-medium">-</button>
-                          <div className="px-2 py-1 text-sm font-bold w-8 text-center">{item.qty}</div>
-                          <button onClick={() => handleQtyChange(index, item.qty + 1)} className="px-2 py-1 bg-gray-50 hover:bg-gray-100 font-medium">+</button>
-                        </div>
-                        <div className="font-black text-sm" style={{ color: "var(--color-obsidian)" }}>
-                          ${(item.qty * item.unitPrice).toFixed(2)}
-                        </div>
-                        <button onClick={() => handleRemoveItem(index)} className="text-[10px] uppercase font-bold text-red-500 hover:underline">
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="pt-4 space-y-2">
-                    <div className="flex justify-between text-sm font-medium text-[var(--color-charcoal)]">
-                      <span>Subtotal</span>
-                      <span>${totalAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xl font-black pt-4 border-t border-[var(--color-fog)]" style={{ color: "var(--color-obsidian)" }}>
-                      <span>TOTAL</span>
-                      <span>${totalAmount.toFixed(2)}</span>
-                    </div>
-                  </div>
-
-                  {selectedProvider && totalAmount > 0 && totalAmount < (selectedProvider.min_order_amount || 0) && (
-                    <div className="mt-4 p-3 bg-amber-50 text-amber-800 text-xs font-bold rounded-lg flex gap-2">
-                      <span className="text-amber-500">⚠</span>
-                      El total no alcanza el pedido mínimo exigido por este proveedor (${selectedProvider.min_order_amount}).
-                    </div>
-                  )}
-
-                  <button 
-                    onClick={handleSendOrder}
-                    className="wise-btn-primary w-full mt-6 flex items-center justify-center gap-2 h-12 text-base"
-                  >
-                    <Send size={18} />
-                    Generar Vía WhatsApp
-                  </button>
-                  
-                  <p className="text-center text-xs mt-3 text-[var(--color-pebble)] font-medium flex items-center justify-center gap-1">
-                    Serás redirigido a WhatsApp Web <ExternalLink size={12}/>
-                  </p>
-                </div>
-              )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>
+                  <tr className="border-b border-[var(--color-fog)]">
+                    <th className="px-6 py-3">ID Orden</th>
+                    <th className="px-6 py-3">Proveedor</th>
+                    <th className="px-6 py-3">Fecha</th>
+                    <th className="px-6 py-3">Condición</th>
+                    <th className="px-6 py-3 text-right">Total</th>
+                    <th className="px-6 py-3 text-center">Estado</th>
+                    <th className="px-6 py-3 text-center">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-fog)]">
+                  {MOCK_ORDERS.map(order => {
+                    const status = STATUS_CONFIG[order.status];
+                    return (
+                      <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-sm" style={{ color: 'var(--color-obsidian)' }}>{order.id}</div>
+                          <div className="text-xs mt-0.5" style={{ color: 'var(--color-pebble)' }}>{order.items} SKUs</div>
+                        </td>
+                        <td className="px-6 py-4 font-medium text-sm" style={{ color: 'var(--color-charcoal)' }}>
+                          {order.provider}
+                        </td>
+                        <td className="px-6 py-4 text-sm" style={{ color: 'var(--color-pebble)' }}>
+                          {order.date}
+                        </td>
+                        <td className="px-6 py-4 text-sm" style={{ color: 'var(--color-pebble)' }}>
+                          {order.paymentTerms}
+                        </td>
+                        <td className="px-6 py-4 text-right font-black text-sm" style={{ color: 'var(--color-obsidian)' }}>
+                          S/ {order.amount.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="wise-badge !text-xs !px-3 !py-1"
+                            style={{ background: status.bg, color: status.color }}>
+                            {status.label}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {order.status === 'aprobada' ? (
+                            <Link href="/financiamiento" className="wise-btn-primary !px-3 !py-1.5 !text-xs flex items-center gap-1 justify-center">
+                              <Landmark size={12} /> Financiar
+                            </Link>
+                          ) : (
+                            <button className="text-xs font-semibold" style={{ color: 'var(--color-forest-ink)' }}>
+                              Ver Detalle
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
+  );
+}
+
+// ── Export con Suspense (useSearchParams requiere) ─────────────────────────────
+export default function ComprasPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-6 flex items-center justify-center min-h-[40vh]">
+        <div className="wise-spinner" />
+      </div>
+    }>
+      <ComprasContent />
+    </Suspense>
   );
 }
