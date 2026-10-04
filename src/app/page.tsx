@@ -40,11 +40,7 @@ export default function LandingPage() {
 
   const scrollToSection = (id: string) => {
     setActiveSegment(id);
-    if (id === 'precios') {
-      // Si va a precios, redireccionamos a /plans ya que es la página de precios
-      window.location.href = '/plans';
-      return;
-    }
+    
     const element = document.getElementById(id);
     if (element) {
       const y = element.getBoundingClientRect().top + window.scrollY - 80;
@@ -631,6 +627,7 @@ export default function LandingPage() {
     </div>
   );
 }
+
 
 
 
