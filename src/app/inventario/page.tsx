@@ -93,7 +93,7 @@ export default function MiAlmacenPage() {
         <div className="wise-card !p-4 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase" style={{ color: 'var(--color-slate)' }}>Valor Total a PV</p>
-            <h3 className="text-xl font-black mt-1" style={{ color: 'var(--color-obsidian)' }}>${totalValue.toLocaleString()}</h3>
+            <h3 className="text-xl font-black mt-1" style={{ color: 'var(--color-obsidian)' }}>S/ {totalValue.toLocaleString()}</h3>
           </div>
           <div className="p-2 rounded-full" style={{ background: 'var(--color-linen-mist)', color: 'var(--color-forest-ink)' }}><DollarSign size={20}/></div>
         </div>
@@ -121,22 +121,23 @@ export default function MiAlmacenPage() {
             <div className="p-4 border-b border-[var(--color-fog)] flex items-center justify-between">
               
               {/* Conmutador de Estado */}
-              <div className="flex p-1 rounded-lg" style={{ background: 'var(--color-fog)' }}>
+              <div className="wise-segmented">
                 <button 
                   onClick={() => setFilterState('todos')}
-                  className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${filterState === 'todos' ? 'bg-white shadow-sm text-[var(--color-obsidian)]' : 'text-[var(--color-pebble)]'}`}
+                  className={filterState === 'todos' ? 'active' : ''}
                 >
                   Todos
                 </button>
                 <button 
                   onClick={() => setFilterState('quiebre')}
-                  className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${filterState === 'quiebre' ? 'bg-white shadow-sm text-red-600' : 'text-[var(--color-pebble)]'}`}
+                  className={filterState === 'quiebre' ? 'active' : ''}
+                  style={filterState === 'quiebre' ? { background: 'var(--color-alarm-red)', color: 'white' } : {}}
                 >
                   Quiebres
                 </button>
                 <button 
                   onClick={() => setFilterState('sobre_stock')}
-                  className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${filterState === 'sobre_stock' ? 'bg-white shadow-sm text-amber-600' : 'text-[var(--color-pebble)]'}`}
+                  className={filterState === 'sobre_stock' ? 'active' : ''}
                 >
                   Sobre Stock
                 </button>
@@ -165,18 +166,18 @@ export default function MiAlmacenPage() {
                       {product.category}
                     </td>
                     <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
-                      ${product.price.toFixed(2)}
+                      S/ {product.price.toFixed(2)}
                     </td>
                     <td className="px-6 py-4 text-sm font-bold text-right" style={{ color: 'var(--color-obsidian)' }}>
                       {product.totalStock}
                     </td>
                     <td className="px-6 py-4 text-center">
                       {product.status === 'quiebre' ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                        <span className="wise-badge gap-1.5" style={{ background: '#fecaca', color: 'var(--color-alarm-red)' }}>
                           <AlertCircle size={14} /> Quiebre
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
+                        <span className="wise-badge gap-1.5" style={{ background: '#fef3c7', color: '#b45309' }}>
                           <TrendingDown size={14} /> Sobre Stock
                         </span>
                       )}
@@ -232,18 +233,18 @@ export default function MiAlmacenPage() {
                   />
                 </div>
 
-                <div className="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
+                <div className="bg-white p-4 rounded-[10px] space-y-3">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-white opacity-80">Capital Recuperado:</span>
-                    <span className="font-bold text-white">S/ {recoveredValue.toLocaleString()}</span>
+                    <span className="font-semibold" style={{ color: 'var(--color-pebble)' }}>Capital Recuperado:</span>
+                    <span className="font-bold" style={{ color: 'var(--color-forest-ink)' }}>S/ {recoveredValue.toLocaleString()}</span>
                   </div>
                   
                   {/* Proyección Interactiva */}
-                  <div className="flex items-start gap-3 pt-3 border-t border-white/10">
-                    <CalendarDays size={24} style={{ color: 'var(--color-lime-voltage)' }} />
+                  <div className="flex items-start gap-3 pt-3 border-t border-[var(--color-fog)]">
+                    <CalendarDays size={24} style={{ color: 'var(--color-spruce)' }} />
                     <div>
-                      <span className="font-bold block" style={{ color: 'var(--color-lime-voltage)' }}>+{additionalDays} Días</span>
-                      <span className="text-xs text-white opacity-70 leading-tight block mt-1">
+                      <span className="font-bold block" style={{ color: 'var(--color-forest-ink)' }}>+{additionalDays} Días</span>
+                      <span className="text-xs leading-tight block mt-1" style={{ color: 'var(--color-charcoal)' }}>
                         De inventario sano adicional que podrías comprar hoy.
                       </span>
                     </div>
