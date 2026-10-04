@@ -84,6 +84,7 @@ function ComprasContent() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [ocSent, setOcSent] = useState(false);
+  const [selectedOC, setSelectedOC] = useState<any>(null);
 
   const selectedProvider = MOCK_PROVIDERS.find(p => p.id === selectedProviderId)!;
 
@@ -443,7 +444,9 @@ function ComprasContent() {
                               <Landmark size={12} /> Financiar
                             </Link>
                           ) : (
-                            <button className="text-xs font-semibold" style={{ color: 'var(--color-forest-ink)' }}>
+                            <button 
+                              onClick={() => setSelectedOC(order)}
+                              className="text-xs font-semibold hover:underline" style={{ color: 'var(--color-forest-ink)' }}>
                               Ver Detalle
                             </button>
                           )}
@@ -457,6 +460,79 @@ function ComprasContent() {
           </div>
         </div>
       )}
+
+      {/* ── MODAL DE DETALLE OC ───────────────────────────────────────────── */}
+      {selectedOC && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+             onClick={(e) => { if (e.target === e.currentTarget) setSelectedOC(null); }}>
+          <div className="wise-card w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 p-6 relative">
+            <button onClick={() => setSelectedOC(null)} className="absolute top-6 right-6 text-[var(--color-slate)] hover:text-[var(--color-obsidian)]">
+              <X size={20} />
+            </button>
+            <h2 className="text-xl font-bold text-[var(--color-obsidian)] mb-1">Orden de Compra {selectedOC.id}</h2>
+            <div className="flex items-center gap-2 mb-6">
+              <span className="wise-badge !text-xs !px-2 !py-0.5" style={{ background: STATUS_CONFIG[selectedOC.status].bg, color: STATUS_CONFIG[selectedOC.status].color }}>
+                {STATUS_CONFIG[selectedOC.status].label}
+              </span>
+              <span className="text-xs text-[var(--color-slate)]">{selectedOC.date}</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="p-4 rounded-xl border border-[var(--color-fog)] bg-[var(--color-fog)]">
+                <p className="text-xs font-bold text-[var(--color-slate)] mb-1">PROVEEDOR</p>
+                <p className="text-sm font-semibold text-[var(--color-obsidian)] flex items-center gap-2"><Building2 size={14} className="text-[var(--color-forest-ink)]" /> {selectedOC.provider}</p>
+                <p className="text-xs text-[var(--color-charcoal)] mt-1">RUC: 20100055237</p>
+              </div>
+              <div className="p-4 rounded-xl border border-[var(--color-fog)] bg-[var(--color-fog)]">
+                <p className="text-xs font-bold text-[var(--color-slate)] mb-1">CONDICIÓN Y LOGÍSTICA</p>
+                <p className="text-sm font-semibold text-[var(--color-obsidian)] flex items-center gap-2"><Truck size={14} className="text-[var(--color-forest-ink)]" /> {selectedOC.paymentTerms}</p>
+                <p className="text-xs text-[var(--color-charcoal)] mt-1">Envío estándar - Almacén Central</p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-sm font-bold text-[var(--color-obsidian)] mb-3">Productos Solicitados</h3>
+              <div className="border border-[var(--color-fog)] rounded-[10px] overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-[var(--color-fog)] text-[var(--color-slate)] text-xs font-bold">
+                    <tr>
+                      <th className="px-4 py-2">Producto</th>
+                      <th className="px-4 py-2 text-right">Cant.</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--color-fog)]">
+                    <tr>
+                      <td className="px-4 py-3 text-[var(--color-charcoal)]">Producto de ejemplo (SKU-1)</td>
+                      <td className="px-4 py-3 text-right font-medium text-[var(--color-obsidian)]">{selectedOC.items} u.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex justify-between items-center mt-3 pt-3 border-t border-[var(--color-fog)]">
+                <span className="font-bold text-[var(--color-obsidian)]">Total de la Orden</span>
+                <span className="font-black text-lg text-[var(--color-obsidian)]" style={{ fontFamily: 'var(--font-wise-sans)' }}>
+                  S/ {selectedOC.amount.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 justify-end pt-4 border-t border-[var(--color-fog)]">
+              <button onClick={() => setSelectedOC(null)} className="wise-btn-outline px-4">
+                Cerrar
+              </button>
+              {selectedOC.status === 'enviada' && (
+                <button 
+                  onClick={() => { alert('OC Aprobada'); setSelectedOC(null); }}
+                  className="wise-btn-primary px-4 bg-[var(--color-spruce)]"
+                >
+                  <CheckCircle2 size={16} className="inline mr-2" /> Aprobar OC
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
