@@ -1,142 +1,149 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import {
+  Coins, ArrowRight, Wallet, Target, TrendingUp, AlertCircle, Calendar
+} from 'lucide-react';
 import Link from 'next/link';
-import { AppShell } from '@/components/layout/AppShell';
-import { Coins, ArrowRight } from 'lucide-react';
-import { RestockItem } from '@/services/RestockCalculatorService';
 
-import { apiFetch } from '@/lib/apiFetch';
+type CapitalItem = {
+  id: string;
+  sku: string;
+  name: string;
+  requiredCapital: number;
+  urgencyDays: number;
+  expectedROI: number; // %
+};
+
+const MOCK_CAPITAL: CapitalItem[] = [
+  { id: 'c-1', sku: 'ALC-001', name: 'Aceite Primor Premium 1L', requiredCapital: 2460, urgencyDays: 2, expectedROI: 45.0 },
+  { id: 'c-2', sku: 'NST-001', name: 'Milo Actigen-E 400g', requiredCapital: 5400, urgencyDays: 4, expectedROI: 41.9 },
+  { id: 'c-3', sku: 'PG-001', name: 'Ariel Líquido Doble Poder 2L', requiredCapital: 3168, urgencyDays: 6, expectedROI: 36.9 },
+  { id: 'c-4', sku: 'NST-002', name: 'Nescafé Tradición 200g', requiredCapital: 4608, urgencyDays: 8, expectedROI: 38.2 },
+  { id: 'c-5', sku: 'ALC-003', name: 'Fideos Don Vittorio 500g', requiredCapital: 1728, urgencyDays: 14, expectedROI: 35.7 },
+  { id: 'c-6', sku: 'PG-002', name: 'Pampers Recién Nacido x 40', requiredCapital: 2220, urgencyDays: 10, expectedROI: 32.6 },
+];
+
 export default function CapitalRequeridoPage() {
-  const [items, setItems] = useState<RestockItem[]>([]);
-  const [totalCapital, setTotalCapital] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const fmt = (v: number) => `S/ ${v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await apiFetch('/api/dashboard/reabastecimiento');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.items) {
-            setItems(data.items);
-            const total = data.items.reduce((acc: number, curr: RestockItem) => acc + curr.investment, 0);
-            setTotalCapital(total);
-          }
-        }
-      } catch (e) {
-        console.error('Error cargando capital requerido:', e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
-
-  // Agrupar por proveedor
-  const providerBreakdown = items.reduce((acc: Record<string, { count: number; total: number }>, curr) => {
-    if (!acc[curr.provider]) {
-      acc[curr.provider] = { count: 0, total: 0 };
-    }
-    acc[curr.provider].count += 1;
-    acc[curr.provider].total += curr.investment;
-    return acc;
-  }, {});
+  const totalRequired = MOCK_CAPITAL.reduce((acc, curr) => acc + curr.requiredCapital, 0);
+  const immediateRequired = MOCK_CAPITAL.filter(i => i.urgencyDays <= 7).reduce((acc, curr) => acc + curr.requiredCapital, 0);
+  const avgROI = MOCK_CAPITAL.reduce((acc, curr) => acc + curr.expectedROI, 0) / MOCK_CAPITAL.length;
 
   return (
-    <AppShell>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        {/* Encabezado */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#e0f2fe', color: '#0369a1', fontSize: '12px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px' }}>
-                <Coins size={14} />
-                INVENTARIO & FINANZAS
-              </span>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Planificación de Flujo de Caja</span>
-            </div>
-            <h1 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--ink)', margin: 0, letterSpacing: '-0.02em' }}>
-              Capital Requerido para Compras
-            </h1>
-            <p style={{ fontSize: '14px', color: 'var(--muted)', marginTop: '6px', marginBottom: 0 }}>
-              Estimación de liquidez necesaria para abastecer los lotes óptimos sugeridos por el algoritmo de reabastecimiento.
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: '#e0f2fe', color: '#0369a1' }}>
+              <Coins size={12} /> PROYECCIÓN FINANCIERA
+            </span>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>
+              Horizonte: Próximos 14 Días
+            </span>
+          </div>
+          <h1 className="text-3xl font-black text-[var(--color-obsidian)]"
+            style={{ fontFamily: 'var(--font-wise-sans)', letterSpacing: '-0.03em' }}>
+            Capital de Trabajo Requerido
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--color-pebble)' }}>
+            Proyección del capital necesario para cubrir tu plan de reabastecimiento y evitar quiebres de stock.
+          </p>
+        </div>
+        <Link href="/financiamiento" className="wise-btn-primary flex items-center gap-2">
+          Ver Línea de Crédito KUOTA <ArrowRight size={16} />
+        </Link>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="wise-card-dark !p-5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10"><Wallet size={80} /></div>
+          <div className="relative z-10">
+            <p className="text-xs font-bold uppercase tracking-wider opacity-70" style={{ color: 'var(--color-paper)' }}>Capital Total (14d)</p>
+            <p className="text-4xl font-black mt-1" style={{ color: 'var(--color-lime-voltage)', fontFamily: 'var(--font-wise-sans)' }}>
+              {fmt(totalRequired)}
             </p>
-          </div>
-
-          <Link
-            href="/finanzas/financiamiento-disponible"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              backgroundColor: 'var(--color-forest-ink)',
-              color: '#ffffff',
-              padding: '10px 18px',
-              borderRadius: '10px',
-              fontWeight: 600,
-              fontSize: '14px',
-              textDecoration: 'none',
-            }}
-          >
-            <span>Solicitar Línea de Financiamiento</span>
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-
-        {/* Tarjetas Resumen */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-          <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '10px', padding: '20px', borderLeft: '4px solid var(--color-forest-ink)' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#1e40af', textTransform: 'uppercase' }}>Inversión Total Estimada</div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--ink)', marginTop: '6px' }}>
-              PEN {loading ? '...' : totalCapital.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>Para 100% de órdenes sugeridas</div>
-          </div>
-
-          <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '10px', padding: '20px', borderLeft: '4px solid #16a34a' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#166534', textTransform: 'uppercase' }}>Retorno Proyectado (30d)</div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#16a34a', marginTop: '6px' }}>
-              +38.5%
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>Margen comercial promedio</div>
-          </div>
-
-          <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '10px', padding: '20px', borderLeft: '4px solid #8b5cf6' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b21a8', textTransform: 'uppercase' }}>Proveedores por Pagar</div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--ink)', marginTop: '6px' }}>
-              {loading ? '...' : Object.keys(providerBreakdown).length}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>Negociación de plazos a 30-60 días</div>
+            <p className="text-xs mt-1 opacity-70" style={{ color: 'var(--color-paper)' }}>Para {MOCK_CAPITAL.length} SKUs prioritarios</p>
           </div>
         </div>
 
-        {/* Desglose por Proveedor */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '10px', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
-            <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--ink)' }}>Distribución de Capital por Proveedor</span>
-          </div>
+        <div className="wise-card !p-5">
+          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>Necesidad Inmediata (7d)</p>
+          <p className="text-2xl font-black mt-1" style={{ color: 'var(--color-alarm-red)', fontFamily: 'var(--font-wise-sans)' }}>
+            {fmt(immediateRequired)}
+          </p>
+          <p className="text-xs mt-1" style={{ color: 'var(--color-pebble)' }}>Capital crítico a desembolsar</p>
+        </div>
 
-          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {Object.entries(providerBreakdown).map(([provider, data]) => {
-              const pct = totalCapital > 0 ? (data.total / totalCapital) * 100 : 0;
-              return (
-                <div key={provider} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600 }}>
-                    <span style={{ color: 'var(--ink)' }}>{provider} ({data.count} SKUs)</span>
-                    <span style={{ color: 'var(--color-forest-ink)' }}>
-                      PEN {data.total.toLocaleString('es-PE', { minimumFractionDigits: 2 })} ({pct.toFixed(1)}%)
-                    </span>
-                  </div>
-                  <div style={{ width: '100%', height: '8px', background: 'var(--bg2)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ width: `${pct}%`, height: '100%', background: 'var(--color-forest-ink)', borderRadius: '4px' }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="wise-card !p-5">
+          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>ROI Promedio</p>
+          <p className="text-2xl font-black mt-1" style={{ color: 'var(--color-obsidian)', fontFamily: 'var(--font-wise-sans)' }}>
+            {avgROI.toFixed(1)}%
+          </p>
+          <p className="text-xs mt-1" style={{ color: 'var(--color-pebble)' }}>Retorno esperado sobre costo</p>
+        </div>
+
+        <div className="wise-card !p-5" style={{ background: 'var(--color-linen-mist)', borderColor: 'var(--color-linen-mist)' }}>
+          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-forest-ink)' }}>Brecha de Caja</p>
+          <p className="text-sm font-bold mt-2 leading-tight" style={{ color: 'var(--color-spruce)' }}>
+            Tienes un desfase de <strong>{fmt(immediateRequired - 2000)}</strong> para cubrir las necesidades de esta semana.
+          </p>
         </div>
       </div>
-    </AppShell>
+
+      {/* Table */}
+      <div className="wise-card !p-0 overflow-hidden">
+        <div className="px-6 py-4 border-b border-[var(--color-fog)] flex items-center justify-between" style={{ background: 'var(--color-fog)' }}>
+          <h3 className="font-bold" style={{ color: 'var(--color-obsidian)' }}>Desglose de Capital por Producto</h3>
+          <span className="wise-badge !text-xs !px-3 !py-1" style={{ background: 'var(--color-forest-ink)', color: 'var(--color-lime-voltage)' }}>
+            IA Priorizada
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="text-xs font-bold uppercase tracking-wider border-b border-[var(--color-fog)]" style={{ color: 'var(--color-slate)' }}>
+                <th className="px-6 py-3">SKU / Producto</th>
+                <th className="px-6 py-3 text-center">Días de Urgencia</th>
+                <th className="px-6 py-3 text-right">Capital Requerido</th>
+                <th className="px-6 py-3 text-right">ROI Esperado</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-fog)]">
+              {MOCK_CAPITAL.map(item => (
+                <tr key={item.id} className="hover:bg-[var(--color-fog)] transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="font-mono text-[10px]" style={{ color: 'var(--color-pebble)' }}>{item.sku}</div>
+                    <div className="font-bold leading-tight mt-0.5" style={{ color: 'var(--color-obsidian)' }}>{item.name}</div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold"
+                      style={
+                        item.urgencyDays <= 3 ? { background: '#fee2e2', color: 'var(--color-alarm-red)' } :
+                        item.urgencyDays <= 7 ? { background: '#fff7ed', color: '#c2410c' } :
+                        { background: 'var(--color-fog)', color: 'var(--color-spruce)' }
+                      }
+                    >
+                      <Calendar size={12} /> {item.urgencyDays} días
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right font-black text-[var(--color-obsidian)]">
+                    {fmt(item.requiredCapital)}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <span className="font-bold" style={{ color: item.expectedROI >= 40 ? 'var(--color-spruce)' : 'var(--color-charcoal)' }}>
+                      {item.expectedROI}%
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,171 +1,197 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import {
+  PackageMinus, ArrowRight, Search, AlertCircle, TrendingDown,
+  DollarSign, Sparkles, Filter, ChevronRight, Tag
+} from 'lucide-react';
 import Link from 'next/link';
-import { AppShell } from '@/components/layout/AppShell';
-import { Boxes, ArrowRight } from 'lucide-react';
-import { InventoryMasterItem } from '@/services/InventoryMasterService';
 
-import { apiFetch } from '@/lib/apiFetch';
+type DeadStockItem = {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  daysInactive: number;
+  physicalStock: number;
+  unitCost: number;
+  totalTiedCapital: number;
+  impactLevel: 'alto' | 'medio' | 'bajo';
+};
+
+const MOCK_DEAD_STOCK: DeadStockItem[] = [
+  { id: 'ds-1', sku: 'ALC-005', name: 'Margarina Manty 500g', category: 'Alimentos', daysInactive: 112, physicalStock: 240, unitCost: 3.8, totalTiedCapital: 912, impactLevel: 'alto' },
+  { id: 'ds-2', sku: 'PG-004', name: 'Gillette Prestobarba x 5', category: 'Higiene', daysInactive: 85, physicalStock: 320, unitCost: 3.5, totalTiedCapital: 1120, impactLevel: 'alto' },
+  { id: 'ds-3', sku: 'NST-004', name: 'Kit Kat 4 Fingers 41.5g', category: 'Alimentos', daysInactive: 64, physicalStock: 180, unitCost: 3.2, totalTiedCapital: 576, impactLevel: 'medio' },
+  { id: 'ds-4', sku: 'PG-003', name: 'Head & Shoulders 400ml', category: 'Higiene', daysInactive: 45, physicalStock: 120, unitCost: 13.0, totalTiedCapital: 1560, impactLevel: 'medio' },
+  { id: 'ds-5', sku: 'ALC-004', name: 'Galletas Casino Chocolate', category: 'Alimentos', daysInactive: 32, physicalStock: 450, unitCost: 1.6, totalTiedCapital: 720, impactLevel: 'bajo' },
+];
+
 export default function InventarioInmovilizadoPage() {
-  const [items, setItems] = useState<InventoryMasterItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterDays, setFilterDays] = useState<'todos' | '30' | '60' | '90'>('todos');
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await apiFetch('/api/dashboard/inventario');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.items) {
-            // Filtrar SKUs inmovilizados / alto volumen de stock
-            const inmovilizados = data.items.filter(
-              (i: InventoryMasterItem) =>
-                (i.physicalStock || 0) > 400 || i.health === 'healthy'
-            );
-            setItems(inmovilizados);
-          }
-        }
-      } catch (e) {
-        console.error('Error cargando inventario inmovilizado:', e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  const fmt = (v: number) => `S/ ${v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
-  const totalTiedCapital = items.reduce(
-    (acc, curr) => acc + (curr.totalValue || (curr.physicalStock || 0) * (curr.unitCost || 10)),
-    0
-  );
+  const filtered = useMemo(() => {
+    return MOCK_DEAD_STOCK.filter(item => {
+      const matchSearch = item.name.toLowerCase().includes(search.toLowerCase()) || item.sku.toLowerCase().includes(search.toLowerCase());
+      const matchDays =
+        filterDays === 'todos' ? true :
+        filterDays === '30' ? item.daysInactive >= 30 :
+        filterDays === '60' ? item.daysInactive >= 60 :
+        item.daysInactive >= 90;
+      return matchSearch && matchDays;
+    }).sort((a, b) => b.totalTiedCapital - a.totalTiedCapital);
+  }, [search, filterDays]);
+
+  const totalCapital = MOCK_DEAD_STOCK.reduce((acc, curr) => acc + curr.totalTiedCapital, 0);
+  const criticalCapital = MOCK_DEAD_STOCK.filter(i => i.daysInactive >= 90).reduce((a, c) => a + c.totalTiedCapital, 0);
 
   return (
-    <AppShell>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        {/* Encabezado */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fef3c7', color: '#92400e', fontSize: '12px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px' }}>
-                <Boxes size={14} />
-                INVENTARIO & FINANZAS
-              </span>
-              <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Optimización de Capital de Trabajo</span>
-            </div>
-            <h1 style={{ fontSize: '26px', fontWeight: 800, color: 'var(--ink)', margin: 0, letterSpacing: '-0.02em' }}>
-              Inventario Inmovilizado & Exceso
-            </h1>
-            <p style={{ fontSize: '14px', color: 'var(--muted)', marginTop: '6px', marginBottom: 0 }}>
-              Identificación de productos con rotación reducida que generan costo financiero y ocupación de almacén.
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: '#fef3c7', color: '#92400e' }}>
+              <PackageMinus size={12} /> INVENTARIO & FINANZAS
+            </span>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>
+              Optimización de Capital
+            </span>
+          </div>
+          <h1 className="text-3xl font-black text-[var(--color-obsidian)]"
+            style={{ fontFamily: 'var(--font-wise-sans)', letterSpacing: '-0.03em' }}>
+            Inventario Inmovilizado
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--color-pebble)' }}>
+            Capital estancado en productos sin movimiento. Libera liquidez aplicando descuentos o liquidaciones.
+          </p>
+        </div>
+        <Link href="/financiamiento" className="wise-btn-primary flex items-center gap-2">
+          Financiamiento para Capital <ArrowRight size={16} />
+        </Link>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="wise-card-dark !p-5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10"><DollarSign size={80} /></div>
+          <div className="relative z-10">
+            <p className="text-xs font-bold uppercase tracking-wider opacity-70" style={{ color: 'var(--color-paper)' }}>Capital Estancado</p>
+            <p className="text-4xl font-black mt-1" style={{ color: 'var(--color-lime-voltage)', fontFamily: 'var(--font-wise-sans)' }}>
+              {fmt(totalCapital)}
             </p>
-          </div>
-
-          <Link
-            href="/finanzas/financiamiento-disponible"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              backgroundColor: 'var(--primary)',
-              color: 'var(--bg)',
-              padding: '10px 18px',
-              borderRadius: '10px',
-              fontWeight: 600,
-              fontSize: '14px',
-              textDecoration: 'none',
-            }}
-          >
-            <span>Ver Financiamiento Disponible</span>
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-
-        {/* Tarjetas de Métricas Financieras */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-          <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '10px', padding: '20px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>Capital Inmovilizado Estimado</div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--ink)', marginTop: '6px' }}>
-              PEN {loading ? '...' : totalTiedCapital.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-            </div>
-            <div style={{ fontSize: '12px', color: '#b45309', marginTop: '4px' }}>Fondos representados en stock</div>
-          </div>
-
-          <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '10px', padding: '20px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>SKUs con Alta Disponibilidad</div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--ink)', marginTop: '6px' }}>
-              {loading ? '...' : items.length}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>Stock holgado en almacén</div>
-          </div>
-
-          <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '10px', padding: '20px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>Acción Recomendada</div>
-            <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-forest-ink)', marginTop: '6px' }}>
-              Priorizar Ventas & Evitar Reorden
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>Acelerar rotación para liberar caja</div>
+            <p className="text-xs mt-1 opacity-70" style={{ color: 'var(--color-paper)' }}>Total en {MOCK_DEAD_STOCK.length} SKUs</p>
           </div>
         </div>
 
-        {/* Tabla de Productos */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: '10px', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, fontSize: '15px', color: 'var(--ink)' }}>Detalle de SKUs</span>
-            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Sincronizado con almacén central</span>
-          </div>
+        <div className="wise-card !p-5">
+          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>Riesgo Crítico (&gt;90d)</p>
+          <p className="text-2xl font-black mt-1" style={{ color: 'var(--color-alarm-red)', fontFamily: 'var(--font-wise-sans)' }}>
+            {fmt(criticalCapital)}
+          </p>
+          <p className="text-xs mt-1" style={{ color: 'var(--color-pebble)' }}>Capital en alto riesgo de pérdida</p>
+        </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-              <thead>
-                <tr style={{ background: 'var(--bg2)', borderBottom: '1px solid var(--line)', color: 'var(--muted)', fontWeight: 600 }}>
-                  <th style={{ padding: '12px 16px' }}>SKU / Nombre</th>
-                  <th style={{ padding: '12px 16px' }}>Categoría</th>
-                  <th style={{ padding: '12px 16px' }}>Stock Físico</th>
-                  <th style={{ padding: '12px 16px' }}>Costo Unitario</th>
-                  <th style={{ padding: '12px 16px' }}>Valor Total</th>
-                  <th style={{ padding: '12px 16px' }}>Diagnóstico</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>
-                      Cargando análisis de inventario...
-                    </td>
-                  </tr>
-                ) : items.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>
-                      No se detectó inventario inmovilizado.
-                    </td>
-                  </tr>
-                ) : (
-                  items.map((item) => (
-                    <tr key={item.id} style={{ borderBottom: '1px solid var(--line)' }}>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: 600, color: 'var(--ink)' }}>{item.name}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{item.sku}</div>
-                      </td>
-                      <td style={{ padding: '12px 16px', color: 'var(--ink)' }}>{item.category || 'General'}</td>
-                      <td style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--ink)' }}>{item.physicalStock} uds</td>
-                      <td style={{ padding: '12px 16px', color: 'var(--muted)' }}>PEN {item.unitCost?.toFixed(2) || '10.00'}</td>
-                      <td style={{ padding: '12px 16px', fontWeight: 700, color: '#b45309' }}>
-                        PEN {(item.totalValue || (item.physicalStock || 0) * (item.unitCost || 10)).toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600 }}>
-                          Stock Estable
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="wise-card !p-5">
+          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>SKUs Críticos</p>
+          <p className="text-2xl font-black mt-1" style={{ color: 'var(--color-obsidian)', fontFamily: 'var(--font-wise-sans)' }}>
+            {MOCK_DEAD_STOCK.filter(i => i.daysInactive >= 90).length}
+          </p>
+          <p className="text-xs mt-1" style={{ color: 'var(--color-pebble)' }}>Sin ventas en 3 meses</p>
+        </div>
+
+        <div className="wise-card !p-5" style={{ background: 'var(--color-linen-mist)', borderColor: 'var(--color-linen-mist)' }}>
+          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-forest-ink)' }}>Estrategia IA</p>
+          <p className="text-sm font-bold mt-2 leading-tight" style={{ color: 'var(--color-spruce)' }}>
+            Liquidar Gillette y Margarina Manty recuperaría S/ 2,032 de liquidez inmediata.
+          </p>
         </div>
       </div>
-    </AppShell>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="wise-segmented">
+          <button className={filterDays === 'todos' ? 'active' : ''} onClick={() => setFilterDays('todos')}>Todos</button>
+          <button className={filterDays === '30' ? 'active' : ''} onClick={() => setFilterDays('30')}>+30 Días</button>
+          <button className={filterDays === '60' ? 'active' : ''} onClick={() => setFilterDays('60')}>+60 Días</button>
+          <button className={filterDays === '90' ? 'active' : ''} onClick={() => setFilterDays('90')}>+90 Días Crítico</button>
+        </div>
+        <div className="relative max-w-xs w-full">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-pebble)' }} />
+          <input
+            type="search" placeholder="Buscar SKU o nombre..." value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="wise-input pl-9 !py-2 !text-sm w-full"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="wise-card !p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead style={{ background: 'var(--color-fog)' }}>
+              <tr className="text-xs font-bold uppercase tracking-wider border-b border-[var(--color-fog)]" style={{ color: 'var(--color-slate)' }}>
+                <th className="px-5 py-3">SKU / Producto</th>
+                <th className="px-5 py-3 text-center">Días Inactivo</th>
+                <th className="px-5 py-3 text-right">Stock Físico</th>
+                <th className="px-5 py-3 text-right">Costo Unit.</th>
+                <th className="px-5 py-3 text-right">Capital Retenido</th>
+                <th className="px-5 py-3 text-center">Acción Recomendada</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-fog)]">
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-[var(--color-pebble)] font-medium">
+                    No se encontró inventario inmovilizado con estos filtros.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map(item => (
+                  <tr key={item.id} className="hover:bg-[var(--color-fog)] transition-colors">
+                    <td className="px-5 py-4">
+                      <div className="font-mono text-[10px]" style={{ color: 'var(--color-pebble)' }}>{item.sku}</div>
+                      <div className="font-bold leading-tight" style={{ color: 'var(--color-obsidian)' }}>{item.name}</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'var(--color-pebble)' }}>{item.category}</div>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <span className="font-black text-sm" style={{ color: item.daysInactive >= 90 ? 'var(--color-alarm-red)' : item.daysInactive >= 60 ? '#c2410c' : 'var(--color-spruce)' }}>
+                        {item.daysInactive} d
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-right font-bold text-[var(--color-obsidian)]">
+                      {item.physicalStock} u.
+                    </td>
+                    <td className="px-5 py-4 text-right text-[var(--color-pebble)]">
+                      S/ {item.unitCost.toFixed(2)}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <span className="font-black" style={{ color: item.impactLevel === 'alto' ? 'var(--color-alarm-red)' : 'var(--color-obsidian)' }}>
+                        {fmt(item.totalTiedCapital)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      {item.daysInactive >= 60 ? (
+                        <button className="wise-btn-outline !text-xs !py-1.5 !px-3 !border-[var(--color-alarm-red)] !text-[var(--color-alarm-red)] hover:!bg-[#fee2e2] flex items-center gap-1.5 mx-auto">
+                          <Tag size={12} /> Liquidar (20% OFF)
+                        </button>
+                      ) : (
+                        <button className="wise-btn-outline !text-xs !py-1.5 !px-3 flex items-center gap-1.5 mx-auto">
+                          <TrendingDown size={12} /> Promocionar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 }
