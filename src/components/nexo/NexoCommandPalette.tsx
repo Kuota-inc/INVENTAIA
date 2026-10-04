@@ -197,7 +197,7 @@ function renderMarkdown(text: string) {
         if (numMatch) {
           return (
             <div key={idx} className="flex items-start gap-2 pl-0.5 mt-1">
-              <span className="text-blue-600 font-bold text-xs leading-5 min-w-[16px]">{numMatch[1]}.</span>
+              <span className="text-emerald-600 font-bold text-xs leading-5 min-w-[16px]">{numMatch[1]}.</span>
               <span className="flex-1 leading-normal">{renderFormattedInline(numMatch[2])}</span>
             </div>
           );
@@ -208,7 +208,7 @@ function renderMarkdown(text: string) {
           const content = trimmed.replace(/^[-•*]\s*/, '');
           return (
             <div key={idx} className="flex items-start gap-2 pl-1">
-              <span className="text-blue-600 font-bold leading-5">•</span>
+              <span className="text-emerald-600 font-bold leading-5">•</span>
               <span className="flex-1 leading-normal">{renderFormattedInline(content)}</span>
             </div>
           );
@@ -229,7 +229,7 @@ function renderFormattedInline(str: string): React.ReactNode {
     }
     if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
       return (
-        <code key={i} className="bg-slate-100 text-blue-700 px-1.5 py-0.5 rounded text-xs font-mono font-medium">
+        <code key={i} className="bg-slate-100 text-emerald-700 px-1.5 py-0.5 rounded text-xs font-mono font-medium">
           {part.slice(1, -1)}
         </code>
       );
@@ -582,7 +582,7 @@ export function NexoCommandPalette() {
         }}
         title="Nexo AI · Cmd+K"
         aria-label="Abrir Asistente Nexo"
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full p-0 border-0 bg-transparent cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full p-0 border-0 bg-transparent cursor-pointer transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -599,7 +599,7 @@ export function NexoCommandPalette() {
         }}
       >
         <Image
-          src="/nexo-orb.webp"
+          src="/nexo-orb.png"
           alt="Nexo AI"
           width={56}
           height={56}
@@ -639,7 +639,7 @@ export function NexoCommandPalette() {
                 setIsChatMode(false);
                 setInput('');
               }}
-              className="inline-flex items-center gap-1.5 bg-transparent border-0 text-blue-600 font-semibold cursor-pointer px-2 py-1 rounded-md hover:bg-blue-50 transition-colors"
+              className="inline-flex items-center gap-1.5 bg-transparent border-0 text-emerald-600 font-semibold cursor-pointer px-2 py-1 rounded-md hover:bg-emerald-50 transition-colors"
             >
               <ArrowLeft size={13} />
               <span>Volver a accesos rápidos</span>
@@ -680,7 +680,7 @@ export function NexoCommandPalette() {
             className="w-full py-4 text-[15px] text-slate-900 bg-transparent border-0 outline-none placeholder:text-slate-400 font-sans"
           />
           {isLoading ? (
-            <Loader2 size={16} className="text-blue-600 animate-spin flex-shrink-0" />
+            <Loader2 size={16} className="text-emerald-600 animate-spin flex-shrink-0" />
           ) : isChatMode ? (
             <button
               type="button"
@@ -688,7 +688,7 @@ export function NexoCommandPalette() {
               disabled={!input.trim()}
               className={`rounded-lg px-2.5 py-1.5 flex items-center justify-center transition-all ${
                 input.trim()
-                  ? 'bg-blue-600 text-white cursor-pointer hover:bg-blue-700'
+                  ? 'bg-emerald-600 text-white cursor-pointer hover:bg-emerald-700'
                   : 'bg-slate-100 text-slate-400 cursor-default'
               }`}
             >
@@ -730,14 +730,14 @@ export function NexoCommandPalette() {
                   onClick={() => executeNavigation(item.href)}
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors ${
-                    isSelected ? 'bg-blue-50/80 text-blue-950' : 'bg-transparent hover:bg-slate-50 text-slate-800'
+                    isSelected ? 'bg-emerald-50/80 text-emerald-950' : 'bg-transparent hover:bg-slate-50 text-slate-800'
                   }`}
                 >
                   {/* Icono en squircle suave */}
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border transition-colors ${
                       isSelected
-                        ? 'bg-blue-100 border-blue-200 text-blue-600'
+                        ? 'bg-emerald-100 border-emerald-200 text-emerald-600'
                         : 'bg-slate-50 border-slate-200/70 text-slate-500'
                     }`}
                   >
@@ -749,7 +749,7 @@ export function NexoCommandPalette() {
                     <div className={`text-sm truncate ${isSelected ? 'font-semibold text-slate-950' : 'font-medium text-slate-800'}`}>
                       {item.label}
                     </div>
-                    <div className={`text-[11px] font-semibold uppercase tracking-wider mt-0.5 ${isSelected ? 'text-blue-600' : 'text-slate-400'}`}>
+                    <div className={`text-[11px] font-semibold uppercase tracking-wider mt-0.5 ${isSelected ? 'text-emerald-600' : 'text-slate-400'}`}>
                       {item.group}
                     </div>
                   </div>
@@ -757,7 +757,7 @@ export function NexoCommandPalette() {
                   {/* Enter Badge */}
                   {isSelected && (
                     <div className="hidden sm:flex items-center flex-shrink-0">
-                      <kbd className="bg-white border border-blue-200 text-blue-600 text-[11px] px-1.5 py-0.5 rounded shadow-sm font-sans">
+                      <kbd className="bg-white border border-emerald-200 text-emerald-600 text-[11px] px-1.5 py-0.5 rounded shadow-sm font-sans">
                         ↵
                       </kbd>
                     </div>
@@ -774,24 +774,24 @@ export function NexoCommandPalette() {
                 onMouseEnter={() => setSelectedIndex(navItemsToShow.length)}
                 className={`flex items-center gap-3 px-3 py-2.5 mt-1 rounded-xl cursor-pointer border border-dashed transition-all ${
                   selectedIndex === navItemsToShow.length
-                    ? 'bg-blue-50/90 border-blue-400 text-blue-950'
+                    ? 'bg-emerald-50/90 border-emerald-400 text-emerald-950'
                     : 'bg-slate-50 border-slate-300 text-slate-800'
                 }`}
               >
-                <div className="w-9 h-9 rounded-xl bg-blue-100/80 border border-blue-200 flex items-center justify-center flex-shrink-0 text-blue-600">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100/80 border border-emerald-200 flex items-center justify-center flex-shrink-0 text-emerald-600">
                   <Sparkles size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold text-blue-900 truncate">
+                  <div className="text-[13px] font-semibold text-emerald-900 truncate">
                     Preguntar a Nexo: &quot;{input.slice(0, 42)}{input.length > 42 ? '...' : ''}&quot;
                   </div>
-                  <div className="text-[11px] text-blue-600/80 truncate">
+                  <div className="text-[11px] text-emerald-600/80 truncate">
                     Análisis en tiempo real de inventario, finanzas y órdenes
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-blue-600 font-semibold hidden sm:inline">Consultar</span>
-                  <kbd className="bg-white text-blue-600 border border-blue-200 text-[10px] px-1.5 py-0.5 rounded">↵</kbd>
+                  <span className="text-[10px] text-emerald-600 font-semibold hidden sm:inline">Consultar</span>
+                  <kbd className="bg-white text-emerald-600 border border-emerald-200 text-[10px] px-1.5 py-0.5 rounded">↵</kbd>
                 </div>
               </div>
             )}
@@ -808,7 +808,7 @@ export function NexoCommandPalette() {
             {chatMessages.length === 0 && (
               <div className="text-center py-6 px-3">
                 <Image
-                  src="/nexo-orb.webp"
+                  src="/nexo-orb.png"
                   alt="Nexo"
                   width={44}
                   height={44}
@@ -833,7 +833,7 @@ export function NexoCommandPalette() {
                       key={chip}
                       type="button"
                       onClick={() => sendChatMessage(chip)}
-                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 text-left cursor-pointer hover:bg-blue-50/80 hover:border-blue-200 transition-colors flex items-center justify-between"
+                      className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700 text-left cursor-pointer hover:bg-emerald-50/80 hover:border-emerald-200 transition-colors flex items-center justify-between"
                     >
                       <span className="truncate">{chip}</span>
                       <ChevronRight size={13} className="text-slate-400 flex-shrink-0 ml-2" />
@@ -866,13 +866,13 @@ export function NexoCommandPalette() {
                   {/* Header de la burbuja Nexo */}
                   <div className="flex items-center gap-2">
                     <Image
-                      src="/nexo-orb.webp"
+                      src="/nexo-orb.png"
                       alt=""
                       width={18}
                       height={18}
                       className="rounded-full object-contain flex-shrink-0"
                     />
-                    <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">
+                    <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
                       Nexo
                     </span>
                     <span className="text-[10px] text-slate-400 ml-auto">
@@ -887,20 +887,20 @@ export function NexoCommandPalette() {
 
                   {/* Redirección automática sugerida */}
                   {msg.toolCall?.route && (
-                    <div className="p-2.5 bg-blue-50/80 border border-blue-200 rounded-xl flex items-center justify-between gap-2 mt-2">
+                    <div className="p-2.5 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 mt-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <ExternalLink size={14} className="text-blue-600 flex-shrink-0" />
+                        <ExternalLink size={14} className="text-emerald-600 flex-shrink-0" />
                         <div className="truncate">
                           <div className="text-xs font-semibold text-slate-900 truncate">
                             Módulo sugerido
                           </div>
-                          <div className="text-[11px] text-blue-600 truncate">{msg.toolCall.route}</div>
+                          <div className="text-[11px] text-emerald-600 truncate">{msg.toolCall.route}</div>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => executeNavigation(msg.toolCall!.route!)}
-                        className="bg-blue-600 text-white border-0 rounded-md px-2.5 py-1 text-[11px] font-semibold cursor-pointer hover:bg-blue-700 flex-shrink-0 transition-colors"
+                        className="bg-emerald-600 text-white border-0 rounded-md px-2.5 py-1 text-[11px] font-semibold cursor-pointer hover:bg-emerald-700 flex-shrink-0 transition-colors"
                       >
                         Ir ahora →
                       </button>
@@ -931,7 +931,7 @@ export function NexoCommandPalette() {
                                 )}
                               </div>
                               {card.metric && (
-                                <div className="text-sm font-bold text-blue-600 font-mono flex-shrink-0">
+                                <div className="text-sm font-bold text-emerald-600 font-mono flex-shrink-0">
                                   {card.metric}
                                 </div>
                               )}
@@ -947,7 +947,7 @@ export function NexoCommandPalette() {
                                   className={`border-0 rounded-md px-3 py-1.5 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors ${
                                     isActionDone
                                       ? 'bg-emerald-600 text-white cursor-default'
-                                      : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                                      : 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'
                                   }`}
                                 >
                                   {isActionRunning && <Loader2 size={12} className="animate-spin" />}
@@ -967,9 +967,9 @@ export function NexoCommandPalette() {
 
             {/* Indicador de Análisis Progresivo (Streaming activo) */}
             {isLoading && (
-              <div className="self-start flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-blue-600 mr-auto">
+              <div className="self-start flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-emerald-600 mr-auto">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <Image src="/nexo-orb.webp" alt="" width={15} height={15} className="rounded-full object-contain" />
+                <Image src="/nexo-orb.png" alt="" width={15} height={15} className="rounded-full object-contain" />
                 <span>{loadingText}</span>
               </div>
             )}
@@ -1019,13 +1019,13 @@ export function NexoCommandPalette() {
           {/* Right Brand Badge: Orb + Nexo */}
           <div className="flex items-center gap-1.5 ml-auto">
             <Image
-              src="/nexo-orb.webp"
+              src="/nexo-orb.png"
               alt="Nexo"
               width={16}
               height={16}
               className="rounded-full object-contain"
             />
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-emerald-600">
               {isChatMode ? 'Nexo Copilot' : 'Nexo'}
             </span>
           </div>
@@ -1065,3 +1065,5 @@ export function NexoCommandPalette() {
 }
 
 export default NexoCommandPalette;
+
+
