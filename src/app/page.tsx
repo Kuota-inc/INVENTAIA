@@ -32,10 +32,27 @@ export default function LandingPage() {
   const isAuthenticated = authStatus === 'authenticated';
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSegment, setActiveSegment] = useState('plataforma');
   const [selectedLang, setSelectedLang] = useState<LandingLang>('es');
   const [googleLoading, setGoogleLoading] = useState(false);
   // Wise Theme: light. El toggle invierte solo esta página a Forest.
   const [light, setLight] = useState(true);
+
+  const scrollToSection = (id: string) => {
+    setActiveSegment(id);
+    if (id === 'precios') {
+      // Si va a precios, redireccionamos a /plans ya que es la página de precios
+      window.location.href = '/plans';
+      return;
+    }
+    const element = document.getElementById(id);
+    if (element) {
+      const y = element.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    } else if (id === 'plataforma') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     try {
@@ -141,9 +158,24 @@ export default function LandingPage() {
           </Link>
 
           <nav className={styles.segments} aria-label={t.nav_menu}>
-            <Link href="/login" className={`${styles.segLink} ${styles.segActive}`}>{t.nav_plataforma}</Link>
-            <Link href="/ayuda/guia" className={styles.segLink}>{t.nav_soluciones}</Link>
-            <Link href="/plans" className={styles.segLink}>{t.nav_precios}</Link>
+            <button 
+              onClick={() => scrollToSection('plataforma')} 
+              className={`${styles.segLink} ${activeSegment === 'plataforma' ? styles.segActive : ''}`}
+            >
+              {t.nav_plataforma}
+            </button>
+            <button 
+              onClick={() => scrollToSection('como-funciona')} 
+              className={`${styles.segLink} ${activeSegment === 'como-funciona' ? styles.segActive : ''}`}
+            >
+              {t.nav_soluciones}
+            </button>
+            <button 
+              onClick={() => scrollToSection('precios')} 
+              className={`${styles.segLink} ${activeSegment === 'precios' ? styles.segActive : ''}`}
+            >
+              {t.nav_precios}
+            </button>
           </nav>
 
           <nav className={styles.nav} aria-label="Principal">
@@ -187,9 +219,24 @@ export default function LandingPage() {
 
         {mobileOpen && (
           <div className={styles.mobilePanel}>
-            <Link href="/login" onClick={() => setMobileOpen(false)}>{t.nav_plataforma}</Link>
-            <Link href="/ayuda/guia" onClick={() => setMobileOpen(false)}>{t.nav_soluciones}</Link>
-            <Link href="/plans" onClick={() => setMobileOpen(false)}>{t.nav_precios}</Link>
+            <button 
+              onClick={() => { scrollToSection('plataforma'); setMobileOpen(false); }} 
+              style={{ textAlign: 'left', background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', padding: 0 }}
+            >
+              {t.nav_plataforma}
+            </button>
+            <button 
+              onClick={() => { scrollToSection('como-funciona'); setMobileOpen(false); }}
+              style={{ textAlign: 'left', background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', padding: 0 }}
+            >
+              {t.nav_soluciones}
+            </button>
+            <button 
+              onClick={() => { scrollToSection('precios'); setMobileOpen(false); }}
+              style={{ textAlign: 'left', background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', padding: 0 }}
+            >
+              {t.nav_precios}
+            </button>
             <Link href="/ayuda/aprender" onClick={() => setMobileOpen(false)}>{t.nav_recursos}</Link>
             <div className={styles.mobileCtaRow}>
               <button type="button" className={styles.btnPrimary} onClick={openDemo}>{t.hero_cta_demo}</button>

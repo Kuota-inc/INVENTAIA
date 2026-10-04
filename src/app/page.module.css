@@ -109,7 +109,7 @@
   margin-left: 8px;
 }
 
-.segLink {
+.segLink { border: none; background: transparent; cursor: pointer; color: inherit; font-family: inherit;
   padding: 7px 14px;
   border-radius: 9999px;
   font-size: 14px;
@@ -1233,3 +1233,4 @@
     animation: none;
   }
 }
+
