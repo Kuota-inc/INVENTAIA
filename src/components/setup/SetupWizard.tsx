@@ -198,7 +198,7 @@ export function SetupWizard() {
       {/* Header Superior */}
       <header className={styles.header}>
         <div className={styles.brand}>
-          <Logo height={24} tone="light" />
+          <Logo height={24} />
           <span className={styles.brandTag}>Asistente de Configuración</span>
         </div>
         <Link href="/panel/resumen" className={styles.exitLink}>

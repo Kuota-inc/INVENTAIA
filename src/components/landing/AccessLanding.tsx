@@ -75,7 +75,7 @@ export function AccessLanding({
       {/* ------------------------------------------- panel de marca */}
       <aside className={styles.brandSide}>
         <div className={styles.brandMark}>
-          <Logo height={26} tone={light ? 'light' : 'dark'} />
+          <Logo height={26} />
           <span className={styles.brandRule} aria-hidden="true" />
           <span className={styles.tagline}>{tagline}</span>
         </div>
