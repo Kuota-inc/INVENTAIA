@@ -76,15 +76,15 @@ export default function MiAlmacenPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="wise-btn-outline !py-2">
+          <Link href="/inventory/stock-adjustments" className="wise-btn-outline !py-2" style={{ textDecoration: 'none' }}>
             <SlidersHorizontal size={18} /> Ajustes de Backlog
-          </button>
-          <button className="wise-btn-outline !py-2">
+          </Link>
+          <Link href="/inventory/imports" className="wise-btn-outline !py-2" style={{ textDecoration: 'none' }}>
             <ArrowDownToLine size={18} /> Subir SKUs
-          </button>
-          <button className="wise-btn-primary !py-2">
+          </Link>
+          <Link href="/products/products" className="wise-btn-primary !py-2" style={{ textDecoration: 'none' }}>
             <Plus size={18} /> Nuevo Producto
-          </button>
+          </Link>
         </div>
       </div>
 

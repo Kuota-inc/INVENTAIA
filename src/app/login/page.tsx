@@ -77,7 +77,7 @@ function LoginContent() {
     <AccessLanding
       tagline="Inventario, pronóstico, reabastecimiento y finanzas"
       headline="Gestione todo el inventario, no solo el almacén."
-      description="INVENTA.AI conecta inventario, pronóstico, órdenes de compra y financiamiento en cada sucursal y proveedor. Un único registro en vivo, desde la orden de compra hasta el cobro."
+      description="KUOTA conecta inventario, pronóstico, órdenes de compra y financiamiento en cada sucursal y proveedor. Un único registro en vivo, desde la orden de compra hasta el cobro."
       capabilities={CAPABILITIES}
       topbar={
         <Link href="/ayuda/guia" className={landingStyles.pill}>
@@ -88,7 +88,7 @@ function LoginContent() {
       eyebrow="Plataforma de operaciones"
       eyebrowError={errorMessage !== null}
       title="Iniciar sesión"
-      subtitle="Use su cuenta de INVENTA.AI. El acceso depende de su empresa y su rol."
+      subtitle="Use su cuenta de KUOTA. El acceso depende de su empresa y su rol."
       alert={
         errorMessage ? (
           <div className={landingStyles.alert} role="alert" aria-live="assertive">
@@ -125,7 +125,7 @@ function LoginContent() {
           .
         </>
       }
-      footerLeft="INVENTA.AI Operaciones"
+      footerLeft="KUOTA Operaciones"
       footerLinks={[
         { href: '/ayuda/guia', label: 'Ayuda' },
         { href: '/ayuda/soporte', label: 'Soporte' },
