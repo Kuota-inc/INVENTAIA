@@ -179,8 +179,20 @@ export default function LandingPage() {
           </nav>
 
           <nav className={styles.nav} aria-label="Principal">
-            <Link href="/ayuda/aprender" className={styles.navLink}>{t.nav_recursos}</Link>
-            <Link href="/ayuda/soporte" className={styles.navLink}>{t.acc_support}</Link>
+            <button 
+              onClick={() => scrollToSection('recursos')}
+              className={styles.navLink}
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              {t.nav_recursos}
+            </button>
+            <button 
+              onClick={() => scrollToSection('soporte')}
+              className={styles.navLink}
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              {t.acc_support}
+            </button>
           </nav>
 
           <div className={styles.actions}>
@@ -237,7 +249,18 @@ export default function LandingPage() {
             >
               {t.nav_precios}
             </button>
-            <Link href="/ayuda/aprender" onClick={() => setMobileOpen(false)}>{t.nav_recursos}</Link>
+            <button 
+              onClick={() => { scrollToSection('recursos'); setMobileOpen(false); }}
+              style={{ textAlign: 'left', background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', padding: 0 }}
+            >
+              {t.nav_recursos}
+            </button>
+            <button 
+              onClick={() => { scrollToSection('soporte'); setMobileOpen(false); }}
+              style={{ textAlign: 'left', background: 'transparent', border: 'none', color: 'inherit', font: 'inherit', cursor: 'pointer', padding: 0 }}
+            >
+              {t.acc_support}
+            </button>
             <div className={styles.mobileCtaRow}>
               <button type="button" className={styles.btnPrimary} onClick={openDemo}>{t.hero_cta_demo}</button>
               <Link href="/login" className={styles.textLink} onClick={() => setMobileOpen(false)}>{t.nav_login}</Link>
@@ -248,7 +271,7 @@ export default function LandingPage() {
 
       <main>
         {/* ---------------------------------------------------------------- hero */}
-        <section className={styles.container}>
+        <section id="plataforma" className={styles.container}>
           <div className={styles.hero}>
             <span className={styles.badge}><span className={styles.dot} aria-hidden="true" />{t.hero_eyebrow}</span>
             <h1 className={styles.display}>{t.hero_title}</h1>
@@ -357,7 +380,7 @@ export default function LandingPage() {
         </section>
 
         {/* ---------------------------------------------------------------- ROI */}
-        <section className={styles.section}>
+        <section id="recursos" className={styles.section}>
           <div className={styles.container}>
             <p className={styles.eyebrow}>{t.roi_pre}</p>
             <h2 className={styles.h2}>{t.roi_title}</h2>
@@ -412,7 +435,7 @@ export default function LandingPage() {
         </section>
 
         {/* -------------------------------------- dark section card + acceso */}
-        <section className={styles.section}>
+        <section id="precios" className={styles.section}>
           <div className={styles.container}>
             <div className={styles.darkCard}>
               <div>
@@ -474,7 +497,7 @@ export default function LandingPage() {
       </main>
 
       {/* ---------------------------------------------------------------- footer */}
-      <footer className={styles.footer}>
+      <footer id="soporte" className={styles.footer}>
         <div className={styles.container}>
           <div className={styles.footerGrid}>
             <div>
@@ -484,28 +507,28 @@ export default function LandingPage() {
             <div>
               <div className={styles.footerH}>{t.foot_prod}</div>
               <div className={styles.footerLinks}>
-                <Link href="/ayuda/guia">{t.foot_f1}</Link>
-                <Link href="/ayuda/guia">{t.foot_f2}</Link>
-                <Link href="/ayuda/guia">{t.foot_f3}</Link>
-                <Link href="/ayuda/guia">{t.foot_f4}</Link>
+                <Link href="#recursos">{t.foot_f1}</Link>
+                <Link href="#recursos">{t.foot_f2}</Link>
+                <Link href="#recursos">{t.foot_f3}</Link>
+                <Link href="#recursos">{t.foot_f4}</Link>
               </div>
             </div>
             <div>
               <div className={styles.footerH}>{t.foot_emp}</div>
               <div className={styles.footerLinks}>
-                <Link href="/ayuda/aprender">{t.foot_e1}</Link>
-                <Link href="/ayuda/aprender">{t.foot_e2}</Link>
-                <Link href="/ayuda/aprender">{t.foot_e3}</Link>
-                <Link href="/ayuda/aprender">{t.foot_e4}</Link>
+                <Link href="#recursos">{t.foot_e1}</Link>
+                <Link href="#recursos">{t.foot_e2}</Link>
+                <Link href="#recursos">{t.foot_e3}</Link>
+                <Link href="#recursos">{t.foot_e4}</Link>
               </div>
             </div>
             <div>
               <div className={styles.footerH}>{t.foot_sup}</div>
               <div className={styles.footerLinks}>
-                <Link href="/ayuda/soporte">{t.acc_support}</Link>
+                <Link href="#soporte">{t.acc_support}</Link>
                 <Link href="/terms">{t.foot_terms}</Link>
                 <Link href="/privacy">{t.foot_priv}</Link>
-                <Link href="/ayuda/soporte">{t.foot_status}</Link>
+                <Link href="#soporte">{t.foot_status}</Link>
               </div>
             </div>
           </div>
@@ -608,5 +631,6 @@ export default function LandingPage() {
     </div>
   );
 }
+
 
 

@@ -95,9 +95,7 @@
   color: var(--spruce);
 }
 
-.shellDark .wordmarkAi {
-  color: var(--paper);
-}
+.shellDark .wordmarkAi { color: var(--charcoal); }
 
 .segments {
   display: flex;
@@ -176,7 +174,7 @@
 }
 
 .shellDark .langPill {
-  color: var(--paper);
+  color: var(--charcoal);
   border-color: #2c5a1a;
 }
 
@@ -200,7 +198,7 @@
 }
 
 .shellDark .iconPill {
-  color: var(--paper);
+  color: var(--charcoal);
   border-color: #2c5a1a;
 }
 
@@ -245,10 +243,7 @@
   text-align: center;
 }
 
-.shellDark .btnOutline {
-  color: var(--paper);
-  border-color: var(--paper);
-}
+.shellDark .btnOutline { color: var(--charcoal); border-color: var(--charcoal); }
 
 .textLink {
   color: var(--forest);
@@ -494,9 +489,7 @@
   box-shadow: rgba(14, 15, 12, 0.12) 0px 0px 0px 1px;
 }
 
-.shellDark .chip {
-  color: var(--paper);
-}
+.shellDark .chip { color: var(--charcoal); }
 
 .chipDot {
   width: 8px;
@@ -613,9 +606,7 @@
   color: var(--charcoal);
 }
 
-.panelOk .panelList li {
-  color: var(--paper);
-}
+.panelOk .panelList li { color: var(--charcoal); }
 
 .panelList strong {
   color: var(--obsidian);
@@ -975,9 +966,7 @@
   color: var(--forest);
 }
 
-.shellDark .footerLinks a {
-  color: var(--paper);
-}
+.shellDark .footerLinks a { color: var(--charcoal); }
 
 .footerBase {
   margin-top: 32px;
@@ -1148,7 +1137,7 @@
     background: var(--paper);
   }
 
-  .mobilePanel a {
+  .mobilePanel a, .mobilePanel button {
     padding: 10px 8px;
     font-size: 15px;
     font-weight: 500;
@@ -1156,9 +1145,7 @@
     border-radius: 9999px;
   }
 
-  .shellDark .mobilePanel a {
-    color: var(--paper);
-  }
+  .shellDark .mobilePanel a, .shellDark .mobilePanel button { color: var(--charcoal); }
 
   .mobileCtaRow {
     display: flex;
@@ -1233,4 +1220,7 @@
     animation: none;
   }
 }
+
+
+
 
