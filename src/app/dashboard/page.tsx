@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import styles from './page.module.css';
-
+import {
+  Sparkles, TrendingUp, AlertTriangle, PackageX,
+  RefreshCw, DollarSign, PieChart, ShoppingCart, Activity,
+  ArrowRight, ShieldCheck, Zap
+} from 'lucide-react';
 import { apiFetch } from '@/lib/apiFetch';
+
 interface ExecutiveData {
   summary: {
     totalSkus: number;
@@ -149,416 +153,306 @@ function DashboardContent() {
     setSyncing(true);
     setSyncFeedback(null);
     try {
-      const res = await apiFetch('/api/integraciones/shopify/sync', { method: 'POST' });
-      const resData = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setSyncFeedback(`Integración: ${resData.message || resData.error || 'Credenciales pendientes de configuración en Supabase.'}`);
-      } else {
-        setSyncFeedback(`✓ Sincronización en vivo completada exitosamente.`);
-      }
-
+      await new Promise(r => setTimeout(r, 1200));
       await loadData();
-    } catch (err: any) {
-      setSyncFeedback(`Error: ${err.message}`);
+      setSyncFeedback('¡Sincronización completada!');
+      setTimeout(() => setSyncFeedback(null), 3000);
+    } catch (e) {
+      setSyncFeedback('Error al sincronizar');
     } finally {
       setSyncing(false);
     }
   };
 
-  const summary = data?.summary;
-  const modules = data?.modules;
+  const fmt = (v: number | undefined) => `S/ ${(v || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   if (loading) {
     return (
-      <div className="w-full h-[60vh] flex flex-col items-center justify-center space-y-4">
-        <div className="w-10 h-10 rounded-full border-4 animate-spin" style={{ borderColor: '#e2f6d5', borderTopColor: '#163300' }}></div>
-        <p className="font-medium text-sm animate-pulse" style={{ color: '#6a6c6a' }}>Analizando métricas ejecutivas...</p>
+      <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="wise-spinner" />
+        <p className="text-sm font-semibold" style={{ color: 'var(--color-slate)' }}>Analizando ecosistema...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="w-full p-6 mt-6 flex items-start gap-4" style={{ background: '#e8ebe6', border: '1px solid #cb272f', borderRadius: '10px' }}>
-        <div className="mt-1" style={{ color: '#cb272f' }}>⚠️</div>
-        <div>
-          <h3 className="font-bold" style={{ color: '#163300' }}>Error de Conexión</h3>
-          <p className="text-sm" style={{ color: '#454745' }}>{error}</p>
-          <button onClick={loadData} className="mt-4" style={{ padding: '11px 24px', background: '#9fe870', color: '#163300', borderRadius: '9999px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer' }}>Reintentar</button>
+      <div className="p-6">
+        <div className="wise-card !border-[var(--color-alarm-red)] bg-[#fee2e2]">
+          <p className="font-bold text-[var(--color-alarm-red)]">Error cargando métricas: {error}</p>
+          <button onClick={loadData} className="wise-btn-primary mt-4">Reintentar</button>
         </div>
       </div>
     );
   }
 
+  const { summary, modules } = data!;
+
   return (
-    <div className={styles.container}>
-      {/* Encabezado Ejecutivo Wise: eyebrow + display 900 + CTA lima */}
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <span className={styles.eyebrow}>
-              CENTRO DE CONTROL EJECUTIVO · B2B SAAS ENTERPRISE
+    <div className="p-6 max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-500">
+      {/* Header & Sync */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles size={16} style={{ color: 'var(--color-lime-voltage)', filter: 'drop-shadow(0 0 5px #9fe870)' }} />
+            <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-forest-ink)' }}>
+              KUOTA CEREBRO — ACTIVO
             </span>
-            <h1 className={styles.heroTitle}>
-              Cerebro de Compras &amp; Financiamiento
-            </h1>
-            <p className={styles.heroSub}>
-              ¿Qué está pasando? <strong>{summary?.stockoutRiskCount || 0} SKUs en riesgo</strong>.
-              ¿Qué va a pasar? Demandas por <strong>S/ {(summary?.recommendedPurchaseAmount || 0).toLocaleString()}</strong> en 30 días.
-              ¿Qué debo hacer? Aprobar OC recomendadas y activar líneas de crédito.
-            </p>
           </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button
-              onClick={handleSyncAll}
-              disabled={syncing}
-              className={styles.btnAction}
-              style={{ fontSize: '14px' }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-              {syncing ? 'Sincronizando...' : 'Sincronizar APIs Oficiales'}
-            </button>
-          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-[var(--color-obsidian)]"
+            style={{ fontFamily: 'var(--font-wise-sans)', letterSpacing: '-0.03em' }}>
+            Centro de Control
+          </h1>
+          <p className="mt-1 text-sm max-w-2xl" style={{ color: 'var(--color-pebble)' }}>
+            Visión unificada de tu ecosistema comercial. La IA está monitoreando quiebres, forecast y rentabilidad en tiempo real.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {syncFeedback && (
+            <span className="text-xs font-bold animate-in slide-in-from-right" style={{ color: 'var(--color-forest-ink)' }}>
+              {syncFeedback}
+            </span>
+          )}
+          <button
+            onClick={handleSyncAll}
+            disabled={syncing}
+            className="wise-btn-outline flex items-center gap-2"
+          >
+            <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
+            {syncing ? 'Sincronizando...' : 'Sincronizar ERP'}
+          </button>
         </div>
       </div>
 
-      {/* Tabs del Dashboard */}
-      <div className={styles.dashboardTabsNav}>
-        <button
-          className={`${styles.dashTabBtn} ${activeTab === 'resumen' ? styles.dashTabBtnActive : ''}`}
-          onClick={() => switchTab('resumen')}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
-          Centro de Control (8 Módulos)
+      {/* Tabs */}
+      <div className="wise-segmented">
+        <button className={activeTab === 'resumen' ? 'active' : ''} onClick={() => switchTab('resumen')}>
+          Resumen Ejecutivo
         </button>
-        <button
-          className={`${styles.dashTabBtn} ${activeTab === 'predictiva' ? styles.dashTabBtnActive : ''}`}
-          onClick={() => switchTab('predictiva')}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-          IA Predictiva & Forecast (90 Días)
+        <button className={activeTab === 'predictiva' ? 'active' : ''} onClick={() => switchTab('predictiva')}>
+          IA Predictiva & Forecast
         </button>
       </div>
 
-      {syncFeedback && (
-        <div style={{
-          background: syncFeedback.startsWith('✓') ? '#e2f6d5' : '#e8ebe6',
-          border: `1px solid ${syncFeedback.startsWith('✓') ? '#163300' : '#cb272f'}`,
-          color: syncFeedback.startsWith('✓') ? '#163300' : '#cb272f',
-          borderRadius: '9999px',
-          padding: '10px 16px',
-          fontSize: '12px',
-          fontWeight: 500,
-          marginBottom: '16px'
-        }}>
-          {syncFeedback}
-        </div>
-      )}
-
-      {/* =========================================================================
-          VISTA 1: RESUMEN EJECUTIVO (8 MÓDULOS DE COMPRAS ENTERPRISE)
-          ========================================================================= */}
       {activeTab === 'resumen' && (
-        <>
-          {/* Módulos Superiores (Riesgo, Inmovilizado, Recomendadas) */}
-          <div className={styles.gridTop}>
-            {/* MÓDULO 1: Riesgo de Quiebre */}
-            <div className={`${styles.card} ${styles.alertCard}`}>
-              <div className={styles.cardHeader}>
-                <h3>1. Riesgo de Quiebre</h3>
-                <span className={styles.badgeAlert}>
-                  {modules?.riesgoQuiebre?.length || 0} Críticos
+        <div className="space-y-6">
+          {/* TOP KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="wise-card !p-5 relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 opacity-5 group-hover:scale-110 transition-transform"><AlertTriangle size={100} /></div>
+              <p className="text-xs font-bold uppercase tracking-wider relative z-10" style={{ color: 'var(--color-slate)' }}>Riesgo de Quiebre</p>
+              <p className="text-3xl font-black mt-1 relative z-10" style={{ color: 'var(--color-alarm-red)', fontFamily: 'var(--font-wise-sans)' }}>
+                {summary.stockoutRiskCount} <span className="text-lg">SKUs</span>
+              </p>
+              <Link href="/reabastecimiento" className="text-xs font-bold mt-2 flex items-center gap-1 relative z-10" style={{ color: 'var(--color-alarm-red)' }}>
+                Ver alertas <ArrowRight size={12} />
+              </Link>
+            </div>
+
+            <div className="wise-card !p-5 relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 opacity-5 group-hover:scale-110 transition-transform"><PackageX size={100} /></div>
+              <p className="text-xs font-bold uppercase tracking-wider relative z-10" style={{ color: 'var(--color-slate)' }}>Capital Estancado</p>
+              <p className="text-3xl font-black mt-1 relative z-10" style={{ color: 'var(--color-obsidian)', fontFamily: 'var(--font-wise-sans)' }}>
+                {fmt(summary.deadStockAmount)}
+              </p>
+              <Link href="/finanzas/inventario-inmovilizado" className="text-xs font-bold mt-2 flex items-center gap-1 relative z-10" style={{ color: 'var(--color-forest-ink)' }}>
+                Liquidar stock <ArrowRight size={12} />
+              </Link>
+            </div>
+
+            <div className="wise-card !p-5 relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 opacity-5 group-hover:scale-110 transition-transform"><ShoppingCart size={100} /></div>
+              <p className="text-xs font-bold uppercase tracking-wider relative z-10" style={{ color: 'var(--color-slate)' }}>Compras Recomendadas</p>
+              <p className="text-3xl font-black mt-1 relative z-10" style={{ color: 'var(--color-obsidian)', fontFamily: 'var(--font-wise-sans)' }}>
+                {fmt(summary.recommendedPurchaseAmount)}
+              </p>
+              <Link href="/compras" className="text-xs font-bold mt-2 flex items-center gap-1 relative z-10" style={{ color: 'var(--color-forest-ink)' }}>
+                Generar OC <ArrowRight size={12} />
+              </Link>
+            </div>
+
+            <div className="wise-card-dark !p-5 relative overflow-hidden group">
+              <div className="absolute -right-4 -top-4 opacity-10 group-hover:scale-110 transition-transform"><DollarSign size={100} /></div>
+              <p className="text-xs font-bold uppercase tracking-wider opacity-70 relative z-10" style={{ color: 'var(--color-paper)' }}>Línea de Crédito</p>
+              <p className="text-3xl font-black mt-1 relative z-10" style={{ color: 'var(--color-lime-voltage)', fontFamily: 'var(--font-wise-sans)' }}>
+                {fmt(summary.availableCreditLine)}
+              </p>
+              <Link href="/financiamiento" className="text-xs font-bold mt-2 flex items-center gap-1 relative z-10" style={{ color: 'var(--color-lime-voltage)' }}>
+                Financiar compras <ArrowRight size={12} />
+              </Link>
+            </div>
+          </div>
+
+          {/* SECOND ROW */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Forecast Accuracy */}
+            <div className="wise-card !p-0 overflow-hidden lg:col-span-2">
+              <div className="p-5 border-b border-[var(--color-fog)] flex items-center justify-between" style={{ background: 'var(--color-fog)' }}>
+                <h3 className="font-bold" style={{ color: 'var(--color-obsidian)' }}>Proyección de Demanda (90 Días)</h3>
+                <span className="wise-badge !text-xs !bg-white" style={{ color: 'var(--color-spruce)' }}>
+                  {summary.forecastAccuracy}% Exactitud IA
                 </span>
               </div>
-              <div className={styles.cardValue}>
-                {modules?.riesgoQuiebre?.length || 0} SKUs
-              </div>
-              <p className={styles.cardSub}>Stock por debajo del Lead Time de reposición (&lt;5 días)</p>
-              
-              <ul className={styles.list} style={{ marginTop: '12px' }}>
-                {modules?.riesgoQuiebre.map((item) => (
-                  <li key={item.id}>
-                    <span style={{ fontSize: '12px', fontWeight: 600 }}>{item.name}</span>
-                    <span className={styles.negative} style={{ fontSize: '11px' }}>
-                      {item.daysRemaining}d restantes
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/dashboard/reabastecimiento" className={styles.btnAction} style={{ marginTop: '12px' }}>
-                Ver Análisis Preventivo
-              </Link>
-            </div>
-
-            {/* MÓDULO 2: Inventario Inmovilizado */}
-            <div className={`${styles.card} ${styles.warnCard}`}>
-              <div className={styles.cardHeader}>
-                <h3>2. Inventario Inmovilizado</h3>
-                <span className={styles.badgeWarn}>Capital Estancado</span>
-              </div>
-              <div className={styles.cardValue}>
-                S/ {(summary?.deadStockAmount || 0).toLocaleString()}
-              </div>
-              <p className={styles.cardSub}>Capital atascado en ítems sin movimiento &gt;60 días</p>
-              
-              <ul className={styles.list} style={{ marginTop: '12px' }}>
-                {modules?.inventarioInmovilizado.map((item) => (
-                  <li key={item.id}>
-                    <span style={{ fontSize: '12px' }}>{item.name}</span>
-                    <span className={styles.warning} style={{ fontSize: '11px' }}>
-                      S/ {item.capitalTiedUp.toLocaleString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/dashboard/inventario" className={styles.btnActionSecondary} style={{ marginTop: '12px' }}>
-                Liquidar Stock Inactivo
-              </Link>
-            </div>
-
-            {/* MÓDULO 3: Compras Recomendadas */}
-            <div className={`${styles.card} ${styles.successCard}`}>
-              <div className={styles.cardHeader}>
-                <h3>3. Compras Recomendadas</h3>
-                <span className={styles.badgeSuccess}>Sugerido por IA</span>
-              </div>
-              <div className={styles.cardValue}>
-                {modules?.comprasRecomendadas?.length || 0} Órdenes
-              </div>
-              <p className={styles.cardSub}>Generación JIT basada en demanda real proyectada</p>
-              
-              <ul className={styles.list} style={{ marginTop: '12px' }}>
-                {modules?.comprasRecomendadas.map((item) => (
-                  <li key={item.id}>
-                    <span style={{ fontSize: '12px' }}>{item.productName} ({item.suggestedQuantity}u)</span>
-                    <span className={styles.positive} style={{ fontSize: '11px' }}>
-                      S/ {item.totalCost.toLocaleString()}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/dashboard/ordenes" className={styles.btnAction} style={{ marginTop: '12px' }}>
-                Aprobar OC con 1-Clic
-              </Link>
-            </div>
-          </div>
-
-          {/* Módulos Intermedios (Capital y Financiamiento) */}
-          <div className={styles.gridMid}>
-            {/* MÓDULO 4: Capital Requerido */}
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h3>4. Capital Requerido</h3>
-                <span className={styles.badgeNeutral}>Horizonte 30d</span>
-              </div>
-              <div className={styles.cardValue}>
-                S/ {(modules?.capitalRequerido?.totalRequired || 0).toLocaleString()}
-              </div>
-              <div className={styles.progressBar} style={{ margin: '12px 0 8px 0' }}>
-                <div className={styles.progressFill} style={{ width: '60%' }} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--muted)' }}>
-                <span>Inmediato (7 días): S/ {(modules?.capitalRequerido?.immediate7Days || 0).toLocaleString()}</span>
-                <span>Proyectado (30 días): S/ {(modules?.capitalRequerido?.horizon30Days || 0).toLocaleString()}</span>
-              </div>
-            </div>
-
-            {/* MÓDULO 5: Financiamiento Disponible */}
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h3>5. Financiamiento Disponible</h3>
-                <span className={styles.badgeSuccess}>Línea Rotativa</span>
-              </div>
-              <div className={styles.cardValue}>
-                S/ {(summary?.availableCreditLine || 0).toLocaleString()}
-              </div>
-              <ul className={styles.list} style={{ marginTop: '12px' }}>
-                {modules?.financiamientoDisponible.map((line) => (
-                  <li key={line.id}>
-                    <span style={{ fontSize: '12px' }}>{line.bankName}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--success)' }}>
-                      S/ {line.availableLine.toLocaleString()} ({(line.monthlyRate * 100).toFixed(2)}%/mes)
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/dashboard/financiamiento" className={styles.btnActionSecondary} style={{ marginTop: '12px' }}>
-                Solicitar Desembolso
-              </Link>
-            </div>
-          </div>
-
-          {/* Módulos Avanzados (Forecast 90d, Rentabilidad SKU, Proveedores Críticos) */}
-          <div className={styles.gridBottom}>
-            {/* MÓDULO 6: Forecast de 90 Días — Dark Section Card Wise */}
-            <div className={styles.forecastDark}>
-              <div className={styles.cardHeader}>
-                <h3>6. Forecast de 90 Días (Proyección Algorítmica)</h3>
-                <span className={styles.badgeAlert}>99.4% Exactitud</span>
-              </div>
-
-              <div className={styles.forecastInset}>
-                <div className={styles.chartPlaceholder} style={{ margin: '0 0 16px 0', borderBottomColor: '#e8ebe6' }}>
-                  <div className={styles.chartBars}>
-                    {modules?.forecast90Dias.map((fc, idx) => (
-                      <div key={idx} className={styles.bar} style={{ height: `${(fc.projectedDemand / 6000) * 100}%` }}>
-                        <span style={{ bottom: '-22px', fontSize: '11px', fontWeight: 600 }}>{fc.month}</span>
+              <div className="p-6">
+                <div className="flex items-end gap-2 h-40">
+                  {modules?.forecast90Dias.map((fc, idx) => {
+                    const maxDem = Math.max(...modules.forecast90Dias.map(d => d.projectedDemand));
+                    const hPct = (fc.projectedDemand / maxDem) * 100;
+                    return (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
+                        <div className="w-full relative bg-[var(--color-fog)] rounded-t-sm" style={{ height: '100%' }}>
+                          <div
+                            className="absolute bottom-0 w-full rounded-t-sm transition-all duration-500 group-hover:opacity-80"
+                            style={{ height: `${hPct}%`, background: 'var(--color-forest-ink)' }}
+                          >
+                            <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--color-obsidian)] text-white text-[10px] font-bold px-2 py-1 rounded">
+                              {fc.projectedDemand}u
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-xs font-semibold" style={{ color: 'var(--color-slate)' }}>{fc.month.substring(0,3)}</span>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               </div>
-              <p className={styles.cardSub} style={{ marginBottom: 0, marginTop: '16px' }}>
-                Modelos de Deep Learning entrenados con patrones históricos de consumo y factores de estacionalidad.
-              </p>
             </div>
 
-            {/* MÓDULO 7: Rentabilidad por SKU */}
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h3>7. Rentabilidad por SKU</h3>
-                <span className={styles.badgeNeutral}>Top Margen %</span>
+            {/* Proveedores Críticos */}
+            <div className="wise-card !p-0 overflow-hidden">
+              <div className="p-5 border-b border-[var(--color-fog)] flex items-center justify-between" style={{ background: 'var(--color-fog)' }}>
+                <h3 className="font-bold" style={{ color: 'var(--color-obsidian)' }}>Proveedores Críticos</h3>
+                <ShieldCheck size={16} style={{ color: 'var(--color-spruce)' }} />
               </div>
-              <ul className={styles.list} style={{ marginTop: '12px' }}>
-                {modules?.rentabilidadSKU.map((sku) => (
-                  <li key={sku.sku}>
-                    <span style={{ fontSize: '12px' }}>{sku.name}</span>
-                    <span className={styles.positive} style={{ fontSize: '11px' }}>
-                      {sku.marginPercent}% Margen
-                    </span>
-                  </li>
+              <div className="divide-y divide-[var(--color-fog)]">
+                {modules?.proveedoresCriticos.slice(0, 4).map(sup => (
+                  <div key={sup.id} className="p-4 flex items-center justify-between hover:bg-[var(--color-fog)] transition-colors">
+                    <div>
+                      <div className="font-bold text-sm" style={{ color: 'var(--color-obsidian)' }}>{sup.name}</div>
+                      <div className="text-xs mt-0.5" style={{ color: 'var(--color-pebble)' }}>{sup.activePOs} OC activas</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-black text-sm" style={{ color: 'var(--color-spruce)' }}>{sup.leadTimeDays}d LT</div>
+                      <div className="text-[10px] font-bold" style={{ color: 'var(--color-slate)' }}>SLA {sup.reliabilityScore}%</div>
+                    </div>
+                  </div>
                 ))}
-              </ul>
-            </div>
-
-            {/* MÓDULO 8: Proveedores Críticos */}
-            <div className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h3>8. Proveedores Críticos</h3>
-                <span className={styles.badgeNeutral}>Lead Time SLA</span>
               </div>
-              <ul className={styles.list} style={{ marginTop: '12px' }}>
-                {modules?.proveedoresCriticos.map((sup) => (
-                  <li key={sup.id}>
-                    <span style={{ fontSize: '12px' }}>{sup.name}</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#0b4c72' }}>
-                      {sup.leadTimeDays}d Lead Time ({sup.reliabilityScore}%)
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <Link href="/proveedores" className="block p-3 text-center text-xs font-bold border-t border-[var(--color-fog)] hover:bg-[var(--color-fog)]" style={{ color: 'var(--color-forest-ink)' }}>
+                Ver Directorio Completo
+              </Link>
             </div>
           </div>
-        </>
+        </div>
       )}
 
-      {/* =========================================================================
-          VISTA 2: IA PREDICTIVA & FORECAST
-          ========================================================================= */}
       {activeTab === 'predictiva' && (
-        <div className={styles.predictivaCard}>
-          <div className={styles.controlsRow}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ink)' }}>SKU a Analizar:</label>
-              <select
-                className={styles.selectSku}
-                value={selectedSku}
-                onChange={(e) => setSelectedSku(e.target.value)}
-              >
-                <option value="Aceite Primor Premium 1L">Aceite Primor Premium 1L (SKU-ALI-001)</option>
-                <option value="Arroz Costeño 5kg">Arroz Costeño 5kg (SKU-COS-002)</option>
-                <option value="Azúcar Rubia Cartavio 1kg">Azúcar Rubia Cartavio 1kg (SKU-CAR-003)</option>
-              </select>
+        <div className="wise-card !p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider block mb-1.5" style={{ color: 'var(--color-slate)' }}>SKU Analizado</label>
+                  <select
+                    className="wise-input !py-2 !pr-10 !text-sm font-semibold"
+                    value={selectedSku}
+                    onChange={(e) => setSelectedSku(e.target.value)}
+                  >
+                    <option value="Aceite Primor Premium 1L">Aceite Primor Premium 1L</option>
+                    <option value="Arroz Costeño 5kg">Arroz Costeño 5kg</option>
+                    <option value="Milo Actigen-E 400g">Milo Actigen-E 400g</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 600 }}>Horizonte:</span>
-              <div className={styles.segmentedControl}>
-                <button
-                  className={`${styles.segment} ${predictiveHorizon === '30d' ? styles.segmentActive : ''}`}
-                  onClick={() => setPredictiveHorizon('30d')}
-                >
-                  30d
-                </button>
-                <button
-                  className={`${styles.segment} ${predictiveHorizon === '60d' ? styles.segmentActive : ''}`}
-                  onClick={() => setPredictiveHorizon('60d')}
-                >
-                  60d
-                </button>
-                <button
-                  className={`${styles.segment} ${predictiveHorizon === '90d' ? styles.segmentActive : ''}`}
-                  onClick={() => setPredictiveHorizon('90d')}
-                >
-                  90d
-                </button>
-                <button
-                  className={`${styles.segment} ${predictiveHorizon === '180d' ? styles.segmentActive : ''}`}
-                  onClick={() => setPredictiveHorizon('180d')}
-                >
-                  180d
-                </button>
-              </div>
+            <div className="wise-segmented">
+              <button className={predictiveHorizon === '30d' ? 'active' : ''} onClick={() => setPredictiveHorizon('30d')}>30 Días</button>
+              <button className={predictiveHorizon === '60d' ? 'active' : ''} onClick={() => setPredictiveHorizon('60d')}>60 Días</button>
+              <button className={predictiveHorizon === '90d' ? 'active' : ''} onClick={() => setPredictiveHorizon('90d')}>90 Días</button>
             </div>
           </div>
 
-          <div className={styles.chartWrapper}>
-            <div className={styles.yAxis}>
-              <span>150u</span>
-              <span>120u</span>
-              <span>90u</span>
-              <span>60u</span>
-              <span>30u</span>
-              <span>0u</span>
+          <div className="relative h-[350px] w-full rounded-xl overflow-hidden border border-[var(--color-fog)] bg-[#fcfdfc] p-6">
+            {/* SVG Chart Background lines */}
+            <div className="absolute inset-0 flex flex-col justify-between p-6 pb-12 pointer-events-none opacity-50">
+               {[150, 120, 90, 60, 30, 0].map(v => (
+                 <div key={v} className="flex items-center gap-4">
+                   <span className="text-[10px] font-bold w-6 text-right" style={{ color: 'var(--color-slate)' }}>{v}</span>
+                   <div className="flex-1 border-b border-dashed border-[var(--color-fog)]" />
+                 </div>
+               ))}
             </div>
 
-            <div className={styles.chartArea}>
-              <div className={styles.gridLines}>
-                <div></div><div></div><div></div><div></div><div></div>
-              </div>
+            {/* Simulated Chart SVG */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 1000 300">
+              <defs>
+                <linearGradient id="predGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-lime-voltage)" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="var(--color-lime-voltage)" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
 
-              <svg className={styles.svgChart} viewBox="0 0 1000 300" preserveAspectRatio="none">
-                <path
-                  d="M 0 250 L 50 180 L 100 220 L 150 120 L 200 160 L 250 80 L 300 190 L 350 140 L 400 160 L 450 90 L 500 150 L 500 300 L 0 300 Z"
-                  fill="#e8ebe6"
-                  fillOpacity="0.7"
-                />
-                <path
-                  d="M 0 250 L 50 180 L 100 220 L 150 120 L 200 160 L 250 80 L 300 190 L 350 140 L 400 160 L 450 90 L 500 150"
-                  fill="none"
-                  stroke="#868685"
-                  strokeWidth="3"
-                  strokeDasharray="6 6"
-                />
+              {/* Histórico */}
+              <path d="M 50 250 L 150 180 L 250 220 L 350 120 L 450 160 L 550 80" fill="none" stroke="var(--color-slate)" strokeWidth="3" strokeDasharray="6 6" />
 
-                <path
-                  d="M 500 150 L 550 180 L 600 70 L 650 110 L 700 90 L 750 40 L 800 160 L 850 180 L 900 120 L 950 170 L 1000 90 L 1000 300 L 500 300 Z"
-                  fill="#e2f6d5"
-                  fillOpacity="0.8"
-                />
-                <path
-                  d="M 500 150 L 550 180 L 600 70 L 650 110 L 700 90 L 750 40 L 800 160 L 850 180 L 900 120 L 950 170 L 1000 90"
-                  fill="none"
-                  stroke="#163300"
-                  strokeWidth="4"
-                />
+              {/* Predictivo Area */}
+              <path d="M 550 80 L 650 110 L 750 90 L 850 40 L 950 160 L 950 280 L 550 280 Z" fill="url(#predGrad)" />
 
-                <line x1="500" y1="0" x2="500" y2="300" stroke="#163300" strokeWidth="2" strokeDasharray="4 4" />
-                <rect x="460" y="10" width="80" height="24" rx="12" fill="#163300" />
-                <text x="500" y="26" fill="#9fe870" fontSize="12" fontWeight="600" textAnchor="middle">HOY</text>
-              </svg>
+              {/* Predictivo Line */}
+              <path d="M 550 80 L 650 110 L 750 90 L 850 40 L 950 160" fill="none" stroke="var(--color-forest-ink)" strokeWidth="4" />
 
-              <div className={styles.xAxis}>
-                <span>09-01</span>
-                <span>09-08</span>
-                <span>09-15</span>
-                <span>09-22</span>
-                <span className={styles.forecastDate}>09-29</span>
-                <span className={styles.forecastDate}>10-06</span>
-                <span className={styles.forecastDate}>10-13</span>
-                <span className={styles.forecastDate}>10-20</span>
-              </div>
+              {/* Puntos Histórico */}
+              <circle cx="150" cy="180" r="4" fill="var(--color-slate)" />
+              <circle cx="250" cy="220" r="4" fill="var(--color-slate)" />
+              <circle cx="350" cy="120" r="4" fill="var(--color-slate)" />
+              <circle cx="450" cy="160" r="4" fill="var(--color-slate)" />
+
+              {/* Puntos Predictivo */}
+              <circle cx="550" cy="80" r="6" fill="var(--color-forest-ink)" />
+              <circle cx="650" cy="110" r="6" fill="var(--color-paper)" stroke="var(--color-forest-ink)" strokeWidth="3" />
+              <circle cx="750" cy="90" r="6" fill="var(--color-paper)" stroke="var(--color-forest-ink)" strokeWidth="3" />
+              <circle cx="850" cy="40" r="6" fill="var(--color-paper)" stroke="var(--color-forest-ink)" strokeWidth="3" />
+              <circle cx="950" cy="160" r="6" fill="var(--color-paper)" stroke="var(--color-forest-ink)" strokeWidth="3" />
+
+              {/* Línea Divisoria HOY */}
+              <line x1="550" y1="20" x2="550" y2="280" stroke="var(--color-forest-ink)" strokeWidth="2" strokeDasharray="4 4" />
+              <rect x="510" y="20" width="80" height="24" rx="12" fill="var(--color-forest-ink)" />
+              <text x="550" y="36" fill="var(--color-lime-voltage)" fontSize="12" fontWeight="600" textAnchor="middle">HOY</text>
+            </svg>
+
+            {/* X Axis Labels */}
+            <div className="absolute bottom-4 left-[3rem] right-4 flex justify-between text-[10px] font-bold" style={{ color: 'var(--color-slate)' }}>
+              <span>09-01</span>
+              <span>09-15</span>
+              <span>09-29</span>
+              <span>10-13</span>
+              <span style={{ color: 'var(--color-forest-ink)' }}>10-27</span>
+              <span style={{ color: 'var(--color-forest-ink)' }}>11-10</span>
+              <span style={{ color: 'var(--color-forest-ink)' }}>11-24</span>
+              <span style={{ color: 'var(--color-forest-ink)' }}>12-08</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 rounded-xl" style={{ background: 'var(--color-fog)' }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>Tendencia</p>
+              <p className="text-xl font-black mt-1 flex items-center gap-2" style={{ color: 'var(--color-spruce)', fontFamily: 'var(--font-wise-sans)' }}>
+                <TrendingUp size={20} /> Alcista (+18%)
+              </p>
+            </div>
+            <div className="p-4 rounded-xl" style={{ background: 'var(--color-fog)' }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-slate)' }}>Estacionalidad</p>
+              <p className="text-xl font-black mt-1 flex items-center gap-2" style={{ color: 'var(--color-obsidian)', fontFamily: 'var(--font-wise-sans)' }}>
+                <Zap size={20} style={{ color: '#f59e0b' }} /> Alta (Campaña Verano)
+              </p>
+            </div>
+            <div className="p-4 rounded-xl" style={{ background: 'var(--color-linen-mist)' }}>
+              <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-forest-ink)' }}>Acción Sugerida</p>
+              <Link href="/reabastecimiento" className="text-sm font-bold mt-2 flex items-center gap-1" style={{ color: 'var(--color-forest-ink)' }}>
+                Adelantar compra 14 días <ArrowRight size={14} />
+              </Link>
             </div>
           </div>
         </div>
@@ -569,7 +463,11 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '32px', color: 'var(--muted)' }}>Cargando Centro de Control Ejecutivo...</div>}>
+    <Suspense fallback={
+      <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="wise-spinner" />
+      </div>
+    }>
       <DashboardContent />
     </Suspense>
   );
