@@ -4,55 +4,59 @@ import React, { useState } from 'react';
 import { Search, Plus, SlidersHorizontal, ArrowDownToLine, AlertCircle, TrendingDown, DollarSign, Calculator, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 
-// Mock Data para Mi Almacén
-const mockProducts = [
-  {
-    id: 'p1',
-    sku: 'SKU-001',
-    name: 'Teclado Mecánico RGB',
-    category: 'Periféricos',
-    price: 120.0, // PV
-    totalStock: 0,
-    minStock: 10,
-    status: 'quiebre', // quiebre o sobre_stock
-    deadInventoryValue: 0
-  },
-  {
-    id: 'p2',
-    sku: 'SKU-002',
-    name: 'Monitor UltraWide 34"',
-    category: 'Monitores',
-    price: 450.0,
-    totalStock: 85,
-    minStock: 20,
-    status: 'sobre_stock',
-    deadInventoryValue: 12000 // Valor inmovilizado
-  },
-  {
-    id: 'p3',
-    sku: 'SKU-003',
-    name: 'Mouse Inalámbrico Pro',
-    category: 'Periféricos',
-    price: 80.0,
-    totalStock: 3,
-    minStock: 15,
-    status: 'quiebre',
-    deadInventoryValue: 0
-  }
-];
+// Datos calculados dinámicamente desde Supabase
+
 
 export default function MiAlmacenPage() {
   const [filterState, setFilterState] = useState<'todos' | 'quiebre' | 'sobre_stock'>('quiebre'); // Por defecto quiebre
   const [rematePercent, setRematePercent] = useState<number>(30); // 30% por defecto
   
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/products?pageSize=100')
+      .then(res => res.json())
+      .then(data => {
+        if (data.items) {
+          const formatted = data.items.map((p: any) => {
+            const isQuiebre = p.stock <= (p.safetyStock || 0);
+            const isSobreStock = p.stock > (p.safetyStock || 5) * 3;
+            const status = isQuiebre ? 'quiebre' : isSobreStock ? 'sobre_stock' : 'normal';
+            
+            // Calculo rápido de inventario inmovilizado (solo si es sobre_stock)
+            const deadInventoryValue = status === 'sobre_stock' ? (p.stock - (p.safetyStock || 5)) * p.price : 0;
+
+            return {
+              id: p.id,
+              sku: p.sku,
+              name: p.name,
+              category: p.category || 'General',
+              price: p.price,
+              totalStock: p.stock,
+              minStock: p.safetyStock,
+              status,
+              deadInventoryValue
+            };
+          });
+          setProducts(formatted);
+        }
+        setIsLoading(false);
+      })
+      .catch(e => {
+        console.error(e);
+        setIsLoading(false);
+      });
+  }, []);
+
   // Totales
-  const totalValue = mockProducts.reduce((acc, p) => acc + (p.price * p.totalStock), 0);
-  const totalProducts = mockProducts.length;
-  const totalVariants = 12; // Mock
-  const totalDeadInventory = mockProducts.reduce((acc, p) => acc + p.deadInventoryValue, 0);
+  const totalValue = products.reduce((acc, p) => acc + (p.price * p.totalStock), 0);
+  const totalProducts = products.length;
+  const totalVariants = products.length; // 1-1 en este MVP
+  const totalDeadInventory = products.reduce((acc, p) => acc + p.deadInventoryValue, 0);
 
   // Filtro
-  const filteredProducts = mockProducts
+  const filteredProducts = products
     .filter(p => filterState === 'todos' ? true : p.status === filterState)
     .sort((a, b) => a.status === 'quiebre' ? -1 : 1); // Priorizar quiebres siempre arriba
 
