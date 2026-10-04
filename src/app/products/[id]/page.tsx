@@ -52,15 +52,15 @@ interface DetailData {
 }
 
 function formatPEN(n: number): string {
-  return `PEN ${Number(n || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `S/ ${Number(n || 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  active: { bg: '#f0fdf4', color: '#15803d', label: 'Activo' },
-  paused: { bg: '#fef2f2', color: '#b91c1c', label: 'Pausado' },
-  critical: { bg: '#fef2f2', color: '#b91c1c', label: 'Crítico' },
+  active: { bg: 'var(--color-linen-mist)', color: 'var(--color-forest-ink)', label: 'Activo' },
+  paused: { bg: '#fef2f2', color: 'var(--color-alarm-red)', label: 'Pausado' },
+  critical: { bg: '#fef2f2', color: 'var(--color-alarm-red)', label: 'Crítico' },
   warning: { bg: '#fffbeb', color: '#b45309', label: 'Alerta' },
-  optimal: { bg: '#f0fdf4', color: '#15803d', label: 'Normal' },
+  optimal: { bg: 'var(--color-linen-mist)', color: 'var(--color-spruce)', label: 'Normal' },
 };
 
 export default function ProductDetailPage() {
@@ -99,12 +99,18 @@ function ProductDetailContent() {
         setNotFound(true);
         return;
       }
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
-      }
+      if (!res.ok) throw new Error('Error de red');
+      const json = await res.json();
+      setData(json);
+      setFName(json.item.name);
+      setFPrice(String(json.item.price));
+      setFCost(String(json.item.cost));
+      setFStatus(json.item.status);
+      setFStock(String(json.stock.physical));
+      setFSafety(String(json.stock.safety));
     } catch (err) {
-      console.error('Error al cargar ficha:', err);
+      console.error(err);
+      setBanner({ type: 'error', text: 'Error al cargar detalles' });
     } finally {
       setLoading(false);
     }
@@ -113,47 +119,6 @@ function ProductDetailContent() {
   useEffect(() => {
     load();
   }, [load]);
-
-  const openEdit = () => {
-    if (!data) return;
-    setFName(data.item.name);
-    setFPrice(String(data.item.price));
-    setFCost(String(data.item.cost));
-    setFStatus(data.item.status);
-    setFStock(String(data.stock.physical));
-    setFSafety(String(data.stock.safety));
-    setFormError(null);
-    setShowEdit(true);
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    setSaving(true);
-    try {
-      const res = await apiFetch(`/api/products/${encodeURIComponent(id)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: fName,
-          price: fPrice === '' ? NaN : Number(fPrice),
-          cost: fCost === '' ? 0 : Number(fCost),
-          status: fStatus,
-          stock: fStock === '' ? 0 : Number(fStock),
-          safetyStock: fSafety === '' ? 0 : Number(fSafety),
-        }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.error || 'No se pudo guardar.');
-      setShowEdit(false);
-      setBanner({ type: 'success', text: 'Producto actualizado correctamente.' });
-      load();
-    } catch (err: any) {
-      setFormError(err?.message || 'No se pudo guardar.');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleGenerateOC = async () => {
     if (!data || generating) return;
@@ -165,288 +130,287 @@ function ProductDetailContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ itemIds: [data.item.sku] }),
       });
-      const json = await res.json();
-      if (res.ok && json.success) {
-        const first = json.results?.[0];
-        setBanner({
-          type: first?.status === 'failed' ? 'error' : 'success',
-          text: first ? `${first.poNumber}: ${first.message}` : json.summary,
-        });
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        setBanner({ type: 'success', text: `Se generó OC por ${data.restock.suggestedQty} u. de este SKU.` });
         triggerNotificationRefresh();
         load();
       } else {
-        setBanner({ type: 'error', text: json.error || 'No se pudo generar la OC.' });
+        setBanner({ type: 'error', text: resData.error || 'No se pudo generar la OC.' });
       }
-    } catch (err: any) {
-      setBanner({ type: 'error', text: `Error de conexión: ${err.message}` });
+    } catch (err) {
+      setBanner({ type: 'error', text: 'Error de conexión.' });
     } finally {
       setGenerating(false);
     }
   };
 
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!data) return;
+    setFormError(null);
+    setSaving(true);
+    try {
+      const res = await apiFetch(`/api/products/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fName,
+          price: Number(fPrice),
+          cost: Number(fCost),
+          status: fStatus,
+          stock: Number(fStock),
+          safetyStock: Number(fSafety),
+        }),
+      });
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(resData.error || 'No se guardaron los cambios');
+      setShowEdit(false);
+      setBanner({ type: 'success', text: 'Producto actualizado.' });
+      load();
+    } catch (err: any) {
+      setFormError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
-    return (
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px', textAlign: 'center', color: 'var(--color-pebble)', fontSize: '13px' }}>
-        Cargando ficha del producto…
-      </div>
-    );
+    return <div className="p-8 text-[var(--color-pebble)] text-sm font-medium">Cargando datos...</div>;
   }
 
   if (notFound || !data) {
     return (
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--color-obsidian)' }}>Producto no encontrado</h1>
-        <p style={{ fontSize: '13px', color: 'var(--color-slate)' }}>La referencia solicitada no existe en el catálogo.</p>
-        <Link href="/products/products" style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-forest-ink)' }}>
-          ← Volver a Productos
-        </Link>
+      <div className="p-8 max-w-[1200px] mx-auto text-center mt-20">
+        <h1 className="text-2xl font-bold text-[var(--color-obsidian)] mb-2">Producto no encontrado</h1>
+        <p className="text-[var(--color-slate)] mb-6">El producto con ID {id} no existe o fue eliminado.</p>
+        <Link href="/products/products" className="wise-btn-primary inline-block">Volver al catálogo</Link>
       </div>
     );
   }
 
-  const st = STATUS_STYLE[data.item.status] || STATUS_STYLE.active;
-  const rst = STATUS_STYLE[data.restock.status] || STATUS_STYLE.optimal;
-  const coveragePct = Math.min(100, Math.max(0, (data.restock.coverageDays / 14) * 100));
+  const stockPct = data.stock.safety > 0 ? (data.stock.physical / data.stock.safety) * 100 : 100;
+  const coveragePct = Math.min(100, Math.max(0, (data.restock.coverageDays / 30) * 100));
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div className="max-w-[1200px] mx-auto p-4 sm:p-6 lg:p-8 pb-32 space-y-6">
+      
       {/* Breadcrumb */}
-      <nav style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--color-slate)' }} aria-label="Miga de pan">
-        <Link href="/products/products" style={{ color: 'var(--color-forest-ink)', fontWeight: 600, textDecoration: 'none' }}>
-          Productos
-        </Link>
-        <ChevronRight size={13} />
-        <span style={{ fontWeight: 700, color: 'var(--color-obsidian)' }}>{data.item.sku}</span>
-      </nav>
-
-      {/* Header */}
-      <div style={{ background: '#ffffff', border: '1px solid var(--color-fog)', borderRadius: '10px', padding: '20px 22px', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-        <span style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'var(--color-fog)', border: '1px solid var(--color-fog)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-charcoal)', flexShrink: 0 }}>
-          <Tag size={20} />
-        </span>
-        <div style={{ flex: 1, minWidth: '200px' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-obsidian)', margin: 0 }}>{data.item.name}</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
-            <code style={{ fontSize: '12px', fontWeight: 700, background: 'var(--color-fog)', padding: '2px 8px', borderRadius: '6px', color: 'var(--color-charcoal)' }}>
-              {data.item.sku}
-            </code>
-            <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '999px', background: st.bg, color: st.color }}>
-              {st.label}
-            </span>
-            <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '999px', background: rst.bg, color: rst.color }}>
-              Stock: {rst.label}
-            </span>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={openEdit}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#ffffff', border: '1px solid var(--color-pebble)', borderRadius: '9999px', padding: '9px 14px', fontSize: '13px', fontWeight: 600, color: 'var(--color-charcoal)', cursor: 'pointer' }}
-          >
-            <Pencil size={14} /> Editar
-          </button>
-          <button
-            type="button"
-            onClick={handleGenerateOC}
-            disabled={generating || data.restock.suggestedQty <= 0}
-            title={data.restock.suggestedQty <= 0 ? 'Sin cantidad sugerida' : 'Generar orden de compra'}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: generating || data.restock.suggestedQty <= 0 ? 'var(--color-pebble)' : 'var(--color-forest-ink)', color: '#ffffff', border: 'none', borderRadius: '9999px', padding: '9px 14px', fontSize: '13px', fontWeight: 600, cursor: generating || data.restock.suggestedQty <= 0 ? 'not-allowed' : 'pointer' }}
-          >
-            <Zap size={14} /> {generating ? 'Generando…' : 'Generar OC'}
-          </button>
-        </div>
+      <div className="flex items-center gap-2 text-sm font-bold text-[var(--color-slate)]">
+        <Link href="/products/products" className="hover:text-[var(--color-obsidian)] hover:underline">Catálogo</Link>
+        <ChevronRight size={14} />
+        <span className="text-[var(--color-charcoal)]">{data.item.sku}</span>
       </div>
 
       {banner && (
-        <div
-          role={banner.type === 'error' ? 'alert' : 'status'}
-          style={{ background: banner.type === 'success' ? '#f0fdf4' : '#fef2f2', border: banner.type === 'success' ? '1px solid #bbf7d0' : '1px solid var(--color-alarm-red)', color: banner.type === 'success' ? '#166534' : '#991b1b', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, display: 'flex', gap: '8px', alignItems: 'center' }}
-        >
-          <span style={{ flex: 1 }}>{banner.text}</span>
-          <button type="button" onClick={() => setBanner(null)} aria-label="Cerrar aviso" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', fontWeight: 700 }}>
-            ×
-          </button>
+        <div className={`p-4 rounded-[10px] text-sm font-semibold flex items-center justify-between ${banner.type === 'error' ? 'bg-[#fef2f2] text-[#991b1b] border border-[var(--color-alarm-red)]' : 'bg-[var(--color-linen-mist)] text-[var(--color-spruce)] border border-[var(--color-forest-ink)]'}`}>
+          {banner.text}
+          <button onClick={() => setBanner(null)}><X size={16} /></button>
         </div>
       )}
 
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', background: '#ffffff', border: '1px solid var(--color-fog)', borderRadius: '10px', overflow: 'hidden' }}>
-        {[
-          { label: 'PRECIO VENTA', value: formatPEN(data.item.price) },
-          { label: 'COSTO', value: formatPEN(data.item.cost) },
-          { label: 'MARGEN', value: `${data.item.margin}%` },
-          { label: 'STOCK ACTUAL', value: `${data.stock.physical} u` },
-          { label: 'COBERTURA', value: `${data.restock.coverageDays} días` },
-        ].map((k, idx) => (
-          <div key={k.label} style={{ padding: '16px 18px', borderLeft: idx === 0 ? 'none' : '1px solid var(--color-fog)' }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--color-charcoal)' }}>{k.label}</div>
-            <div style={{ fontSize: '20px', fontWeight: 800, color: 'var(--color-obsidian)', marginTop: '4px', fontVariantNumeric: 'tabular-nums' }}>{k.value}</div>
+      {/* Hero Section */}
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        <div className="w-full lg:w-2/3">
+          <div className="flex items-center gap-3 mb-2 text-xs font-bold uppercase tracking-wider text-[var(--color-slate)]">
+            <span className="flex items-center gap-1"><Tag size={14} /> {data.item.category || 'Sin categoría'}</span>
+            <span>•</span>
+            <span
+              className="px-2.5 py-1 rounded-full flex items-center gap-1.5"
+              style={{ background: STATUS_STYLE[data.item.status]?.bg, color: STATUS_STYLE[data.item.status]?.color }}
+            >
+              {STATUS_STYLE[data.item.status]?.label || data.item.status}
+            </span>
           </div>
-        ))}
+          <h1 className="text-4xl lg:text-5xl font-black text-[var(--color-obsidian)] leading-tight tracking-[-0.03em] mb-4">
+            {data.item.name}
+          </h1>
+          <p className="text-lg text-[var(--color-charcoal)] font-mono font-bold mb-6">SKU: {data.item.sku}</p>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setShowEdit(true)}
+              className="wise-btn-outline flex items-center gap-2"
+            >
+              <Pencil size={16} /> Editar Producto
+            </button>
+            <button
+              onClick={handleGenerateOC}
+              disabled={generating || data.restock.suggestedQty <= 0}
+              className="wise-btn-primary flex items-center gap-2"
+              style={data.restock.suggestedQty <= 0 ? { background: 'var(--color-pebble)', cursor: 'not-allowed' } : {}}
+            >
+              <Zap size={16} /> 
+              {generating ? 'Generando...' : data.restock.suggestedQty > 0 ? `Generar OC (${data.restock.suggestedQty}u)` : 'Stock óptimo'}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '14px' }}>
-        {/* Info general */}
-        <div style={{ background: '#ffffff', border: '1px solid var(--color-fog)', borderRadius: '10px', padding: '20px 22px' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--color-obsidian)', margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Tag size={15} color="var(--color-forest-ink)" /> Información general
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+        
+        {/* Precios y Margen */}
+        <div className="wise-card">
+          <h2 className="text-sm font-bold text-[var(--color-obsidian)] mb-4 flex items-center gap-2">
+            <Tag size={16} className="text-[var(--color-forest-ink)]" /> Financiero
           </h2>
-          {[
-            ['Categoría', data.item.category || '—'],
-            ['Estado', st.label],
-            ['Última actualización', new Date(data.item.updatedAt).toLocaleString('es-PE')],
-          ].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '9px 0', borderBottom: '1px solid var(--color-fog)', fontSize: '13px' }}>
-              <span style={{ color: 'var(--color-slate)' }}>{k}</span>
-              <strong style={{ color: 'var(--color-obsidian)', textAlign: 'right' }}>{v}</strong>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2 border-b border-[var(--color-fog)]">
+              <span className="text-sm text-[var(--color-slate)]">Precio de venta</span>
+              <strong className="text-[var(--color-obsidian)] font-bold">{formatPEN(data.item.price)}</strong>
             </div>
-          ))}
+            <div className="flex justify-between items-center py-2 border-b border-[var(--color-fog)]">
+              <span className="text-sm text-[var(--color-slate)]">Costo de compra</span>
+              <strong className="text-[var(--color-obsidian)] font-bold">{formatPEN(data.item.cost)}</strong>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-[var(--color-fog)]">
+              <span className="text-sm text-[var(--color-slate)]">Margen unitario</span>
+              <strong className="text-[var(--color-forest-ink)] font-bold">{formatPEN(data.item.margin)}</strong>
+            </div>
+          </div>
         </div>
 
         {/* Proveedor */}
-        <div style={{ background: '#ffffff', border: '1px solid var(--color-fog)', borderRadius: '10px', padding: '20px 22px' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--color-obsidian)', margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Building2 size={15} color="var(--color-forest-ink)" /> Proveedor
+        <div className="wise-card">
+          <h2 className="text-sm font-bold text-[var(--color-obsidian)] mb-4 flex items-center gap-2">
+            <Building2 size={16} className="text-[var(--color-forest-ink)]" /> Proveedor Asociado
           </h2>
           {data.supplier ? (
-            [
-              ['Nombre', data.supplier.name],
-              ['Tipo', data.supplier.type === 'corporate' ? 'Corporativo (SAP)' : 'Tradicional (WhatsApp)'],
-              ['Contacto', data.supplier.phone || '—'],
-              ['Lead time', `${data.supplier.leadTimeDays} días`],
-            ].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '9px 0', borderBottom: '1px solid var(--color-fog)', fontSize: '13px' }}>
-                <span style={{ color: 'var(--color-slate)' }}>{k}</span>
-                <strong style={{ color: 'var(--color-obsidian)', textAlign: 'right' }}>{v}</strong>
+            <div className="space-y-3">
+              <div className="font-bold text-[var(--color-obsidian)] text-lg mb-1">{data.supplier.name}</div>
+              <div className="text-sm text-[var(--color-slate)]">
+                {data.supplier.type === 'international' ? 'Internacional' : 'Local'} • {data.supplier.leadTimeDays} días de envío
               </div>
-            ))
+              <div className="text-sm text-[var(--color-charcoal)] font-medium">Contact: {data.supplier.phone || 'No registrado'}</div>
+              <Link href={`/proveedores/${data.supplier.id}`} className="text-sm text-[var(--color-forest-ink)] font-bold hover:underline block mt-2">
+                Ver proveedor &rarr;
+              </Link>
+            </div>
           ) : (
-            <p style={{ fontSize: '13px', color: 'var(--color-pebble)' }}>Sin proveedor asignado.</p>
+            <div className="text-sm text-[var(--color-pebble)] py-4">No hay proveedor primario asignado a este producto.</div>
           )}
         </div>
 
-        {/* Stock y reposición */}
-        <div style={{ background: '#ffffff', border: '1px solid var(--color-fog)', borderRadius: '10px', padding: '20px 22px' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--color-obsidian)', margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Boxes size={15} color="var(--color-forest-ink)" /> Stock y reposición
+        {/* Stock y Reposición */}
+        <div className="wise-card-dark bg-[var(--color-forest-ink)] text-white">
+          <h2 className="text-sm font-bold text-[var(--color-lime-voltage)] mb-4 flex items-center gap-2">
+            <Boxes size={16} /> Stock y Reposición
           </h2>
-          <div style={{ height: '8px', background: 'var(--color-fog)', borderRadius: '999px', overflow: 'hidden', marginBottom: '12px' }}>
-            <div style={{ width: `${coveragePct}%`, height: '100%', background: data.restock.status === 'critical' ? '#ef4444' : data.restock.status === 'warning' ? '#f59e0b' : '#15803d', borderRadius: '999px' }} />
+          <div className="h-2 bg-white/20 rounded-full overflow-hidden mb-4">
+            <div 
+              className="h-full rounded-full transition-all" 
+              style={{ 
+                width: `${coveragePct}%`, 
+                background: data.restock.status === 'critical' ? 'var(--color-alarm-red)' : data.restock.status === 'warning' ? '#f59e0b' : 'var(--color-lime-voltage)' 
+              }} 
+            />
           </div>
-          {[
-            ['Stock físico', `${data.stock.physical} u`],
-            ['Stock seguridad', `${data.stock.safety} u`],
-            ['Punto de reorden (ROP)', `${data.restock.rop} u`],
-            ['Velocidad estimada', `${data.restock.dailyVelocity} u/día`],
-            ['Compra sugerida', `${data.restock.suggestedQty} u`],
-            ['Inversión estimada', formatPEN(data.restock.investment)],
-          ].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '7px 0', borderBottom: '1px solid var(--color-fog)', fontSize: '13px' }}>
-              <span style={{ color: 'var(--color-slate)' }}>{k}</span>
-              <strong style={{ color: 'var(--color-obsidian)', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{v}</strong>
-            </div>
-          ))}
+          <div className="space-y-2">
+            {[
+              ['Stock físico', `${data.stock.physical} u`],
+              ['Stock seguridad', `${data.stock.safety} u`],
+              ['Punto reorden', `${data.restock.rop} u`],
+              ['Velocidad est.', `${data.restock.dailyVelocity} u/día`],
+              ['Compra sugerida', `${data.restock.suggestedQty} u`]
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between items-center text-sm py-1 border-b border-white/10 last:border-0">
+                <span className="text-white/70">{k}</span>
+                <strong className="font-bold tabular-nums">{v}</strong>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Historial OC */}
-        <div style={{ background: '#ffffff', border: '1px solid var(--color-fog)', borderRadius: '10px', padding: '20px 22px' }}>
-          <h2 style={{ fontSize: '14px', fontWeight: 800, color: 'var(--color-obsidian)', margin: '0 0 14px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <TrendingUp size={15} color="var(--color-forest-ink)" /> Historial de órdenes ({data.orders.length})
-          </h2>
-          {data.orders.length === 0 ? (
-            <p style={{ fontSize: '13px', color: 'var(--color-pebble)' }}>Aún no hay órdenes de compra para este SKU.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto' }}>
-              {data.orders.map((o) => (
-                <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid var(--color-fog)', borderRadius: '10px', padding: '9px 12px', fontSize: '12px' }}>
-                  <strong style={{ color: 'var(--color-obsidian)' }}>{o.orderNumber}</strong>
-                  <span style={{ color: 'var(--color-slate)' }}>
-                    {o.lines.reduce((a, l) => a + l.quantity, 0)} u · S/ {o.total.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-                  </span>
-                  <span
-                    style={{
-                      marginLeft: 'auto',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      padding: '2px 8px',
-                      borderRadius: '999px',
-                      background: o.status === 'sent' ? '#f0fdf4' : 'var(--color-fog)',
-                      color: o.status === 'sent' ? '#15803d' : 'var(--color-slate)',
-                    }}
-                  >
-                    {o.status === 'sent' ? 'ENVIADA' : 'BORRADOR'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      </div>
+
+      {/* Historial OC */}
+      <div className="wise-card mt-6">
+        <h2 className="text-sm font-bold text-[var(--color-obsidian)] mb-4 flex items-center gap-2">
+          <TrendingUp size={16} className="text-[var(--color-forest-ink)]" /> Historial de Órdenes ({data.orders.length})
+        </h2>
+        {data.orders.length === 0 ? (
+          <p className="text-sm text-[var(--color-pebble)] py-4">Aún no hay órdenes de compra para este SKU.</p>
+        ) : (
+          <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
+            {data.orders.map((o) => (
+              <div key={o.id} className="flex flex-col sm:flex-row sm:items-center gap-3 border border-[var(--color-fog)] rounded-[10px] p-3 text-sm">
+                <strong className="text-[var(--color-obsidian)] min-w-24">{o.orderNumber}</strong>
+                <span className="text-[var(--color-slate)] flex-1">
+                  {o.lines.reduce((a, l) => a + l.quantity, 0)} u · S/ {o.total.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                </span>
+                <span
+                  className="text-xs font-bold px-3 py-1 rounded-full w-fit"
+                  style={{
+                    background: o.status === 'sent' ? 'var(--color-linen-mist)' : 'var(--color-fog)',
+                    color: o.status === 'sent' ? 'var(--color-spruce)' : 'var(--color-slate)',
+                  }}
+                >
+                  {o.status === 'sent' ? 'ENVIADA' : 'BORRADOR'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Modal Editar */}
       {showEdit && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Editar producto"
-          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 80, padding: '16px' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !saving) setShowEdit(false);
-          }}
-        >
-          <form
-            onSubmit={handleSave}
-            style={{ background: '#ffffff', borderRadius: '10px', padding: '24px', width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h2 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--color-obsidian)', margin: 0, flex: 1 }}>Editar {data.item.sku}</h2>
-              <button type="button" onClick={() => !saving && setShowEdit(false)} aria-label="Cerrar" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-slate)', display: 'flex' }}>
-                <X size={18} />
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget && !saving) setShowEdit(false); }}>
+          <form onSubmit={handleSave} className="wise-card w-full max-w-lg shadow-2xl animate-in zoom-in-95 p-6 flex flex-col gap-4">
+            
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-bold text-[var(--color-obsidian)]">Editar {data.item.sku}</h2>
+              <button type="button" onClick={() => !saving && setShowEdit(false)} className="text-[var(--color-slate)] hover:text-[var(--color-obsidian)]">
+                <X size={20} />
               </button>
             </div>
+
             {formError && (
-              <div role="alert" style={{ background: '#fef2f2', border: '1px solid var(--color-alarm-red)', color: '#991b1b', padding: '10px 12px', borderRadius: '10px', fontSize: '13px', fontWeight: 600 }}>
+              <div className="p-3 rounded-xl text-sm font-bold bg-[#fef2f2] text-[#991b1b] border border-[var(--color-alarm-red)]">
                 {formError}
               </div>
             )}
-            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-              Nombre *
-              <input value={fName} onChange={(e) => setFName(e.target.value)} required style={inputStyle} />
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Precio (PEN) *
-                <input value={fPrice} onChange={(e) => setFPrice(e.target.value)} inputMode="decimal" required style={inputStyle} />
-              </label>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Costo (PEN)
-                <input value={fCost} onChange={(e) => setFCost(e.target.value)} inputMode="decimal" style={inputStyle} />
-              </label>
+
+            <div>
+              <label className="block text-xs font-bold mb-1.5 text-[var(--color-charcoal)]">Nombre *</label>
+              <input value={fName} onChange={e => setFName(e.target.value)} required className="wise-input w-full" />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Estado
-                <select value={fStatus} onChange={(e) => setFStatus(e.target.value)} style={inputStyle}>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold mb-1.5 text-[var(--color-charcoal)]">Precio (S/) *</label>
+                <input value={fPrice} onChange={e => setFPrice(e.target.value)} required className="wise-input w-full" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5 text-[var(--color-charcoal)]">Costo (S/)</label>
+                <input value={fCost} onChange={e => setFCost(e.target.value)} className="wise-input w-full" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold mb-1.5 text-[var(--color-charcoal)]">Estado</label>
+                <select value={fStatus} onChange={e => setFStatus(e.target.value)} className="wise-input w-full">
                   <option value="active">Activo</option>
                   <option value="paused">Pausado</option>
                 </select>
-              </label>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Stock físico
-                <input value={fStock} onChange={(e) => setFStock(e.target.value)} inputMode="numeric" style={inputStyle} />
-              </label>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-charcoal)' }}>
-                Stock seguridad
-                <input value={fSafety} onChange={(e) => setFSafety(e.target.value)} inputMode="numeric" style={inputStyle} />
-              </label>
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5 text-[var(--color-charcoal)]">Stock físico</label>
+                <input value={fStock} onChange={e => setFStock(e.target.value)} className="wise-input w-full" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5 text-[var(--color-charcoal)]">Stock mín.</label>
+                <input value={fSafety} onChange={e => setFSafety(e.target.value)} className="wise-input w-full" />
+              </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '4px' }}>
-              <button type="button" onClick={() => !saving && setShowEdit(false)} style={{ background: '#ffffff', border: '1px solid var(--color-pebble)', borderRadius: '9999px', padding: '9px 16px', fontSize: '13px', fontWeight: 600, color: 'var(--color-charcoal)', cursor: saving ? 'not-allowed' : 'pointer' }}>
+
+            <div className="flex items-center justify-end gap-3 mt-4">
+              <button type="button" onClick={() => !saving && setShowEdit(false)} className="wise-btn-outline px-6">
                 Cancelar
               </button>
-              <button type="submit" disabled={saving} style={{ background: saving ? 'var(--color-pebble)' : 'var(--color-forest-ink)', color: '#ffffff', border: 'none', borderRadius: '9999px', padding: '9px 16px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}>
-                {saving ? 'Guardando…' : 'Guardar cambios'}
+              <button type="submit" disabled={saving} className="wise-btn-primary px-6 flex items-center gap-2">
+                {saving ? 'Guardando...' : 'Guardar cambios'}
               </button>
             </div>
           </form>
@@ -455,16 +419,3 @@ function ProductDetailContent() {
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  display: 'block',
-  width: '100%',
-  marginTop: '4px',
-  padding: '9px 12px',
-  borderRadius: '10px',
-  border: '1px solid var(--color-pebble)',
-  fontSize: '14px',
-  outline: 'none',
-  boxSizing: 'border-box',
-  fontWeight: 400,
-};
