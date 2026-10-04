@@ -6,11 +6,11 @@ import { NextAuthProvider } from '@/components/providers/NextAuthProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Cerebro de Compras | INVENTA.AI',
+  title: 'KUOTA | Compras Inteligentes para Empresas',
   description:
-    'Predice qué comprar, cuándo comprarlo y cómo financiarlo antes de que ocurra un quiebre de stock.',
+    'Anticipa la demanda, evita quiebres de stock y financia inventario con inteligencia predictiva.',
   openGraph: {
-    title: 'INVENTA.AI — El Cerebro de Compras para tu Empresa',
+    title: 'KUOTA — Compras Inteligentes para Empresas',
     description:
       'Anticipa la demanda, evita quiebres de stock y financia inventario con inteligencia predictiva.',
     type: 'website',
@@ -28,13 +28,13 @@ export const metadata: Metadata = {
 const ORG_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'INVENTA.AI',
+  name: 'KUOTA',
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   description:
-    'Predice qué comprar, cuándo comprarlo y cómo financiarlo antes de que ocurra un quiebre de stock.',
+    'Compras Inteligentes para Empresas.',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'PEN' },
-  provider: { '@type': 'Organization', name: 'INVENTA.AI Technologies Inc.' },
+  provider: { '@type': 'Organization', name: 'KUOTA Technologies Inc.' },
 };
 
 // Corre ANTES del primer paint: lee la preferencia persistida y deja <html>

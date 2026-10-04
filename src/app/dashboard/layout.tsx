@@ -1,8 +1,8 @@
 import { AppShell } from '@/components/layout/AppShell';
 
 export const metadata = {
-  title: 'Cerebro de Compras | INVENTA.AI',
-  description: 'Plataforma B2B de optimización de compras, inventario y financiamiento.',
+  title: 'Dashboard | KUOTA',
+  description: 'Compras Inteligentes para Empresas.',
 };
 
 export default function DashboardLayout({

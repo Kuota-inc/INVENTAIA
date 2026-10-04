@@ -30,7 +30,7 @@ export default function OnboardingPage() {
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Rocket size={100} />
           </div>
-          <h1 className="text-3xl font-black mb-2" style={{ fontFamily: "var(--font-wise-sans)", color: "var(--color-lime-voltage)" }}>Bienvenido a Inventa.ai</h1>
+          <h1 className="text-3xl font-black mb-2" style={{ fontFamily: "var(--font-wise-sans)", color: "var(--color-lime-voltage)" }}>Bienvenido a KUOTA</h1>
           <p className="opacity-80">Configuremos tu negocio en 3 sencillos pasos.</p>
           
           <div className="flex justify-center items-center gap-4 mt-8 relative z-10">

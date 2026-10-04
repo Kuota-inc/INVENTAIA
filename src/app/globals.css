@@ -1,10 +1,10 @@
 :root {
-  /* ─── Wise — Style Reference (DESIGN.md) · deep moss with lime voltage ─── */
-  --color-forest-ink: #163300;
-  --color-lime-voltage: #9fe870;
-  --color-lime-hover: #8bd95e;
-  --color-spruce: #054d28;
-  --color-linen-mist: #e2f6d5;
+  /* ─── KUOTA Brand Tokens ─── */
+  --color-forest-ink: #1B4332; /* Primary Dark Green (KUOTA) */
+  --color-lime-voltage: #95D5B2; /* Accent Light Green (KUOTA) */
+  --color-lime-hover: #74C69D; /* Hover Accent (KUOTA) */
+  --color-spruce: #081C15; /* Secondary Dark (KUOTA) */
+  --color-linen-mist: #D8F3DC; /* Muted Background (KUOTA) */
   --color-signal-blue: #0b4c72;
   --color-alarm-red: #cb272f;
   --color-charcoal: #454745;
