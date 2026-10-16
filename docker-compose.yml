@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  kuota-postgres:
+    image: postgres:16-alpine
+    container_name: kuota-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kuota_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/kuota_schema.sql:/docker-entrypoint-initdb.d/01_kuota_schema.sql:ro
+      - kuota_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d kuota_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kuota-redis:
+    image: redis:7-alpine
+    container_name: kuota-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - kuota_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  kuota-api:
+    build:
+      context: ./backend/kuota-api
+      dockerfile: Dockerfile
+    container_name: kuota-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      kuota-postgres:
+        condition: service_healthy
+      kuota-redis:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://kuota-postgres:5432/kuota_db?currentSchema=kuota_core
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      REDIS_HOST: kuota-redis
+      REDIS_PORT: 6379
+
+volumes:
+  kuota_pgdata:
+  kuota_redisdata:

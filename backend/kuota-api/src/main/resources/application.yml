@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: kuota-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/kuota_db?currentSchema=kuota_core}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_schema: kuota_core
+        format_sql: true
+    open-in-view: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+kuota:
+  financing:
+    reference-percentage: 70.0 # PRD Sección 5.2: 70% referencial fijo configurable
+  transaction:
+    confirmation-timeout-seconds: 60 # PRD Sección 5.6: Timeout de 1 minuto

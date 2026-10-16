@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuota v1.0 — Simulador Fintech de Alta Fidelidad</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+    
+    * {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Chasis de Smartphone Insignia */
+    .device-chassis {
+      width: 400px;
+      height: 820px;
+      border-radius: 54px;
+      background: #090d16;
+      padding: 12px;
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 25px 60px -15px rgba(0, 0, 0, 0.9),
+        0 0 80px -20px rgba(107, 17, 135, 0.25);
+      position: relative;
+    }
+
+    .device-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 44px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #f8fafc;
+    }
+
+    /* Botones Físicos Laterales */
+    .btn-power {
+      position: absolute;
+      right: -15px;
+      top: 190px;
+      width: 4px;
+      height: 55px;
+      background: #334155;
+      border-radius: 0 4px 4px 0;
+    }
+    .btn-vol-up {
+      position: absolute;
+      left: -15px;
+      top: 170px;
+      width: 4px;
+      height: 48px;
+      background: #334155;
+      border-radius: 4px 0 0 4px;
+    }
+    .btn-vol-down {
+      position: absolute;
+      left: -15px;
+      top: 230px;
+      width: 4px;
+      height: 48px;
+      background: #334155;
+      border-radius: 4px 0 0 4px;
+    }
+
+    /* Animaciones */
+    @keyframes laser-sweep {
+      0% { top: 10%; opacity: 0.9; }
+      50% { top: 88%; opacity: 1; }
+      100% { top: 10%; opacity: 0.9; }
+    }
+    .laser-line {
+      animation: laser-sweep 2.2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-subtle {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.8; }
+    }
+    .pulse-dot {
+      animation: pulse-subtle 1.8s infinite ease-in-out;
+    }
+
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 min-h-screen flex flex-col items-center justify-start p-4 md:p-8">
+
+  <!-- BARRA DE CONTROL GLOBAL DEL SIMULADOR -->
+  <header class="w-full max-w-6xl mb-6 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 rounded-3xl shadow-2xl backdrop-blur-md">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-teal-400 p-0.5 flex items-center justify-center shadow-lg shadow-purple-600/30">
+        <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center font-black text-white text-base tracking-wider">
+          K
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-extrabold text-white tracking-tight">KUOTA FACTORING v1.0</span>
+          <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-bold">PRODUCCIÓN MVP</span>
+        </div>
+        <p class="text-xs text-slate-400">Simulador interactivo en tiempo real con Web Audio y sincronización cruzada</p>
+      </div>
+    </div>
+
+    <!-- Acciones Rápidas del Entorno -->
+    <div class="flex flex-wrap items-center gap-2">
+      <button onclick="simulateIncomingPayment(96.00, 'YAPE', true)" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-purple-600/30 active:scale-95">
+        <span class="text-sm">⚡</span> Simular Yape S/ 96.00 <span class="text-[10px] bg-purple-800 px-1.5 py-0.5 rounded font-normal">Matching</span>
+      </button>
+      <button onclick="simulateIncomingPayment(14.50, 'PLIN', false)" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center gap-2 active:scale-95">
+        <span class="text-sm">🔵</span> Simular Plin S/ 14.50 <span class="text-[10px] bg-slate-700 px-1.5 py-0.5 rounded font-normal">No Comprobada</span>
+      </button>
+      <button onclick="resetAllState()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white text-xs font-bold border border-slate-700 transition" title="Restablecer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- WORKSPACE DE SMARTPHONES DUALES -->
+  <main class="flex flex-wrap items-start justify-center gap-10 md:gap-14 w-full max-w-6xl">
+
+    <!-- 📱 SMARTPHONE 1: APP COMPRADOR -->
+    <div class="flex flex-col items-center">
+      <div class="mb-3 flex items-center justify-between w-full px-2">
+        <div class="flex items-center gap-2 text-xs font-bold text-purple-400">
+          <span class="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-sm shadow-purple-500/80"></span>
+          App Comprador (Pyme Distribuidora)
+        </div>
+        <span class="text-[11px] text-slate-500 font-medium">Kotlin Jetpack Compose</span>
+      </div>
+
+      <div class="device-chassis">
+        <div class="btn-power"></div>
+        <div class="btn-vol-up"></div>
+        <div class="btn-vol-down"></div>
+
+        <div class="device-screen bg-[#f8fafc]">
+          <!-- Barra de Estado Android Flagship -->
+          <div class="h-10 bg-slate-950 text-white px-7 flex items-center justify-between text-xs font-bold select-none relative z-40">
+            <span id="live-clock-buyer">10:45</span>
+            <div class="w-4 h-4 rounded-full bg-black border border-slate-800 absolute left-1/2 -translate-x-1/2"></div>
+            <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+              <span>5G</span>
+              <span class="text-[10px] bg-slate-800 px-1 py-0.5 rounded text-white">98%</span>
+            </div>
+          </div>
+
+          <!-- NOTIFICACIÓN HEADS-UP REALISTA DE ANDROID 14 -->
+          <div id="buyer-hun-notification" class="absolute top-11 left-3 right-3 z-50 transform -translate-y-24 transition-all duration-300 pointer-events-none opacity-0">
+            <div class="bg-slate-900/95 text-white p-3.5 rounded-3xl shadow-2xl border border-slate-700/80 backdrop-blur-xl flex items-center gap-3">
+              <div id="hun-icon-container" class="w-10 h-10 rounded-2xl bg-[#6B1187] flex items-center justify-center font-black text-white text-base shadow-md">
+                Y
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <span id="hun-app-title" class="text-xs font-bold text-slate-200">Yape</span>
+                  <span class="text-[10px] text-slate-400">ahora mismo</span>
+                </div>
+                <div id="hun-message" class="text-xs font-extrabold text-white truncate">¡Te yapearon! S/ 96.00</div>
+                <div class="text-[10px] text-teal-400 font-semibold mt-0.5 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span> Interceptado por Kuota Listener (24/7)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONTENIDO SCROLLABLE DE LA APP COMPRADOR -->
+          <div id="buyer-viewport" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col justify-between relative">
+
+            <!-- VISTA 1: HOME COMPRADOR -->
+            <div id="view-buyer-home" class="p-4 space-y-4">
+              <div class="flex items-center justify-between pt-1">
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-semibold text-slate-500">Hola,</span>
+                    <span class="text-xs font-bold text-slate-900">Distribuidora San Juan</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+                    <span class="text-[11px] font-bold text-emerald-700 tracking-tight">Verificación pasiva activa</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button onclick="switchBuyerTab('products')" class="w-9 h-9 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center text-slate-700 shadow-sm active:scale-95 transition" title="Catálogo">
+                    📦
+                  </button>
+                  <button onclick="switchBuyerTab('qr')" class="w-9 h-9 rounded-2xl bg-purple-100 border border-purple-200 text-purple-800 flex items-center justify-center shadow-sm active:scale-95 transition" title="Escanear">
+                    📷
+                  </button>
+                </div>
+              </div>
+
+              <!-- HERO CARD: TARJETA DE FINANCIAMIENTO DISPONIBLE -->
+              <div class="rounded-3xl p-5 text-white shadow-xl relative overflow-hidden transition-all duration-300" style="background: radial-gradient(circle at 10% 20%, #87199c 0%, #4a0860 90%);">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-teal-400/10 blur-2xl pointer-events-none"></div>
+                <div class="absolute right-4 top-4 text-purple-300/40 font-mono text-[10px] tracking-widest font-black uppercase">
+                  KUOTA LINE
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-medium text-purple-200/90">Línea disponible para compra</span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-teal-400/20 text-teal-300 border border-teal-400/30 text-[11px] font-extrabold">
+                    70% de ventas
+                  </span>
+                </div>
+
+                <div class="mt-2 flex items-baseline gap-1">
+                  <span class="text-sm font-bold text-purple-200">S/</span>
+                  <span id="buyer-credit-display" class="text-3xl font-black tracking-tight">7,000.00</span>
+                </div>
+
+                <div class="mt-1 flex items-center justify-between text-[11px] text-purple-200/70 border-t border-purple-500/20 pt-2">
+                  <span id="buyer-base-display">Base comprobada: S/ 10,000.00</span>
+                  <span class="text-teal-300 font-bold">Sin papeleos</span>
+                </div>
+
+                <button onclick="switchBuyerTab('qr')" class="mt-4 w-full py-3 bg-gradient-to-r from-teal-400 to-teal-300 hover:from-teal-300 hover:to-teal-200 text-slate-950 font-black text-xs rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 transition transform active:scale-98">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                  Financiar Compra vía QR
+                </button>
+              </div>
+
+              <!-- BOTONES MODULARES -->
+              <div class="grid grid-cols-2 gap-2.5">
+                <button onclick="switchBuyerTab('products')" class="p-3 bg-white border border-slate-200/90 rounded-2xl flex items-center gap-2.5 shadow-sm hover:border-purple-300 active:scale-95 transition">
+                  <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-sm">
+                    🏷️
+                  </div>
+                  <div class="text-left">
+                    <div class="text-xs font-extrabold text-slate-900">Mis Productos</div>
+                    <div class="text-[10px] text-slate-400">Precios de matching</div>
+                  </div>
+                </button>
+
+                <button onclick="switchBuyerTab('payments')" class="p-3 bg-white border border-slate-200/90 rounded-2xl flex items-center gap-2.5 shadow-sm hover:border-purple-300 active:scale-95 transition">
+                  <div class="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-sm">
+                    📊
+                  </div>
+                  <div class="text-left">
+                    <div class="text-xs font-extrabold text-slate-900">Pagos Pendientes</div>
+                    <div class="text-[10px] text-slate-400">Cuentas por pagar</div>
+                  </div>
+                </button>
+              </div>
+
+              <!-- FEED DE VENTAS -->
+              <div class="space-y-2 pt-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-extrabold text-slate-900">Historial de Ventas</span>
+                  <span class="text-[11px] text-slate-400 font-medium">Matching por monto</span>
+                </div>
+
+                <div id="buyer-sales-list" class="space-y-2">
+                  <div class="p-3 bg-white rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between transition hover:border-purple-200">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 font-black flex items-center justify-center text-xs">Y</div>
+                      <div>
+                        <div class="font-bold text-xs text-slate-900">+ S/ 96.00</div>
+                        <div class="text-[10px] text-slate-400">YAPE • Hoy, 10:45 AM</div>
+                      </div>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-full text-[10px] font-extrabold flex items-center gap-1 shadow-xs">
+                      <span>✓</span> Comprobada
+                    </span>
+                  </div>
+
+                  <div class="p-3 bg-white rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between transition hover:border-purple-200">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 font-black flex items-center justify-center text-xs">P</div>
+                      <div>
+                        <div class="font-bold text-xs text-slate-900">+ S/ 165.00</div>
+                        <div class="text-[10px] text-slate-400">PLIN • Hoy, 09:20 AM</div>
+                      </div>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-full text-[10px] font-extrabold flex items-center gap-1 shadow-xs">
+                      <span>✓</span> Comprobada
+                    </span>
+                  </div>
+
+                  <div class="p-3 bg-white rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between transition hover:border-purple-200">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 font-black flex items-center justify-center text-xs">Y</div>
+                      <div>
+                        <div class="font-bold text-xs text-slate-900">+ S/ 14.50</div>
+                        <div class="text-[10px] text-slate-400">YAPE • Ayer, 06:12 PM</div>
+                      </div>
+                    </div>
+                    <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200/60 rounded-full text-[10px] font-extrabold flex items-center gap-1 shadow-xs">
+                      <span>?</span> No comprobada
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VISTA 2: SCANNER CAMERAX -->
+            <div id="view-buyer-qr" class="hidden flex-1 bg-slate-950 text-white flex flex-col justify-between p-4 relative">
+              <div class="flex items-center justify-between z-20">
+                <button onclick="switchBuyerTab('home')" class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white backdrop-blur">✕</button>
+                <span class="text-xs font-bold tracking-tight">Escanear QR Proveedor</span>
+                <div class="w-9"></div>
+              </div>
+
+              <div class="my-auto flex flex-col items-center z-20">
+                <div class="w-64 h-64 border-2 border-teal-400/80 rounded-3xl relative overflow-hidden shadow-[0_0_60px_rgba(45,212,191,0.25)] flex items-center justify-center bg-black/40 backdrop-blur-xs">
+                  <div class="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-teal-400 rounded-tl-xl"></div>
+                  <div class="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-teal-400 rounded-tr-xl"></div>
+                  <div class="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-teal-400 rounded-bl-xl"></div>
+                  <div class="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-teal-400 rounded-br-xl"></div>
+
+                  <div class="laser-line absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-teal-300 to-transparent shadow-[0_0_15px_#2dd4bf]"></div>
+
+                  <div class="text-center p-4">
+                    <div class="text-4xl mb-2 opacity-80">📷</div>
+                    <span class="text-[11px] text-slate-300 font-medium">Buscando QR Kuota...</span>
+                  </div>
+                </div>
+
+                <button onclick="handleQrScanTrigger()" class="mt-6 px-5 py-2.5 bg-gradient-to-r from-teal-400 to-teal-300 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-teal-500/30 flex items-center gap-2 active:scale-95 transition">
+                  <span>⚡</span> Detectar QR de Distribuidora El Sol
+                </button>
+              </div>
+
+              <div class="text-center text-[10px] text-slate-400 pb-2 z-20">
+                Validando firma criptográfica RS256 de Kuota
+              </div>
+            </div>
+
+            <!-- VISTA 3: CHECKOUT -->
+            <div id="view-buyer-checkout" class="hidden flex-1 p-4 flex flex-col justify-between space-y-3">
+              <div class="space-y-3">
+                <div class="flex items-center gap-2">
+                  <button onclick="switchBuyerTab('qr')" class="text-slate-500 text-xs font-bold hover:text-slate-900">← Volver</button>
+                  <h3 class="font-extrabold text-sm text-slate-900">Checkout de Factoring</h3>
+                </div>
+
+                <div class="p-3 bg-white border border-slate-200 rounded-2xl flex items-center gap-3 shadow-xs">
+                  <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-base">🏪</div>
+                  <div>
+                    <div class="font-extrabold text-xs text-slate-900 flex items-center gap-1">
+                      <span>Distribuidora Mayorista El Sol</span>
+                      <span class="text-emerald-600 font-bold">✓</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400">RUC 20100456789 • Cuenta Verificada</div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-bold text-slate-700 block mb-1">Monto Total de Compra</label>
+                  <div class="relative">
+                    <span class="absolute left-3.5 top-2.5 text-purple-700 font-black text-sm">S/</span>
+                    <input type="number" id="input-checkout-total" value="1500" oninput="calculateCheckoutBreakdown()" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl font-bold text-sm text-slate-900 focus:outline-none focus:border-purple-600 shadow-xs">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-bold text-slate-700 block mb-1">Plazo de Pago</label>
+                  <div class="grid grid-cols-4 gap-1.5" id="term-selector-group">
+                    <button type="button" onclick="setCheckoutTerm(15, this)" class="py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 transition">15d</button>
+                    <button type="button" onclick="setCheckoutTerm(30, this)" class="py-1.5 rounded-lg text-xs font-bold border border-purple-600 bg-purple-700 text-white transition">30d</button>
+                    <button type="button" onclick="setCheckoutTerm(45, this)" class="py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 transition">45d</button>
+                    <button type="button" onclick="setCheckoutTerm(60, this)" class="py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 transition">60d</button>
+                  </div>
+                </div>
+
+                <div class="p-3.5 bg-gradient-to-br from-purple-50 to-indigo-50/50 border border-purple-100 rounded-2xl space-y-1.5 text-xs">
+                  <div class="flex justify-between text-slate-600">
+                    <span>Cuota inicial adelantada (20%):</span>
+                    <span class="font-extrabold text-slate-900" id="lbl-downpayment">S/ 300.00</span>
+                  </div>
+                  <div class="flex justify-between text-purple-900 font-black">
+                    <span>Monto financiado Kuota (80%):</span>
+                    <span id="lbl-financed" class="text-sm">S/ 1,200.00</span>
+                  </div>
+                  <div class="border-t border-purple-200/60 pt-1.5 flex justify-between text-[11px] text-emerald-700 font-bold">
+                    <span>Línea disponible:</span>
+                    <span id="lbl-credit-validation">S/ 7,000.00 (Válido ✅)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-bold text-slate-700 block mb-1">PIN de Seguridad (6 dígitos)</label>
+                  <input type="password" id="input-checkout-pin" value="123456" maxlength="6" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-mono text-center tracking-widest text-sm text-slate-900 shadow-xs">
+                </div>
+              </div>
+
+              <button onclick="submitFinancingOperation()" class="w-full py-3.5 bg-purple-700 hover:bg-purple-800 text-white font-black text-xs rounded-2xl shadow-lg shadow-purple-700/30 transition transform active:scale-98">
+                Aceptar y Solicitar Financiamiento
+              </button>
+            </div>
+
+            <!-- VISTA 4: TIMER 60s -->
+            <div id="view-buyer-waiting" class="hidden flex-1 p-5 flex flex-col items-center justify-center text-center space-y-5">
+              <div id="subview-waiting-pending" class="space-y-4 flex flex-col items-center">
+                <div class="relative w-40 h-40 flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" stroke="#e2e8f0" stroke-width="7" fill="none" />
+                    <circle id="buyer-timer-arc" cx="50" cy="50" r="42" stroke="#00D1B2" stroke-width="7" stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round" fill="none" class="transition-all duration-1000 ease-linear" />
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span id="buyer-timer-number" class="text-4xl font-black text-purple-900 tracking-tighter">60</span>
+                    <span class="text-[9px] uppercase tracking-widest font-black text-slate-400">SEGUNDOS</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-black text-base text-slate-900">Esperando al Proveedor</h4>
+                  <p class="text-xs text-slate-500 mt-1 max-w-[260px] leading-relaxed">
+                    Kuota adelantó la cuota inicial de <strong class="text-slate-900">S/ 300.00</strong> a Distribuidora El Sol. Esperando su confirmación manual.
+                  </p>
+                </div>
+
+                <div class="w-full p-3 bg-white border border-slate-200/80 rounded-2xl text-left text-xs space-y-1.5 shadow-xs">
+                  <div class="flex items-center gap-1.5 text-emerald-600 font-bold text-[11px]">
+                    <span>✓</span> Payout emitido a cuenta del proveedor
+                  </div>
+                  <div class="flex items-center gap-1.5 text-purple-700 font-bold text-[11px]">
+                    <span class="w-2 h-2 rounded-full bg-purple-600 pulse-dot"></span> Esperando validación en App Proveedor
+                  </div>
+                </div>
+              </div>
+
+              <div id="subview-waiting-approved" class="hidden space-y-4 flex flex-col items-center">
+                <div class="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-4xl shadow-inner font-black animate-bounce">
+                  ✓
+                </div>
+                <div>
+                  <h4 class="font-black text-lg text-slate-900">¡Financiamiento Aprobado!</h4>
+                  <p class="text-xs text-slate-500 mt-1 max-w-[260px] leading-relaxed">
+                    El proveedor confirmó el pago de la cuota inicial. Tu factura y orden quedan formalizadas bajo factoring Kuota.
+                  </p>
+                </div>
+                <div class="w-full p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 font-semibold text-center">
+                  Cuenta por Pagar registrada: S/ 1,200.00 (30 días)
+                </div>
+                <button onclick="switchBuyerTab('home')" class="w-full py-3 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-lg transition">
+                  Volver al Inicio
+                </button>
+              </div>
+            </div>
+
+            <!-- VISTA 5: MIS PRODUCTOS -->
+            <div id="view-buyer-products" class="hidden flex-1 p-4 space-y-3">
+              <div class="flex items-center gap-2">
+                <button onclick="switchBuyerTab('home')" class="text-slate-500 text-xs font-bold hover:text-slate-900">← Volver</button>
+                <h3 class="font-extrabold text-sm text-slate-900">Catálogo de Productos</h3>
+              </div>
+              <div class="p-3 bg-purple-50 text-purple-900 rounded-2xl text-[11px] leading-relaxed border border-purple-100">
+                💡 Los montos de Yape o Plin que coincidan exactamente con estos precios serán certificados como <strong>Comprobadas</strong>.
+              </div>
+              <div class="space-y-2">
+                <div class="p-3 bg-white rounded-xl border border-slate-200/80 flex justify-between items-center text-xs shadow-xs">
+                  <span class="font-bold text-slate-800">Leche Evaporada Caja x24</span>
+                  <span class="font-black text-purple-700">S/ 96.00</span>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-slate-200/80 flex justify-between items-center text-xs shadow-xs">
+                  <span class="font-bold text-slate-800">Arroz Superior 50kg</span>
+                  <span class="font-black text-purple-700">S/ 165.00</span>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-slate-200/80 flex justify-between items-center text-xs shadow-xs">
+                  <span class="font-bold text-slate-800">Aceite Vegetal 1L</span>
+                  <span class="font-black text-purple-700">S/ 8.50</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- VISTA 6: PAGOS PENDIENTES -->
+            <div id="view-buyer-payments" class="hidden flex-1 p-4 space-y-3">
+              <div class="flex items-center gap-2">
+                <button onclick="switchBuyerTab('home')" class="text-slate-500 text-xs font-bold hover:text-slate-900">← Volver</button>
+                <h3 class="font-extrabold text-sm text-slate-900">Mis Pagos Pendientes (CxP)</h3>
+              </div>
+
+              <div id="buyer-active-debts-list" class="space-y-2.5">
+                <div class="p-3.5 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-2">
+                  <div class="flex justify-between items-center">
+                    <span class="text-xs font-extrabold text-slate-900">Distribuidora El Sol</span>
+                    <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md text-[10px] font-bold">50% restante</span>
+                  </div>
+                  <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div class="bg-teal-400 h-full w-1/2"></div>
+                  </div>
+                  <div class="flex justify-between text-xs text-slate-500">
+                    <span>Total: S/ 2,400.00</span>
+                    <span class="font-black text-purple-900">Pendiente: S/ 1,200.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Barra de Navegación Inferior Android -->
+          <div class="h-16 bg-white border-t border-slate-200/80 px-4 flex items-center justify-around z-30">
+            <button onclick="switchBuyerTab('home')" class="flex flex-col items-center gap-1 text-purple-700">
+              <span class="text-base">🏠</span>
+              <span class="text-[10px] font-bold">Inicio</span>
+            </button>
+            <button onclick="switchBuyerTab('products')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800">
+              <span class="text-base">📦</span>
+              <span class="text-[10px] font-medium">Productos</span>
+            </button>
+            <button onclick="switchBuyerTab('qr')" class="flex flex-col items-center -mt-5">
+              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-700 to-teal-400 text-white flex items-center justify-center shadow-lg shadow-purple-600/30 font-bold text-lg active:scale-95 transition">
+                ⚡
+              </div>
+              <span class="text-[10px] font-bold text-purple-700 mt-1">Financiar</span>
+            </button>
+            <button onclick="switchBuyerTab('payments')" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800">
+              <span class="text-base">📄</span>
+              <span class="text-[10px] font-medium">Pagos</span>
+            </button>
+          </div>
+
+          <div class="h-4 bg-white flex items-center justify-center">
+            <div class="w-28 h-1 bg-slate-300 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- 📱 SMARTPHONE 2: APP PROVEEDOR -->
+    <div class="flex flex-col items-center">
+      <div class="mb-3 flex items-center justify-between w-full px-2">
+        <div class="flex items-center gap-2 text-xs font-bold text-amber-400">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/80"></span>
+          App Proveedor (Vendedor Mayorista)
+        </div>
+        <span class="text-[11px] text-slate-500 font-medium">Terminal Factoring</span>
+      </div>
+
+      <div class="device-chassis">
+        <div class="btn-power"></div>
+        <div class="btn-vol-up"></div>
+        <div class="btn-vol-down"></div>
+
+        <div class="device-screen bg-[#090d16] text-white">
+          <div class="h-10 bg-slate-950 text-white px-7 flex items-center justify-between text-xs font-bold select-none relative z-40">
+            <span id="live-clock-supplier">10:45</span>
+            <div class="w-4 h-4 rounded-full bg-black border border-slate-800 absolute left-1/2 -translate-x-1/2"></div>
+            <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300">
+              <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+              <span>5G</span>
+              <span class="text-[10px] bg-slate-800 px-1 py-0.5 rounded text-white">100%</span>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto hide-scrollbar p-4 space-y-4 flex flex-col justify-between">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between pt-1">
+                <div>
+                  <h3 class="font-black text-sm text-white">Distribuidora El Sol S.A.</h3>
+                  <div class="text-[11px] text-slate-400">RUC: 20100456789 • Mayorista</div>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/20 flex items-center justify-center font-bold text-xs">
+                  ☀️
+                </div>
+              </div>
+
+              <!-- HERO CARD PROVEEDOR -->
+              <div class="rounded-3xl p-5 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 border border-slate-800 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                  <span>Próximo desembolso de Kuota</span>
+                  <span class="px-2 py-0.5 rounded-lg bg-amber-400/10 text-amber-300 border border-amber-400/20 text-[10px] font-bold">
+                    Cero Riesgo
+                  </span>
+                </div>
+
+                <div class="mt-2 text-3xl font-black text-white tracking-tight flex items-baseline gap-1">
+                  <span class="text-sm text-slate-400">S/</span>
+                  <span id="supplier-disbursement-display">4,850.00</span>
+                </div>
+
+                <p class="text-[11px] text-slate-400 mt-1">
+                  Desembolso garantizado por Kuota directamente a tu cuenta bancaria.
+                </p>
+              </div>
+
+              <button onclick="toggleSupplierQrModal()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-black text-xs rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-amber-400/20 transition transform active:scale-98">
+                <span class="text-base">🏁</span> Mostrar mi Código QR Kuota
+              </button>
+
+              <!-- QR VECTORIAL EN MODAL -->
+              <div id="supplier-qr-view" class="hidden p-4 bg-white text-slate-900 rounded-3xl border border-slate-200 shadow-2xl text-center space-y-2.5 transition-all duration-300">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-500">
+                  <span>QR Kuota Verificado</span>
+                  <button onclick="toggleSupplierQrModal()" class="text-slate-400 hover:text-slate-800 text-sm">✕</button>
+                </div>
+
+                <div class="w-48 h-48 mx-auto bg-slate-950 p-3 rounded-2xl flex items-center justify-center shadow-md">
+                  <svg class="w-full h-full bg-white p-2 rounded-xl" viewBox="0 0 100 100">
+                    <rect x="0" y="0" width="30" height="30" fill="#000" rx="3" />
+                    <rect x="5" y="5" width="20" height="20" fill="#fff" rx="2" />
+                    <rect x="9" y="9" width="12" height="12" fill="#000" rx="1" />
+                    
+                    <rect x="70" y="0" width="30" height="30" fill="#000" rx="3" />
+                    <rect x="75" y="5" width="20" height="20" fill="#fff" rx="2" />
+                    <rect x="79" y="9" width="12" height="12" fill="#000" rx="1" />
+                    
+                    <rect x="0" y="70" width="30" height="30" fill="#000" rx="3" />
+                    <rect x="5" y="75" width="20" height="20" fill="#fff" rx="2" />
+                    <rect x="9" y="79" width="12" height="12" fill="#000" rx="1" />
+
+                    <circle cx="50" cy="50" r="14" fill="#6B1187" />
+                    <text x="46" y="55" fill="#fff" font-size="14" font-weight="900">K</text>
+                    
+                    <rect x="36" y="10" width="8" height="8" fill="#000" />
+                    <rect x="48" y="10" width="8" height="8" fill="#000" />
+                    <rect x="36" y="24" width="8" height="8" fill="#000" />
+                    <rect x="54" y="24" width="8" height="8" fill="#000" />
+                    <rect x="12" y="44" width="8" height="8" fill="#000" />
+                    <rect x="24" y="44" width="8" height="8" fill="#000" />
+                    <rect x="68" y="44" width="8" height="8" fill="#000" />
+                    <rect x="80" y="44" width="8" height="8" fill="#000" />
+                    <rect x="44" y="72" width="8" height="8" fill="#000" />
+                    <rect x="72" y="72" width="8" height="8" fill="#000" />
+                    <rect x="84" y="84" width="8" height="8" fill="#000" />
+                  </svg>
+                </div>
+
+                <div class="text-[10px] text-slate-500 font-mono">
+                  kuota://pay?v=1&supplierId=fa71b12b...
+                </div>
+              </div>
+
+              <!-- HISTORIAL PROVEEDOR -->
+              <div class="space-y-2">
+                <div class="text-xs font-bold text-slate-400">Ventas Financiadas Recientes</div>
+                
+                <div id="supplier-sales-feed" class="space-y-2">
+                  <div class="p-3 bg-slate-900 border border-slate-800 rounded-2xl space-y-1.5 text-xs">
+                    <div class="flex justify-between font-bold text-white">
+                      <span>Distribuidora San Juan</span>
+                      <span class="text-slate-500 text-[10px]">Hoy, 10:45 AM</span>
+                    </div>
+                    <div class="flex justify-between text-[11px] pt-1.5 border-t border-slate-800">
+                      <span class="text-slate-400">Cuota inicial: <strong class="text-emerald-400">S/ 300.00</strong></span>
+                      <span class="text-slate-400">Pendiente Kuota: <strong class="text-amber-400">S/ 1,200.00</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MODAL FLOTANTE DE CONFIRMACIÓN -->
+            <div id="supplier-confirmation-card" class="hidden bg-slate-900 border-2 border-amber-400 rounded-3xl p-4 shadow-2xl space-y-3 z-30">
+              <div class="flex items-center gap-2 text-amber-300 font-black text-xs">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400 pulse-dot"></span>
+                🔔 Solicitud de Confirmación Entrante
+              </div>
+
+              <p class="text-xs text-slate-300">
+                <strong class="text-white">Distribuidora San Juan</strong> solicita financiar <strong class="text-white">S/ 1,500.00</strong>.
+              </p>
+
+              <div class="p-3 bg-slate-950 rounded-2xl text-xs space-y-1.5 border border-slate-800">
+                <div class="flex justify-between text-slate-400">
+                  <span>Cuota inicial recibida:</span>
+                  <span class="font-black text-emerald-400 text-sm">S/ 300.00</span>
+                </div>
+                <div class="flex justify-between text-slate-400">
+                  <span>Saldo a liquidar Kuota:</span>
+                  <span class="font-black text-amber-300">S/ 1,200.00</span>
+                </div>
+              </div>
+
+              <button onclick="handleSupplierConfirmClick()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition transform active:scale-95">
+                Confirmar que recibí S/ 300.00 ✓
+              </button>
+            </div>
+          </div>
+
+          <div class="h-16 bg-slate-950 border-t border-slate-800/80 px-4 flex items-center justify-around z-30 text-slate-400 text-xs">
+            <button class="flex flex-col items-center gap-1 text-amber-400 font-bold">
+              <span>📊</span>
+              <span class="text-[10px]">Dashboard</span>
+            </button>
+            <button onclick="toggleSupplierQrModal()" class="flex flex-col items-center gap-1 hover:text-white">
+              <span>🏁</span>
+              <span class="text-[10px]">Mi QR</span>
+            </button>
+            <button class="flex flex-col items-center gap-1 hover:text-white">
+              <span>💳</span>
+              <span class="text-[10px]">Liquidaciones</span>
+            </button>
+          </div>
+
+          <div class="h-4 bg-slate-950 flex items-center justify-center">
+            <div class="w-28 h-1 bg-slate-700 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    let availableCredit = 7000.00;
+    let verifiedBase = 10000.00;
+    let supplierDisbursement = 4850.00;
+    let currentBuyerScreen = 'home';
+    let countdownInterval = null;
+    let countdownSeconds = 60;
+    let currentTerm = 30;
+
+    function updateClock() {
+      const now = new Date();
+      const hrs = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      const timeStr = hrs + ':' + mins;
+      const el1 = document.getElementById('live-clock-buyer');
+      const el2 = document.getElementById('live-clock-supplier');
+      if (el1) el1.innerText = timeStr;
+      if (el2) el2.innerText = timeStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playFintechBeep(freq = 880, type = 'sine', duration = 0.12) {
+      try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (_) {}
+    }
+
+    function playSuccessChime() {
+      playFintechBeep(523.25, 'triangle', 0.1);
+      setTimeout(() => playFintechBeep(659.25, 'triangle', 0.1), 100);
+      setTimeout(() => playFintechBeep(783.99, 'triangle', 0.25), 200);
+    }
+
+    function switchBuyerTab(tabName) {
+      currentBuyerScreen = tabName;
+      ['home', 'qr', 'checkout', 'waiting', 'products', 'payments'].forEach(t => {
+        const view = document.getElementById('view-buyer-' + t);
+        if (view) view.classList.add('hidden');
+      });
+      const active = document.getElementById('view-buyer-' + tabName);
+      if (active) active.classList.remove('hidden');
+    }
+
+    function toggleSupplierQrModal() {
+      playFintechBeep(700, 'sine', 0.08);
+      const modal = document.getElementById('supplier-qr-view');
+      modal.classList.toggle('hidden');
+    }
+
+    function handleQrScanTrigger() {
+      playFintechBeep(1200, 'sine', 0.15);
+      switchBuyerTab('checkout');
+    }
+
+    function setCheckoutTerm(days, btn) {
+      currentTerm = days;
+      playFintechBeep(600, 'sine', 0.05);
+      const group = document.getElementById('term-selector-group');
+      group.querySelectorAll('button').forEach(b => {
+        b.className = 'py-1.5 rounded-lg text-xs font-bold border border-slate-200 bg-white text-slate-700 transition';
+      });
+      btn.className = 'py-1.5 rounded-lg text-xs font-bold border border-purple-600 bg-purple-700 text-white transition';
+    }
+
+    function calculateCheckoutBreakdown() {
+      const input = document.getElementById('input-checkout-total');
+      const val = parseFloat(input.value) || 0;
+      const downpayment = (val * 0.20).toFixed(2);
+      const financed = (val * 0.80).toFixed(2);
+
+      document.getElementById('lbl-downpayment').innerText = 'S/ ' + downpayment;
+      document.getElementById('lbl-financed').innerText = 'S/ ' + financed;
+
+      const validation = document.getElementById('lbl-credit-validation');
+      if (parseFloat(financed) > availableCredit) {
+        validation.innerText = 'Excede tu línea de crédito ❌';
+        validation.className = 'text-red-500 font-bold';
+      } else {
+        validation.innerText = 'S/ ' + availableCredit.toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' (Válido ✅)';
+        validation.className = 'text-emerald-700 font-semibold';
+      }
+    }
+
+    function submitFinancingOperation() {
+      const pin = document.getElementById('input-checkout-pin').value;
+      if (pin.length !== 6) {
+        alert("Ingresa tu PIN de 6 dígitos.");
+        return;
+      }
+
+      playFintechBeep(900, 'sine', 0.12);
+      switchBuyerTab('waiting');
+
+      document.getElementById('subview-waiting-pending').classList.remove('hidden');
+      document.getElementById('subview-waiting-approved').classList.add('hidden');
+
+      countdownSeconds = 60;
+      document.getElementById('buyer-timer-number').innerText = countdownSeconds;
+      
+      document.getElementById('supplier-confirmation-card').classList.remove('hidden');
+
+      clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        countdownSeconds--;
+        document.getElementById('buyer-timer-number').innerText = countdownSeconds;
+        
+        const arc = document.getElementById('buyer-timer-arc');
+        const offset = 264 - (264 * (countdownSeconds / 60));
+        arc.style.strokeDashoffset = offset;
+
+        if (countdownSeconds <= 0) {
+          clearInterval(countdownInterval);
+          alert("⏱️ Timeout de 1 minuto cumplido. La transacción pasó a 'Pendiente de confirmación'.");
+          switchBuyerTab('payments');
+        }
+      }, 1000);
+    }
+
+    function handleSupplierConfirmClick() {
+      clearInterval(countdownInterval);
+      playSuccessChime();
+
+      document.getElementById('supplier-confirmation-card').classList.add('hidden');
+
+      supplierDisbursement += 1200.00;
+      document.getElementById('supplier-disbursement-display').innerText = supplierDisbursement.toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+      document.getElementById('subview-waiting-pending').classList.add('hidden');
+      document.getElementById('subview-waiting-approved').classList.remove('hidden');
+
+      availableCredit -= 1200.00;
+      document.getElementById('buyer-credit-display').innerText = availableCredit.toLocaleString('en-US', { minimumFractionDigits: 2 });
+    }
+
+    function simulateIncomingPayment(amount, wallet, isMatch) {
+      playFintechBeep(wallet === 'YAPE' ? 1046.50 : 880, 'triangle', 0.18);
+
+      const hun = document.getElementById('buyer-hun-notification');
+      document.getElementById('hun-app-title').innerText = wallet === 'YAPE' ? 'Yape' : 'Plin';
+      document.getElementById('hun-message').innerText = `¡Te ${wallet === 'YAPE' ? 'yapearon' : 'transfirieron'}! S/ ${amount.toFixed(2)}`;
+      
+      const icon = document.getElementById('hun-icon-container');
+      icon.innerText = wallet === 'YAPE' ? 'Y' : 'P';
+      icon.className = wallet === 'YAPE' ? 
+        'w-10 h-10 rounded-2xl bg-[#6B1187] flex items-center justify-center font-black text-white text-base shadow-md' :
+        'w-10 h-10 rounded-2xl bg-[#0070BA] flex items-center justify-center font-black text-white text-base shadow-md';
+
+      hun.classList.remove('opacity-0', '-translate-y-24');
+      hun.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        hun.classList.add('opacity-0', '-translate-y-24');
+        hun.classList.remove('opacity-100', 'translate-y-0');
+      }, 3600);
+
+      if (isMatch) {
+        verifiedBase += amount;
+        availableCredit += (amount * 0.70);
+        document.getElementById('buyer-base-display').innerText = `Base comprobada: S/ ${verifiedBase.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+        document.getElementById('buyer-credit-display').innerText = availableCredit.toLocaleString('en-US', { minimumFractionDigits: 2 });
+      }
+
+      const list = document.getElementById('buyer-sales-list');
+      const item = document.createElement('div');
+      item.className = 'p-3 bg-white rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between transition animate-pulse';
+      item.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl ${wallet === 'YAPE' ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'} font-black flex items-center justify-center text-xs">${wallet === 'YAPE' ? 'Y' : 'P'}</div>
+          <div>
+            <div class="font-bold text-xs text-slate-900">+ S/ ${amount.toFixed(2)}</div>
+            <div class="text-[10px] text-slate-400">${wallet} • Ahora mismo</div>
+          </div>
+        </div>
+        <span class="px-2.5 py-1 ${isMatch ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-amber-50 text-amber-700 border border-amber-200/60'} rounded-full text-[10px] font-extrabold flex items-center gap-1 shadow-xs">
+          <span>${isMatch ? '✓' : '?'}</span> ${isMatch ? 'Comprobada' : 'No comprobada'}
+        </span>
+      `;
+      list.prepend(item);
+    }
+
+    function resetAllState() {
+      clearInterval(countdownInterval);
+      availableCredit = 7000.00;
+      verifiedBase = 10000.00;
+      supplierDisbursement = 4850.00;
+      document.getElementById('buyer-credit-display').innerText = '7,000.00';
+      document.getElementById('buyer-base-display').innerText = 'Base comprobada: S/ 10,000.00';
+      document.getElementById('supplier-disbursement-display').innerText = '4,850.00';
+      document.getElementById('supplier-confirmation-card').classList.add('hidden');
+      document.getElementById('supplier-qr-view').classList.add('hidden');
+      switchBuyerTab('home');
+    }
+  </script>
+</body>
+</html>

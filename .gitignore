@@ -61,3 +61,11 @@ github-profile-juzakito/
 
 .vercel
 .env*
+
+# Android & IDE
+.idea/
+*.iml
+.gradle/
+build/
+*.apk
+*.aar
