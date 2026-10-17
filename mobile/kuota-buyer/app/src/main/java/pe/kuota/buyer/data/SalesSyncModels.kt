@@ -12,6 +12,6 @@ data class SalesSyncRequest(
 data class SalesSyncResponse(
     val saleId: String,
     val amount: BigDecimal,
-    val status: String, // "COMPROBADA" | "NO_COMPROBADA"
+    val status: String, // "PRODUCT_MATCH" | "NO_PRODUCT_MATCH"
     val matchedProductId: String?
 )

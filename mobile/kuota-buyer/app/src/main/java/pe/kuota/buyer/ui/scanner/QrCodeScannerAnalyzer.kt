@@ -9,6 +9,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.UUID
 
 data class ScannedSupplierInfo(
     val supplierId: String,
@@ -59,15 +60,15 @@ class QrCodeScannerAnalyzer(
     }
 
     private fun parseKuotaQr(rawValue: String): ScannedSupplierInfo? {
-        // Formato esperado: kuota://pay?v=1&supplierId={id}&name={name}
         return try {
             val uri = Uri.parse(rawValue)
-            if (uri.scheme == "kuota" && uri.host == "pay") {
+            if (uri.scheme == "kuota" && uri.host == "pay" &&
+                uri.getQueryParameter("v") == "1") {
                 val supplierId = uri.getQueryParameter("supplierId") ?: return null
-                val name = uri.getQueryParameter("name") ?: "Proveedor Mayorista"
+                UUID.fromString(supplierId)
                 ScannedSupplierInfo(
                     supplierId = supplierId,
-                    supplierName = name.replace("+", " "),
+                    supplierName = "Proveedor Kuota",
                     rawPayload = rawValue
                 )
             } else {

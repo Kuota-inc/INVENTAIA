@@ -16,12 +16,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pe.kuota.buyer.ui.theme.*
+import pe.kuota.buyer.ui.OnboardingPermissionsHelper
 import java.text.DecimalFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,8 +33,10 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onNavigateToScanQr: () -> Unit,
     onNavigateToProducts: () -> Unit,
-    onNavigateToPendingPayments: () -> Unit
+    onNavigateToPendingPayments: () -> Unit,
+    onSwitchRole: () -> Unit
 ) {
+    val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
     val currencyFormatter = DecimalFormat("#,##0.00")
 
@@ -51,18 +56,28 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(CircleShape)
-                                    .background(if (state.isListenerActive) KuotaGreenVerified else Color.Gray)
+                                    .background(if (state.hasNotificationAccess) KuotaGreenVerified else Color.Gray)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (state.isListenerActive) "Verificación de ventas activa" else "Listener inactivo",
+                                text = if (state.hasNotificationAccess) "Acceso a notificaciones habilitado" else "Toca para habilitar notificaciones",
                                 fontSize = 12.sp,
-                                color = KuotaTextSecondary
+                                color = KuotaTextSecondary,
+                                modifier = Modifier.clickable(enabled = !state.hasNotificationAccess) {
+                                    OnboardingPermissionsHelper.openNotificationListenerSettings(context)
+                                }
                             )
                         }
                     }
                 },
                 actions = {
+                    IconButton(onClick = onSwitchRole) {
+                        Icon(
+                            imageVector = Icons.Default.SwapHoriz,
+                            contentDescription = "Cambiar perfil",
+                            tint = KuotaPurple
+                        )
+                    }
                     IconButton(onClick = onNavigateToScanQr) {
                         Icon(
                             imageVector = Icons.Default.QrCodeScanner,
@@ -83,7 +98,7 @@ fun HomeScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Tarjeta Hero de Financiamiento Disponible (PRD 5.2)
+            // 1. Referencia de montos coincidentes
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -107,7 +122,7 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Financiamiento disponible",
+                                    text = "Estimación referencial",
                                     color = Color.White.copy(alpha = 0.85f),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium
@@ -117,7 +132,7 @@ fun HomeScreen(
                                     color = Color.White.copy(alpha = 0.2f)
                                 ) {
                                     Text(
-                                        text = "${state.referencePercentage}% de ventas",
+                                        text = "${state.referencePercentage}% de avisos coincidentes",
                                         color = Color.White,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
@@ -129,7 +144,7 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = "S/ ${currencyFormatter.format(state.availableCredit)}",
+                                text = "S/ ${currencyFormatter.format(state.referenceEstimate)}",
                                 color = Color.White,
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.ExtraBold
@@ -138,7 +153,7 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "Base comprobada acumulada: S/ ${currencyFormatter.format(state.verifiedSalesBase)}",
+                                text = "Notificaciones con monto coincidente: S/ ${currencyFormatter.format(state.matchedNotificationAmount)}",
                                 color = Color.White.copy(alpha = 0.7f),
                                 fontSize = 12.sp
                             )
@@ -161,10 +176,16 @@ fun HomeScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Financiar Compra vía QR",
+                                    text = "Enviar solicitud por QR",
                                     fontWeight = FontWeight.Bold
                                 )
                             }
+                            Text(
+                                text = "Se basa solo en notificaciones del dispositivo y coincidencias con productos. Kuota no consulta a Yape/Plin ni verifica pagos; no es crédito aprobado.",
+                                color = Color.White.copy(alpha = 0.78f),
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
                         }
                     }
                 }
@@ -205,7 +226,7 @@ fun HomeScreen(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Pagos Pendientes", color = KuotaTextPrimary)
+                        Text(text = "Mis Solicitudes", color = KuotaTextPrimary)
                     }
                 }
             }
@@ -224,7 +245,7 @@ fun HomeScreen(
                         color = KuotaTextPrimary
                     )
                     Text(
-                        text = "Matching por monto",
+                        text = "Notificaciones · coincidencia por monto",
                         fontSize = 12.sp,
                         color = KuotaTextSecondary
                     )
@@ -278,7 +299,7 @@ fun SaleItemRow(
 
                 Column {
                     Text(
-                        text = "+ S/ ${formatter.format(sale.amount)}",
+                        text = "Notificación: S/ ${formatter.format(sale.amount)}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         color = KuotaTextPrimary
@@ -291,13 +312,13 @@ fun SaleItemRow(
                 }
             }
 
-            // Badge de Estado: Comprobada vs No Comprobada (PRD 5.2 y 5.3)
+            // El matching compara montos; no acredita que el pago ocurrió.
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = if (sale.isVerified) KuotaGreenVerified.copy(alpha = 0.12f) else KuotaAmberUnverified.copy(alpha = 0.12f),
+                color = KuotaAmberUnverified.copy(alpha = 0.12f),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    if (sale.isVerified) KuotaGreenVerified.copy(alpha = 0.3f) else KuotaAmberUnverified.copy(alpha = 0.3f)
+                    KuotaAmberUnverified.copy(alpha = 0.3f)
                 )
             ) {
                 Row(
@@ -305,15 +326,15 @@ fun SaleItemRow(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = if (sale.isVerified) Icons.Default.CheckCircle else Icons.Default.HelpOutline,
+                        imageVector = Icons.Default.HelpOutline,
                         contentDescription = null,
-                        tint = if (sale.isVerified) KuotaGreenVerified else KuotaAmberUnverified,
+                        tint = KuotaAmberUnverified,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = if (sale.isVerified) "Comprobada" else "No comprobada",
-                        color = if (sale.isVerified) KuotaGreenVerified else KuotaAmberUnverified,
+                        text = if (sale.hasProductMatch) "Monto coincide" else "Sin coincidencia",
+                        color = KuotaAmberUnverified,
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp
                     )

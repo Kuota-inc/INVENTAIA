@@ -1,68 +1,105 @@
 package pe.kuota.supplier.ui.home
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import pe.kuota.common.KuotaApi
+import pe.kuota.supplier.BuildConfig
 import java.math.BigDecimal
-
-data class SupplierSaleItem(
-    val id: String,
-    val buyerName: String,
-    val totalAmount: BigDecimal,
-    val downPaymentReceived: BigDecimal, // Monto recibido (cuota inicial)
-    val kuotaPendingDisbursement: BigDecimal, // Monto pendiente (desembolso de Kuota)
-    val formattedDate: String
-)
+import org.json.JSONObject
 
 data class PendingConfirmationNotification(
     val transactionId: String,
     val buyerName: String,
-    val totalPurchaseAmount: BigDecimal,
-    val downPaymentAmount: BigDecimal,
-    val remainingDisbursement: BigDecimal
+    val totalPurchaseAmount: BigDecimal
+)
+
+data class SupplierRequestItem(
+    val id: String,
+    val amount: BigDecimal,
+    val status: String,
+    val createdAt: String
 )
 
 data class SupplierUiState(
-    val supplierName: String = "Distribuidora Mayorista El Sol S.A.",
-    val supplierRuc: String = "20100456789",
-    val nextDisbursementTotal: BigDecimal = BigDecimal("4850.00"), // PRD 6.2: Tarjeta monto total a recibir
-    val salesHistory: List<SupplierSaleItem> = listOf(
-        SupplierSaleItem("1", "Distribuidora San Juan S.A.C.", BigDecimal("1500.00"), BigDecimal("300.00"), BigDecimal("1200.00"), "Hoy, 10:45 AM"),
-        SupplierSaleItem("2", "Bodega Don Lucho", BigDecimal("850.00"), BigDecimal("170.00"), BigDecimal("680.00"), "Ayer, 04:20 PM"),
-        SupplierSaleItem("3", "Comercializadora Santa Rosa", BigDecimal("3700.00"), BigDecimal("740.00"), BigDecimal("2960.00"), "14 Oct, 11:30 AM")
-    ),
+    val supplierName: String = "Kuota Proveedor",
+    val supplierRuc: String = "",
+    val requests: List<SupplierRequestItem> = emptyList(),
     val pendingConfirmation: PendingConfirmationNotification? = null,
-    val qrPayload: String = "kuota://pay?v=1&supplierId=fa71b12b-31d2-430c-b2da-342f5ca3e956&name=Distribuidora+Mayorista+El+Sol"
+    val qrPayload: String = "",
+    val error: String? = null
 )
 
-class SupplierHomeViewModel : ViewModel() {
-
+class SupplierHomeViewModel(application: Application) : AndroidViewModel(application) {
+    private val api = KuotaApi.get(application, BuildConfig.KUOTA_API_BASE_URL)
     private val _uiState = MutableStateFlow(SupplierUiState())
     val uiState: StateFlow<SupplierUiState> = _uiState.asStateFlow()
+    private val dismissedRequests = mutableSetOf<String>()
 
-    fun triggerSimulatedIncomingTransaction() {
-        _uiState.value = _uiState.value.copy(
-            pendingConfirmation = PendingConfirmationNotification(
-                transactionId = "KT-20261015-992",
-                buyerName = "Distribuidora San Juan S.A.C.",
-                totalPurchaseAmount = BigDecimal("1500.00"),
-                downPaymentAmount = BigDecimal("300.00"),
-                remainingDisbursement = BigDecimal("1200.00")
-            )
-        )
+    init {
+        refresh()
     }
 
-    fun confirmDownPayment(transactionId: String) {
+    fun refresh() {
+        if (!api.hasSession) return
         viewModelScope.launch {
-            // En producción: POST /api/v1/transactions/{id}/confirm-received
-            _uiState.value = _uiState.value.copy(pendingConfirmation = null)
+            try {
+                val participant = api.participant("SUPPLIER")
+                val rows = api.transactions().optJSONArray("transactions")
+                val transactions = (0 until (rows?.length() ?: 0))
+                    .mapNotNull { rows?.optJSONObject(it) }
+                val pending = transactions.firstOrNull {
+                        it.optString("status") == "AWAITING_SUPPLIER_ACCEPTANCE" &&
+                            it.optString("id") !in dismissedRequests
+                    }
+                _uiState.value = SupplierUiState(
+                    supplierName = participant.optString("display_name", "Proveedor Kuota"),
+                    qrPayload = participant.optString("qrPayload"),
+                    requests = transactions.map {
+                        SupplierRequestItem(
+                            id = it.optString("id"),
+                            amount = it.optString("total_amount").toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                            status = it.optString("status"),
+                            createdAt = it.optString("created_at")
+                        )
+                    },
+                    pendingConfirmation = pending?.let(::toPendingRequest)
+                )
+            } catch (error: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = error.message ?: "No se pudieron cargar las solicitudes."
+                )
+            }
+        }
+    }
+
+    fun acceptRequest(transactionId: String) {
+        viewModelScope.launch {
+            try {
+                api.acceptTransaction(transactionId)
+                dismissedRequests.remove(transactionId)
+                _uiState.value = _uiState.value.copy(pendingConfirmation = null, error = null)
+                refresh()
+            } catch (error: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = error.message ?: "No se pudo aceptar la solicitud."
+                )
+            }
         }
     }
 
     fun dismissConfirmation() {
+        _uiState.value.pendingConfirmation?.transactionId?.let(dismissedRequests::add)
         _uiState.value = _uiState.value.copy(pendingConfirmation = null)
     }
+
+    private fun toPendingRequest(row: JSONObject) = PendingConfirmationNotification(
+        transactionId = row.optString("id"),
+        buyerName = "Comprador ${row.optString("buyer_id").take(8)}",
+        totalPurchaseAmount = row.optString("total_amount").toBigDecimalOrNull() ?: BigDecimal.ZERO
+    )
 }

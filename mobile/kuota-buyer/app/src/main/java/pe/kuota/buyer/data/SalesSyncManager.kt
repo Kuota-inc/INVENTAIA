@@ -5,76 +5,72 @@ import android.util.Log
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import pe.kuota.buyer.BuildConfig
 import pe.kuota.buyer.listener.ParsedPayment
+import pe.kuota.common.KuotaApi
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * Gestor de sincronización de ventas interceptadas.
- * Despacha los eventos al endpoint del backend (/api/v1/sales/sync-notification)
- * y mantiene una cola en memoria/disco en caso de desconexión temporal.
- */
-class SalesSyncManager private constructor(private val context: Context) {
-
+class SalesSyncManager private constructor(context: Context) {
+    private val api = KuotaApi.get(context.applicationContext, BuildConfig.KUOTA_API_BASE_URL)
     private val offlineQueue = ConcurrentLinkedQueue<ParsedPayment>()
-    
-    // Flujo reactivo para notificar al Home y actualizar la tarjeta de financiamiento
+    private val flushing = AtomicBoolean(false)
     private val _salesEventFlow = MutableSharedFlow<SalesSyncResponse>(extraBufferCapacity = 20)
     val salesEventFlow: SharedFlow<SalesSyncResponse> = _salesEventFlow.asSharedFlow()
 
-    /**
-     * Registra el pago detectado y realiza el envío al backend.
-     */
     suspend fun recordAndSyncSale(payment: ParsedPayment) {
-        val request = SalesSyncRequest(
-            amount = payment.amount,
-            sourceApp = payment.sourceWallet,
-            detectedAt = payment.detectedAt.toString(),
-            checksum = payment.deduplicationHash
-        )
-
         try {
-            // Nota: Aquí se invoca el cliente HTTP (Retrofit/Ktor Client)
-            // Simulación del contrato con el backend:
-            val simulatedResponse = executeApiCall(request)
-            
-            Log.i(TAG, "Venta sincronizada exitosamente: ID ${simulatedResponse.saleId} | Estado: ${simulatedResponse.status}")
-            _salesEventFlow.tryEmit(simulatedResponse)
-
-            // Procesar pendientes si recuperó conexión
+            sync(payment)
             flushOfflineQueue()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error de red al sincronizar venta. Encolando para reintento...", e)
+        } catch (error: Exception) {
+            Log.e(TAG, "No se pudo sincronizar la venta; queda pendiente en memoria.", error)
             offlineQueue.add(payment)
         }
     }
 
     private suspend fun flushOfflineQueue() {
-        while (offlineQueue.isNotEmpty()) {
-            val pendingPayment = offlineQueue.poll() ?: break
-            recordAndSyncSale(pendingPayment)
+        if (!flushing.compareAndSet(false, true)) return
+        try {
+            while (true) {
+                val pending = offlineQueue.poll() ?: break
+                try {
+                    sync(pending)
+                } catch (error: Exception) {
+                    Log.e(TAG, "Falló el reintento de venta; se conserva en memoria.", error)
+                    offlineQueue.add(pending)
+                    break
+                }
+            }
+        } finally {
+            flushing.set(false)
         }
     }
 
-    private fun executeApiCall(request: SalesSyncRequest): SalesSyncResponse {
-        // En implementación real: KuotaApiClient.salesApi.syncNotification(request)
-        return SalesSyncResponse(
-            saleId = java.util.UUID.randomUUID().toString(),
-            amount = request.amount,
-            status = "COMPROBADA", // Calculado por el backend contra 'Mis Productos'
-            matchedProductId = null
+    private suspend fun sync(payment: ParsedPayment) {
+        val response = api.syncSale(
+            amount = payment.amount.toPlainString(),
+            sourceApp = payment.sourceWallet,
+            detectedAt = payment.detectedAt.toString(),
+            checksum = payment.deduplicationHash
+        ).getJSONObject("sale")
+        val synced = SalesSyncResponse(
+            saleId = response.getString("id"),
+            amount = payment.amount,
+            status = response.getString("status"),
+            matchedProductId = response.optString("matched_product_id").takeIf { it.isNotBlank() }
         )
+        Log.i(TAG, "Venta guardada: ${synced.saleId} (${synced.status})")
+        _salesEventFlow.emit(synced)
     }
 
     companion object {
         private const val TAG = "SalesSyncManager"
 
-        @Volatile
-        private var INSTANCE: SalesSyncManager? = null
+        @Volatile private var instance: SalesSyncManager? = null
 
-        fun getInstance(context: Context): SalesSyncManager {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: SalesSyncManager(context.applicationContext).also { INSTANCE = it }
+        fun getInstance(context: Context): SalesSyncManager =
+            instance ?: synchronized(this) {
+                instance ?: SalesSyncManager(context.applicationContext).also { instance = it }
             }
-        }
     }
 }

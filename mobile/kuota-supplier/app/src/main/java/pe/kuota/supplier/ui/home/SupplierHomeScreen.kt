@@ -29,7 +29,6 @@ fun SupplierHomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val currencyFormatter = DecimalFormat("#,##0.00")
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -42,7 +41,7 @@ fun SupplierHomeScreen(
                             color = SupplierTextPrimary
                         )
                         Text(
-                            text = "RUC: ${state.supplierRuc}",
+                            text = "Solicitudes de compra Kuota",
                             fontSize = 12.sp,
                             color = SupplierTextSecondary
                         )
@@ -60,7 +59,7 @@ fun SupplierHomeScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Tarjeta de Monto Total a Recibir en el Próximo Desembolso (PRD 6.2)
+            // Desembolsos are not implemented; avoid presenting simulated balances.
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -84,7 +83,7 @@ fun SupplierHomeScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Próximo desembolso de Kuota",
+                                    text = "Desembolsos Kuota",
                                     color = Color.White.copy(alpha = 0.85f),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium
@@ -94,7 +93,7 @@ fun SupplierHomeScreen(
                                     color = SupplierGold.copy(alpha = 0.25f)
                                 ) {
                                     Text(
-                                        text = "Liquidación Factoring",
+                                        text = "No habilitados",
                                         color = SupplierGoldLight,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
@@ -106,7 +105,7 @@ fun SupplierHomeScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = "S/ ${currencyFormatter.format(state.nextDisbursementTotal)}",
+                                text = "No disponibles",
                                 color = Color.White,
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.ExtraBold
@@ -115,7 +114,7 @@ fun SupplierHomeScreen(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = "Fondos transferidos directamente por Kuota sin riesgo de cobranza",
+                                text = "Esta versión registra solicitudes, pero no transfiere fondos.",
                                 color = Color.White.copy(alpha = 0.7f),
                                 fontSize = 12.sp
                             )
@@ -150,67 +149,51 @@ fun SupplierHomeScreen(
                 }
             }
 
-            // 3. Encabezado de Historial
+            // Solicitudes recientes recibidas por la API.
             item {
                 Text(
-                    text = "Historial de Ventas Financiadas",
+                    text = "Solicitudes recientes",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = SupplierTextPrimary
                 )
             }
 
-            // 4. Lista de Ventas mostrando Monto Recibido y Monto Pendiente (PRD 6.2)
-            items(state.salesHistory) { item ->
+            if (state.requests.isEmpty()) {
+                item {
+                    Text(
+                        state.error ?: "Las solicitudes nuevas aparecerán aquí.",
+                        color = if (state.error != null) MaterialTheme.colorScheme.error else SupplierTextSecondary,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+            items(state.requests, key = { it.id }) { request ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text("Solicitud ${request.id.take(8)}", fontWeight = FontWeight.SemiBold)
+                            Text(request.createdAt.take(10), fontSize = 12.sp, color = SupplierTextSecondary)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("S/ ${currencyFormatter.format(request.amount)}", fontWeight = FontWeight.Bold)
                             Text(
-                                text = item.buyerName,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
-                                color = SupplierTextPrimary
-                            )
-                            Text(
-                                text = item.formattedDate,
+                                text = when (request.status) {
+                                    "AWAITING_SUPPLIER_ACCEPTANCE" -> "Pendiente"
+                                    "SUPPLIER_ACCEPTED" -> "Aceptaste"
+                                    else -> "Cerrada"
+                                },
                                 fontSize = 12.sp,
                                 color = SupplierTextSecondary
                             )
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(text = "Cuota inicial recibida:", fontSize = 11.sp, color = SupplierTextSecondary)
-                                Text(
-                                    text = "S/ ${currencyFormatter.format(item.downPaymentReceived)}",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = SupplierEmerald
-                                )
-                            }
-
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(text = "Pendiente Kuota:", fontSize = 11.sp, color = SupplierTextSecondary)
-                                Text(
-                                    text = "S/ ${currencyFormatter.format(item.kuotaPendingDisbursement)}",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = SupplierGold
-                                )
-                            }
                         }
                     }
                 }

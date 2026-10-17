@@ -10,6 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import pe.kuota.buyer.data.SalesSyncManager
+import pe.kuota.buyer.BuildConfig
+import pe.kuota.common.KuotaApi
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -40,6 +42,7 @@ class KuotaNotificationListenerService : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         super.onNotificationPosted(sbn)
+        if (KuotaApi.get(applicationContext, BuildConfig.KUOTA_API_BASE_URL).activeRole != "BUYER") return
         if (sbn == null) return
 
         val packageName = sbn.packageName ?: return

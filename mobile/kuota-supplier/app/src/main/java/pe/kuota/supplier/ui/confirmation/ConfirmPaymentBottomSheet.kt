@@ -1,6 +1,5 @@
 package pe.kuota.supplier.ui.confirmation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -19,9 +18,8 @@ import pe.kuota.supplier.ui.theme.*
 import java.text.DecimalFormat
 
 /**
- * Modal BottomSheet para la Confirmación de Pago del Proveedor (PRD Sección 6.3).
- * Se presenta inmediatamente cuando el comprador finaliza el escaneo y solicitud de financiamiento.
- * Al confirmar, dispara el cierre exitoso de la transacción en la app del comprador.
+ * Aceptación de una solicitud registrada. Esto no confirma un pago ni inicia
+ * una transferencia de fondos.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +59,7 @@ fun ConfirmPaymentBottomSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Confirmar Cuota Inicial",
+                text = "Aceptar solicitud",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 color = SupplierTextPrimary
@@ -70,7 +68,7 @@ fun ConfirmPaymentBottomSheet(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "El comprador ha solicitado financiamiento Kuota para su compra.",
+                text = "El comprador envió una solicitud de compra referencial.",
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
                 color = SupplierTextSecondary
@@ -98,43 +96,23 @@ fun ConfirmPaymentBottomSheet(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Total de compra:", fontSize = 13.sp, color = SupplierTextSecondary)
+                        Text(text = "Monto solicitado:", fontSize = 13.sp, color = SupplierTextSecondary)
                         Text(text = "S/ ${currencyFormatter.format(notification.totalPurchaseAmount)}", fontWeight = FontWeight.SemiBold)
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = "Cuota inicial recibida (efectivo/Yape):", fontSize = 13.sp, color = SupplierTextSecondary)
-                        Text(
-                            text = "S/ ${currencyFormatter.format(notification.downPaymentAmount)}",
-                            fontWeight = FontWeight.Bold,
-                            color = SupplierEmerald
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = "Desembolso restante de Kuota:", fontSize = 13.sp, color = SupplierTextSecondary)
-                        Text(
-                            text = "S/ ${currencyFormatter.format(notification.remainingDisbursement)}",
-                            fontWeight = FontWeight.Bold,
-                            color = SupplierGold
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Aceptar solo registra tu respuesta. No se efectúa pago ni desembolso.",
+                        fontSize = 12.sp,
+                        color = SupplierTextSecondary
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón de Confirmación Manual (PRD 6.3)
             Button(
                 onClick = { onConfirm(notification.transactionId) },
                 modifier = Modifier
@@ -143,11 +121,7 @@ fun ConfirmPaymentBottomSheet(
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = SupplierEmerald)
             ) {
-                Text(
-                    text = "Confirmar que recibí S/ ${currencyFormatter.format(notification.downPaymentAmount)}",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
+                Text(text = "Aceptar solicitud", fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -156,7 +130,7 @@ fun ConfirmPaymentBottomSheet(
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Aún no he recibido el pago", color = SupplierTextSecondary)
+                Text(text = "Cerrar", color = SupplierTextSecondary)
             }
         }
     }

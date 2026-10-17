@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { Capacitor } from '@capacitor/core';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import { AccessLanding } from '@/components/landing/AccessLanding';
 import { GoogleMark } from '@/components/landing/GoogleMark';
 import landingStyles from '@/components/landing/AccessLanding.module.css';
@@ -30,6 +32,15 @@ const CAPABILITIES = [
   'Analítica',
 ];
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
+}
+
 function HelpIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -43,7 +54,9 @@ function HelpIcon() {
 function LoginContent() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState<boolean>(false);
+  const [googleLoginStep, setGoogleLoginStep] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const nativeGoogleInitialized = useRef(false);
 
   // 1. Intercepción y limpieza inmediata de URL (?error=)
   useEffect(() => {
@@ -64,12 +77,86 @@ function LoginContent() {
     try {
       setLoading(true);
       setErrorMessage(null);
+
+      if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
+        setGoogleLoginStep('Conectando con KUOTA…');
+        const configResponse = await withTimeout(
+          fetch('/api/auth/google/mobile', { cache: 'no-store' }),
+          15000,
+          'No se pudo conectar con KUOTA. Revisa tu conexión e inténtalo de nuevo.',
+        );
+        const config = await configResponse.json();
+        if (!configResponse.ok || typeof config.webClientId !== 'string') {
+          throw new Error(config.error || AUTH_ERROR_MESSAGES.Default);
+        }
+
+        if (!nativeGoogleInitialized.current) {
+          setGoogleLoginStep('Preparando inicio de sesión seguro…');
+          await withTimeout(
+            SocialLogin.initialize({
+              google: { webClientId: config.webClientId, mode: 'online' },
+            }),
+            20000,
+            'No se pudo preparar el inicio de sesión de Google. Cierra y vuelve a abrir la app.',
+          );
+          nativeGoogleInitialized.current = true;
+        }
+
+        setGoogleLoginStep('Esperando respuesta de Google…');
+        const { result } = await withTimeout(
+          SocialLogin.login({ provider: 'google', options: {} }),
+          90000,
+          'Google no respondió. Comprueba que haya una cuenta Google en el teléfono e inténtalo de nuevo.',
+        );
+        if (result.responseType !== 'online' || !result.idToken) {
+          throw new Error(AUTH_ERROR_MESSAGES.Default);
+        }
+
+        setGoogleLoginStep('Verificando tu cuenta…');
+        const authResponse = await withTimeout(
+          fetch('/api/auth/google/mobile', {
+            method: 'POST',
+            credentials: 'include',
+            cache: 'no-store',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: result.idToken }),
+          }),
+          30000,
+          'KUOTA tardó demasiado en verificar tu cuenta. Inténtalo de nuevo.',
+        );
+        const authResult = await authResponse.json();
+        if (!authResponse.ok || typeof authResult.redirectTo !== 'string') {
+          throw new Error(authResult.error || AUTH_ERROR_MESSAGES.Default);
+        }
+
+        if (authResult.pendingTwoFactor) {
+          window.location.replace(authResult.redirectTo);
+          return;
+        }
+
+        const sessionResponse = await withTimeout(
+          fetch('/api/session', { credentials: 'include', cache: 'no-store' }),
+          15000,
+          'La cuenta se verificó, pero KUOTA no pudo confirmar la sesión en este teléfono.',
+        );
+        const session = await sessionResponse.json();
+        if (!sessionResponse.ok || !session.authenticated) {
+          throw new Error(
+            'Google verificó tu cuenta, pero el teléfono no guardó la sesión. Cierra completamente la app y vuelve a intentarlo.',
+          );
+        }
+
+        window.location.replace(authResult.redirectTo);
+        return;
+      }
+
       const targetUrl = searchParams?.get('callbackUrl') || '/dashboard';
       await signIn('google', { callbackUrl: targetUrl });
     } catch (err) {
       console.error('Error al iniciar sesión con Google:', err);
-      setErrorMessage(AUTH_ERROR_MESSAGES.Default);
+      setErrorMessage(err instanceof Error ? err.message : AUTH_ERROR_MESSAGES.Default);
       setLoading(false);
+      setGoogleLoginStep(null);
     }
   };
 
@@ -150,7 +237,7 @@ function LoginContent() {
               <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.25" />
               <path d="M21 12a9 9 0 00-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
             </svg>
-            <span>Conectando con Google…</span>
+            <span>{googleLoginStep ?? 'Conectando con Google…'}</span>
           </>
         ) : (
           <>

@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,42 +16,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pe.kuota.buyer.ui.scanner.ScannedSupplierInfo
 import pe.kuota.buyer.ui.theme.*
 import java.math.BigDecimal
-import java.math.RoundingMode
 import java.text.DecimalFormat
 
-/**
- * Pantalla de Checkout de Financiamiento (PRD Sección 5.6):
- * Permite al comprador definir el monto total de compra, el plazo de pago (días)
- * e ingresar su PIN de seguridad antes de disparar la transacción y el timeout de 60s.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FinancingCheckoutScreen(
     supplier: ScannedSupplierInfo,
-    availableCreditLimit: BigDecimal = BigDecimal("7000.00"),
-    onConfirmFinancing: (total: BigDecimal, downPayment: BigDecimal, financed: BigDecimal, termDays: Int) -> Unit,
+    referenceEstimate: BigDecimal = BigDecimal.ZERO,
+    onConfirmFinancing: (total: BigDecimal, termDays: Int) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     var totalAmountInput by remember { mutableStateOf("1500") }
     val availableTerms = listOf(15, 30, 45, 60)
     var selectedTermDays by remember { mutableIntStateOf(30) }
-    var pinInput by remember { mutableStateOf("") }
-    var showPinError by remember { mutableStateOf(false) }
 
     val currencyFormatter = DecimalFormat("#,##0.00")
-
-    // Cálculos en vivo: Cuota inicial referencial 20%, Financiado 80%
     val totalAmount = totalAmountInput.toBigDecimalOrNull() ?: BigDecimal.ZERO
-    val downPayment = totalAmount.multiply(BigDecimal("0.20")).setScale(2, RoundingMode.HALF_UP)
-    val financedAmount = totalAmount.subtract(downPayment).max(BigDecimal.ZERO)
-    val exceedsCreditLimit = financedAmount > availableCreditLimit
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -105,12 +89,6 @@ fun FinancingCheckoutScreen(
                                 color = KuotaTextPrimary
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Verificado",
-                                tint = KuotaGreenVerified,
-                                modifier = Modifier.size(16.dp)
-                            )
                         }
                         Text(
                             text = "Código Proveedor: ${supplier.supplierId.take(8)}...",
@@ -173,7 +151,7 @@ fun FinancingCheckoutScreen(
                 }
             }
 
-            // 4. Desglose Financiero en Tiempo Real
+            // The amount and available credit are references, not a financing decision.
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -182,35 +160,20 @@ fun FinancingCheckoutScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Estructura de la Operación",
+                        text = "Solicitud referencial",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = KuotaTextPrimary
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Cuota inicial adelantada por Kuota (20%):", fontSize = 13.sp, color = KuotaTextSecondary)
+                        Text(text = "Monto solicitado:", fontSize = 13.sp, color = KuotaTextSecondary)
                         Text(
-                            text = "S/ ${currencyFormatter.format(downPayment)}",
-                            fontWeight = FontWeight.SemiBold,
-                            color = KuotaTextPrimary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = "Monto financiado (a pagar en $selectedTermDays días):", fontSize = 13.sp, color = KuotaTextSecondary)
-                        Text(
-                            text = "S/ ${currencyFormatter.format(financedAmount)}",
+                            text = "S/ ${currencyFormatter.format(totalAmount)}",
                             fontWeight = FontWeight.ExtraBold,
                             color = KuotaPurple,
                             fontSize = 15.sp
@@ -225,77 +188,35 @@ fun FinancingCheckoutScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "Tu línea disponible actual:", fontSize = 12.sp, color = KuotaTextSecondary)
                         Text(
-                            text = "S/ ${currencyFormatter.format(availableCreditLimit)}",
+                            text = "Estimación referencial (no es crédito aprobado):",
+                            fontSize = 12.sp,
+                            color = KuotaTextSecondary
+                        )
+                        Text(
+                            text = "S/ ${currencyFormatter.format(referenceEstimate)}",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (exceedsCreditLimit) Color.Red else KuotaGreenVerified
+                            color = KuotaTextPrimary
                         )
                     }
 
-                    if (exceedsCreditLimit) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "⚠️ El monto financiado supera tu línea disponible de S/ ${currencyFormatter.format(availableCreditLimit)}.",
-                            color = Color.Red,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
-            // 5. Autenticación con PIN obligatorio (PRD 8.1)
-            Column {
-                Text(
-                    text = "PIN de Seguridad (6 dígitos)",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    color = KuotaTextPrimary
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                OutlinedTextField(
-                    value = pinInput,
-                    onValueChange = {
-                        if (it.length <= 6 && it.all { char -> char.isDigit() }) {
-                            pinInput = it
-                            showPinError = false
-                        }
-                    },
-                    placeholder = { Text("Ingresa tu PIN para confirmar") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    isError = showPinError,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Color.White,
-                        unfocusedContainerColor = Color.White
-                    )
-                )
-                if (showPinError) {
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "El PIN debe tener 6 dígitos",
-                        color = Color.Red,
+                        text = "Enviar esta solicitud no aprueba crédito ni transfiere dinero.",
                         fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 4.dp)
+                        color = KuotaTextSecondary
                     )
                 }
             }
 
-            // 6. Botón de Aceptación (PRD 5.6.4)
             Button(
                 onClick = {
-                    if (pinInput.length != 6) {
-                        showPinError = true
-                        return@Button
-                    }
-                    if (!exceedsCreditLimit && totalAmount > BigDecimal.ZERO) {
-                        onConfirmFinancing(totalAmount, downPayment, financedAmount, selectedTermDays)
+                    if (totalAmount > BigDecimal.ZERO) {
+                        onConfirmFinancing(totalAmount, selectedTermDays)
                     }
                 },
-                enabled = !exceedsCreditLimit && totalAmount > BigDecimal.ZERO,
+                enabled = totalAmount > BigDecimal.ZERO,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
@@ -303,7 +224,7 @@ fun FinancingCheckoutScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = KuotaPurple)
             ) {
                 Text(
-                    text = "Aceptar y Financiar",
+                    text = "Enviar solicitud",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )

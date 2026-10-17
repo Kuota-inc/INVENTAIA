@@ -6,3 +6,8 @@ web
 /api/
 /ai-engine/
 .data
+/android/
+/mobile/
+/capacitor-www/
+.env*
+*.keystore

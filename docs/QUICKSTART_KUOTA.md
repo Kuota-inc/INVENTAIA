@@ -72,6 +72,8 @@ Ambas aplicaciones están desarrolladas en **Kotlin** con **Jetpack Compose** y 
 3. Deja que Gradle sincronice las dependencias (SDK 34, Compose BOM 2024.02.01, CameraX 1.3.2, ML Kit 17.2.0, ZXing 3.5.3).
 4. Ejecuta en tu emulador o dispositivo físico Android 8.0+ (API 26+).
 
+En las apps Android se configura un PIN Kuota de 6 dígitos al completar el perfil del negocio. El PIN protege la apertura y vuelve a solicitarse para enviar una solicitud de compra o aceptar una solicitud recibida. Si el dispositivo tiene biometría inscrita, puede usarse en lugar del PIN. El verificador del PIN se guarda localmente con una clave de Android Keystore; después de 5 intentos incorrectos se activa una espera progresiva. El PIN no se envía al servidor. Si se olvida, borra los datos de la app o reinstálala y vuelve a iniciar sesión para configurar otro.
+
 ---
 
 ## 4. Garantías de Privacidad y Cumplimiento Normativo (PRD 8.2)

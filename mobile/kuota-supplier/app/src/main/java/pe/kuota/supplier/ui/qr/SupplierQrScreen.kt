@@ -77,12 +77,14 @@ fun SupplierQrScreen(
                         color = SupplierTextPrimary
                     )
 
-                    Text(
-                        text = "RUC: $supplierRuc",
-                        fontSize = 13.sp,
-                        color = SupplierTextSecondary,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                    if (supplierRuc.isNotBlank()) {
+                        Text(
+                            text = "RUC: $supplierRuc",
+                            fontSize = 13.sp,
+                            color = SupplierTextSecondary,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -112,7 +114,7 @@ fun SupplierQrScreen(
                         color = SupplierNavy.copy(alpha = 0.05f)
                     ) {
                         Text(
-                            text = "Pide a tu comprador que abra la App Kuota y escanee este código para financiar su compra de inventario.",
+                            text = "Pide a tu comprador que escanee este QR desde Kuota para enviarte una solicitud de compra. No se transfieren fondos.",
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center,
                             color = SupplierTextSecondary,

@@ -14,12 +14,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import pe.kuota.buyer.ui.theme.*
+import pe.kuota.buyer.BuildConfig
+import pe.kuota.common.KuotaApi
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.text.DecimalFormat
 
@@ -39,21 +43,33 @@ data class ProductItem(
 fun ProductsScreen(
     onNavigateBack: () -> Unit
 ) {
-    var products by remember {
-        mutableStateOf(
-            listOf(
-                ProductItem("1", "Aceite Vegetal 1L", BigDecimal("8.50")),
-                ProductItem("2", "Arroz Superior 50kg", BigDecimal("165.00")),
-                ProductItem("3", "Leche Evaporada Caja x24", BigDecimal("96.00")),
-                ProductItem("4", "Azúcar Rubia Saco 50kg", BigDecimal("145.00"))
-            )
-        )
-    }
+    val context = LocalContext.current
+    val api = remember { KuotaApi.get(context, BuildConfig.KUOTA_API_BASE_URL) }
+    val scope = rememberCoroutineScope()
+    var products by remember { mutableStateOf(emptyList<ProductItem>()) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var saving by remember { mutableStateOf(false) }
 
     var showAddDialog by remember { mutableStateOf(false) }
     var newProductName by remember { mutableStateOf("") }
     var newProductPrice by remember { mutableStateOf("") }
     val currencyFormatter = DecimalFormat("#,##0.00")
+
+    LaunchedEffect(Unit) {
+        try {
+            val rows = api.products().optJSONArray("products")
+            products = (0 until (rows?.length() ?: 0)).mapNotNull { index ->
+                val row = rows?.optJSONObject(index) ?: return@mapNotNull null
+                ProductItem(
+                    id = row.optString("id"),
+                    name = row.optString("name"),
+                    price = row.optString("price").toBigDecimalOrNull() ?: BigDecimal.ZERO
+                )
+            }
+        } catch (failure: Exception) {
+            error = failure.message ?: "No se pudieron cargar los productos."
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -93,7 +109,7 @@ fun ProductsScreen(
                     .padding(vertical = 8.dp)
             ) {
                 Text(
-                    text = "💡 Cada venta de Yape o Plin cuyo monto coincida con estos precios será marcada automáticamente como 'Comprobada' para aumentar tu línea de crédito.",
+                    text = "El servidor compara los montos de notificaciones con estos precios. Esto no confirma que el pago ocurrió.",
                     fontSize = 12.sp,
                     color = KuotaPurpleDark,
                     modifier = Modifier.padding(12.dp),
@@ -157,6 +173,10 @@ fun ProductsScreen(
             }
         }
 
+        error?.let {
+            Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(vertical = 8.dp))
+        }
+
         // Diálogo para crear nuevo producto
         if (showAddDialog) {
             AlertDialog(
@@ -183,20 +203,32 @@ fun ProductsScreen(
                     Button(
                         onClick = {
                             val priceVal = newProductPrice.toBigDecimalOrNull()
-                            if (newProductName.isNotBlank() && priceVal != null && priceVal > BigDecimal.ZERO) {
-                                products = products + ProductItem(
-                                    id = java.util.UUID.randomUUID().toString(),
-                                    name = newProductName,
-                                    price = priceVal
-                                )
-                                newProductName = ""
-                                newProductPrice = ""
-                                showAddDialog = false
+                            if (!saving && newProductName.isNotBlank() && priceVal != null && priceVal > BigDecimal.ZERO) {
+                                scope.launch {
+                                    saving = true
+                                    error = null
+                                    try {
+                                        val created = api.addProduct(newProductName.trim(), priceVal.toPlainString())
+                                            .getJSONObject("product")
+                                        products = products + ProductItem(
+                                            id = created.getString("id"),
+                                            name = created.getString("name"),
+                                            price = created.getString("price").toBigDecimal()
+                                        )
+                                        newProductName = ""
+                                        newProductPrice = ""
+                                        showAddDialog = false
+                                    } catch (failure: Exception) {
+                                        error = failure.message ?: "No se pudo guardar el producto."
+                                    } finally {
+                                        saving = false
+                                    }
+                                }
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = KuotaPurple)
                     ) {
-                        Text("Guardar")
+                        Text(if (saving) "Guardando…" else "Guardar")
                     }
                 },
                 dismissButton = {

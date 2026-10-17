@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { requiredSecret } from '@/lib/secret';
 
@@ -58,23 +59,38 @@ export class SessionManager {
   /**
    * Crea y establece la cookie de sesión HTTP-only firmada
    */
-  public static async createSession(data: Omit<SessionData, 'createdAt'>): Promise<SessionData> {
+  public static async createSession(
+    data: Omit<SessionData, 'createdAt'>,
+    response?: NextResponse
+  ): Promise<SessionData> {
+    const { avatarUrl, ...sessionFields } = data;
     const sessionData: SessionData = {
-      ...data,
+      ...sessionFields,
+      ...(avatarUrl && /^https?:\/\//i.test(avatarUrl) && avatarUrl.length <= 2048
+        ? { avatarUrl }
+        : {}),
       createdAt: Date.now(),
     };
 
     const serialized = Buffer.from(JSON.stringify(sessionData)).toString('base64');
     const signed = signData(serialized);
+    if (Buffer.byteLength(signed, 'utf8') > 3800) {
+      throw new Error('La sesión excede el tamaño máximo permitido para una cookie.');
+    }
 
-    const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE_NAME, signed, {
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       path: '/',
       maxAge: 60 * 60 * 24 * 14, // 14 días
-    });
+    };
+    if (response) {
+      response.cookies.set(SESSION_COOKIE_NAME, signed, cookieOptions);
+    } else {
+      const cookieStore = await cookies();
+      cookieStore.set(SESSION_COOKIE_NAME, signed, cookieOptions);
+    }
 
     return sessionData;
   }
@@ -133,16 +149,26 @@ export class SessionManager {
    * de login con segundo factor. NO otorga acceso: solo habilita la
    * verificación del código TOTP en /login/verify-2fa.
    */
-  public static async createPendingTwoFactor(userId: string, email: string): Promise<void> {
+  public static async createPendingTwoFactor(
+    userId: string,
+    email: string,
+    response?: NextResponse
+  ): Promise<void> {
     const payload = Buffer.from(JSON.stringify({ userId, email, createdAt: Date.now() })).toString('base64');
-    const cookieStore = await cookies();
-    cookieStore.set(PENDING_2FA_COOKIE_NAME, signData(payload), {
+    const cookieValue = signData(payload);
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       path: '/',
       maxAge: 10 * 60,
-    });
+    };
+    if (response) {
+      response.cookies.set(PENDING_2FA_COOKIE_NAME, cookieValue, cookieOptions);
+    } else {
+      const cookieStore = await cookies();
+      cookieStore.set(PENDING_2FA_COOKIE_NAME, cookieValue, cookieOptions);
+    }
   }
 
   public static async getPendingTwoFactor(): Promise<{ userId: string; email: string } | null> {

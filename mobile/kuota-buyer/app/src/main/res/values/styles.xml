@@ -1,0 +1,7 @@
+<resources>
+    <style name="KuotaAppTheme.Base" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <style name="KuotaAppTheme" parent="@style/KuotaAppTheme.Base" />
+</resources>
