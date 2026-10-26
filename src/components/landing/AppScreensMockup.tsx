@@ -22,7 +22,7 @@ export function AppScreensMockup({ mode }: AppScreensMockupProps) {
         </div>
 
         {/* Screen Content */}
-        <div className={styles.mockupBody}>
+        <div className={`${styles.mockupBody} ${styles.mockupContentAnim}`} key={mode}>
           <div style={{ background: '#ffffff', borderRadius: '10px', padding: '16px', border: '1px solid rgba(0, 35, 92, 0.12)' }}>
             <span style={{ fontSize: '11px', color: 'rgba(47, 122, 239, 0.7)', textTransform: 'uppercase', fontWeight: 600 }}>Monto a cobrar</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '4px 0 12px' }}>
@@ -100,7 +100,7 @@ export function AppScreensMockup({ mode }: AppScreensMockupProps) {
         </div>
 
         {/* Screen Content */}
-        <div className={styles.mockupBody}>
+        <div className={`${styles.mockupBody} ${styles.mockupContentAnim}`} key={mode}>
           <div style={{ background: '#ffffff', borderRadius: '10px', padding: '16px', border: '1px solid rgba(0, 35, 92, 0.12)' }}>
             <span style={{ fontSize: '11px', color: 'rgba(47, 122, 239, 0.7)', textTransform: 'uppercase', fontWeight: 600 }}>Línea disponible</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', margin: '4px 0 8px' }}>
@@ -163,7 +163,7 @@ export function AppScreensMockup({ mode }: AppScreensMockupProps) {
       </div>
 
       {/* Screen Content */}
-      <div className={styles.mockupBody}>
+      <div className={`${styles.mockupBody} ${styles.mockupContentAnim}`} key={mode}>
         {/* QR Scan Simulation */}
         <div
           style={{

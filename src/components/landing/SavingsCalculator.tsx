@@ -311,10 +311,10 @@ export function SavingsCalculator({ mode, onModeChange, onNavigateToDownload }: 
                     </div>
                     <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '9999px', overflow: 'hidden', display: 'flex' }}>
                       <div
+                        className={styles.calcProgressBarFill}
                         style={{
                           width: `${Math.min(100, Math.max(10, buyCostAlt > 0 ? (buyCostKuota / buyCostAlt) * 100 : 50))}%`,
-                          background: 'var(--color-dodger-blue)',
-                          borderRadius: '9999px',
+                          
                         }}
                       />
                     </div>
@@ -381,7 +381,7 @@ export function SavingsCalculator({ mode, onModeChange, onNavigateToDownload }: 
                       <span style={{ color: 'var(--color-dodger-blue)' }}>Ahorras el 71% de comisiones</span>
                     </div>
                     <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '9999px', overflow: 'hidden', display: 'flex' }}>
-                      <div style={{ width: '28.5%', background: 'var(--color-dodger-blue)', borderRadius: '9999px' }} />
+                      <div className={styles.calcProgressBarFill} style={{ width: '28.5%' }} />
                     </div>
                   </div>
 

@@ -27,6 +27,10 @@
   --shadow-xl: rgba(0, 35, 92, 0.20) 0px 25px 50px -12px;
   --shadow-subtle: rgba(0, 35, 92, 0.05) 0px 1px 2px 0px;
 
+  /* Animation Tokens (Emil Kowalski curve standards) */
+  --ease-out-snappy: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-smooth: cubic-bezier(0.77, 0, 0.175, 1);
+
   background-color: var(--color-pale-sky);
   color: var(--color-crayola-blue);
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -247,6 +251,7 @@
   text-transform: uppercase;
   margin-bottom: 24px;
   box-shadow: var(--shadow-subtle);
+  animation: heroFadeUp 0.45s var(--ease-out-snappy) 0.05s both;
 }
 
 .heroTitle {
@@ -256,6 +261,7 @@
   color: var(--color-crayola-blue);
   letter-spacing: -0.035em;
   margin: 0 0 20px;
+  animation: heroFadeUp 0.5s var(--ease-out-snappy) 0.12s both;
 }
 
 .heroTitleAccent {
@@ -271,6 +277,7 @@
   max-width: 680px;
   margin: 0 0 36px;
   opacity: 0.9;
+  animation: heroFadeUp 0.5s var(--ease-out-snappy) 0.18s both;
 }
 
 .heroCtas {
@@ -279,6 +286,7 @@
   gap: 12px;
   width: 100%;
   max-width: 380px;
+  animation: heroFadeUp 0.5s var(--ease-out-snappy) 0.24s both;
 }
 
 @media (min-width: 520px) {
@@ -297,6 +305,18 @@
   font-size: 13px;
   color: var(--color-deep-navy);
   opacity: 0.85;
+  animation: heroFadeUp 0.5s var(--ease-out-snappy) 0.30s both;
+}
+
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .heroMetaItem {
@@ -1232,13 +1252,15 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 35, 92, 0.4);
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 35, 92, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  animation: modalFadeIn 0.2s ease-out both;
 }
 
 .modalCard {
@@ -1252,6 +1274,23 @@
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
+  animation: modalCardPop 0.24s var(--ease-out-snappy) both;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalCardPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .modalCloseBtn {
@@ -1262,4 +1301,120 @@
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.modalCloseBtn:hover {
+  color: var(--color-deep-navy);
+  transform: scale(1.1);
+}
+
+/* --------------------------------------------------------------------------
+   ANIMACIONES ESPECÍFICAS — Calculadora, Mockup y Gating
+   -------------------------------------------------------------------------- */
+
+.calcProgressBarFill {
+  background-color: var(--color-dodger-blue);
+  border-radius: 9999px;
+  height: 8px;
+  transition: width 0.35s var(--ease-out-snappy);
+  will-change: width;
+}
+
+.mockupContentAnim {
+  animation: mockupSwitch 0.28s var(--ease-out-snappy) both;
+  will-change: transform, opacity;
+}
+
+@keyframes mockupSwitch {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Slider thumb feedback */
+.calcSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--color-deep-navy);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 35, 92, 0.25);
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-out-snappy);
+}
+
+.calcSlider:active::-webkit-slider-thumb {
+  transform: scale(1.22);
+}
+
+/* Gated Hover states (only for mice/trackpads, not touch) */
+@media (hover: hover) and (pointer: fine) {
+  .teamCard {
+    transition: transform 0.22s var(--ease-out-snappy), box-shadow 0.22s var(--ease-out-snappy);
+  }
+  .teamCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 28px -4px rgba(0, 35, 92, 0.14);
+  }
+
+  .trustPartnerCard {
+    transition: transform 0.22s var(--ease-out-snappy), box-shadow 0.22s var(--ease-out-snappy);
+  }
+  .trustPartnerCard:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .storeButton {
+    transition: background-color 0.18s ease, transform 0.15s var(--ease-out-snappy), box-shadow 0.15s ease;
+  }
+  .storeButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 35, 92, 0.22);
+  }
+
+  .storeButtonOutline {
+    transition: background-color 0.18s ease, transform 0.15s var(--ease-out-snappy), border-color 0.18s ease;
+  }
+  .storeButtonOutline:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Soporte de accesibilidad: Prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .heroTag,
+  .heroTitle,
+  .heroSubtitle,
+  .heroCtas,
+  .heroMeta,
+  .mockupContentAnim,
+  .modalCard,
+  .modalOverlay {
+    animation: simpleFade 0.15s ease both !important;
+    transform: none !important;
+  }
+  
+  .teamCard,
+  .trustPartnerCard,
+  .storeButton,
+  .btnPrimary,
+  .btnSecondary,
+  .stepChip,
+  .calcProgressBarFill {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@keyframes simpleFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
