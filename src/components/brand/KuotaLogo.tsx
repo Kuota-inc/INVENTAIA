@@ -5,9 +5,14 @@ export interface KuotaLogoProps extends React.SVGProps<SVGSVGElement> {
   height?: number;
 }
 
-export function KuotaLogo({ variant = 'full', height = 32, className = '', ...props }: KuotaLogoProps) {
-  const primary = '#1F5E45';
-  const secondary = '#8FD694';
+export function KuotaLogo({
+  variant = 'full',
+  height = 32,
+  className = '',
+  primary = '#00235C',
+  secondary = '#0391FD',
+  ...props
+}: KuotaLogoProps & { primary?: string; secondary?: string }) {
 
   const mark = (
     <svg viewBox="0 0 100 100" height={height} className={className} fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
@@ -22,7 +27,7 @@ export function KuotaLogo({ variant = 'full', height = 32, className = '', ...pr
 
   const wordmark = (
     <svg viewBox="0 0 300 100" height={height} className={className} fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <text x="0" y="75" fontFamily="var(--font-wise-sans, system-ui)" fontWeight="900" fontSize="72" fill={primary} letterSpacing="-0.04em">
+      <text x="0" y="75" fontFamily="'Plus Jakarta Sans', system-ui, sans-serif" fontWeight="800" fontSize="72" fill={primary} letterSpacing="-0.03em">
         KUOTA
       </text>
     </svg>
@@ -35,7 +40,7 @@ export function KuotaLogo({ variant = 'full', height = 32, className = '', ...pr
         <path d="M40 55 C 40 55, 65 15, 85 15 C 90 15, 93 20, 88 25 C 65 50, 50 65, 50 65 Z" fill={secondary} />
         <path d="M35 55 L 75 88 C 80 92, 88 88, 85 82 L 48 50 Z" fill={primary} />
       </g>
-      <text x="110" y="75" fontFamily="var(--font-wise-sans, system-ui)" fontWeight="900" fontSize="72" fill={primary} letterSpacing="-0.04em">
+      <text x="110" y="75" fontFamily="'Plus Jakarta Sans', system-ui, sans-serif" fontWeight="800" fontSize="72" fill={primary} letterSpacing="-0.03em">
         KUOTA
       </text>
     </svg>

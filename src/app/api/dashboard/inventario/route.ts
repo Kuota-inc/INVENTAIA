@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
       params.get('branch')
     );
     const items = await InventoryMasterService.getInventoryItems(filter);
-    const metrics = await InventoryMasterService.getInventoryMetrics(filter);
+    const metrics = InventoryMasterService.calculateMetricsFromItems(items);
     
     const supabase = await createClient();
     const { data: categories } = await supabase.from('categories').select('*');

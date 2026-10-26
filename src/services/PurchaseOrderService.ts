@@ -23,9 +23,7 @@ export class PurchaseOrderService {
     return (orders || []).sort((a, b) => b.order_number.localeCompare(a.order_number));
   }
 
-  public static async getMetrics(): Promise<POMetrics> {
-    const orders = await this.getAllOrders();
-
+  public static calculateMetrics(orders: any[]): POMetrics {
     const porAprobar = orders.filter((o: any) => o.status === 'draft').length;
     const enTransito = orders.filter((o: any) => o.status === 'transit').length;
     const comprometidoMes = orders.reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0);
@@ -36,6 +34,11 @@ export class PurchaseOrderService {
       comprometidoMes,
       cumplimientoLeadTime: '96.8%',
     };
+  }
+
+  public static async getMetrics(existingOrders?: any[]): Promise<POMetrics> {
+    const orders = existingOrders || await this.getAllOrders();
+    return this.calculateMetrics(orders);
   }
 
   public static async getOrderDetails(idOrNumber: string): Promise<any> {

@@ -1,7 +1,10 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
-import { WarehouseMotif } from './WarehouseMotif';
+import { KuotaNetworkMotif } from './KuotaNetworkMotif';
 import styles from './AccessLanding.module.css';
 
 export interface AccessFooterLink {
@@ -10,16 +13,16 @@ export interface AccessFooterLink {
 }
 
 interface AccessLandingProps {
-  /** Tagline mono junto al isotipo, p. ej. "inventario, pronóstico, …". */
+  /** Tagline mono junto al isotipo, p. ej. "Financiamiento y pagos". */
   tagline: string;
   /** Titular grande del panel de marca. */
   headline: React.ReactNode;
   /** Párrafo bajo el titular. */
   description: React.ReactNode;
-  /** Rail de módulos en mayúsculas mono. */
+  /** Rail de módulos o capacidades en mayúsculas mono. */
   capabilities: string[];
   /** Slot superior derecho (selector de idioma, ayuda, …). */
-  topbar: React.ReactNode;
+  topbar?: React.ReactNode;
   /** Eyebrow mono sobre el título ("Plataforma de operaciones"). */
   eyebrow: string;
   /** Tiñe el eyebrow de error cuando hay alerta visible. */
@@ -34,20 +37,18 @@ interface AccessLandingProps {
   children: React.ReactNode;
   /** Línea legal bajo el cuerpo (términos, prueba gratis, …). */
   footerNote?: React.ReactNode;
-  /** Texto inferior izquierdo ("KUOTA Operaciones"). */
+  /** Texto inferior izquierdo ("Kuota Technologies"). */
   footerLeft: string;
   footerLinks: AccessFooterLink[];
-  /** Variante clara del landing (oscuro por defecto, como la referencia). */
+  /** Variante clara del landing. */
   light?: boolean;
   /** Rellena el alto restante cuando vive bajo una cabecera. */
   fill?: boolean;
 }
 
 /**
- * Pantalla de acceso de dos columnas y tema oscuro fijo: panel de marca a la
- * izquierda (isotipo, motivo SVG animado, propuesta de valor) y tarjeta de
- * acceso a la derecha. Es standalone — no sigue el tema claro/oscuro de la
- * app, siempre se ve igual.
+ * Pantalla de acceso de dos columnas adaptada al Sistema de Diseño Kuota (DESIGN.md):
+ * Canvas Pale Sky a la izquierda con motivo fintech abstracto y tarjeta White a la derecha.
  */
 export function AccessLanding({
   tagline,
@@ -64,38 +65,48 @@ export function AccessLanding({
   footerNote,
   footerLeft,
   footerLinks,
-  light = false,
+  light = true,
   fill = false,
 }: AccessLandingProps) {
-  const pageClass = [styles.page, light ? styles.pageLight : '', fill ? styles.pageFill : '']
-    .filter(Boolean)
-    .join(' ');
+  const pageClass = [styles.page, fill ? styles.pageFill : ''].filter(Boolean).join(' ');
+
   return (
     <div className={pageClass}>
-      {/* ------------------------------------------- panel de marca */}
+      {/* ------------------------------------------- PANEL DE MARCA (IZQ) */}
       <aside className={styles.brandSide}>
         <div className={styles.brandMark}>
-          <Logo height={26} />
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Logo height={28} />
+          </Link>
           <span className={styles.brandRule} aria-hidden="true" />
           <span className={styles.tagline}>{tagline}</span>
         </div>
 
-        <WarehouseMotif />
+        <KuotaNetworkMotif />
 
         <div className={styles.brandCopy}>
           <h2 className={styles.brandH2}>{headline}</h2>
           <p className={styles.brandP}>{description}</p>
           <div className={styles.brandRail}>
             {capabilities.map((capability) => (
-              <span key={capability}>{capability}</span>
+              <span key={capability} className={styles.brandRailTag}>
+                {capability}
+              </span>
             ))}
           </div>
         </div>
       </aside>
 
-      {/* --------------------------------------------- panel de acceso */}
+      {/* --------------------------------------------- PANEL DE ACCESO (DER) */}
       <main className={styles.formSide}>
-        <div className={styles.topbar}>{topbar}</div>
+        <div className={styles.topbar}>
+          <Link href="/" className={styles.backLink}>
+            <ArrowLeft size={16} />
+            <span>Volver a Kuota</span>
+          </Link>
+
+          <div>{topbar}</div>
+        </div>
 
         <div className={styles.formWrap}>
           <div className={styles.card}>
@@ -129,5 +140,3 @@ export function AccessLanding({
 }
 
 export default AccessLanding;
-
-

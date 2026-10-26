@@ -23,13 +23,7 @@ export async function GET(req: NextRequest) {
       params.get('branch')
     );
 
-    const { createClient } = await import('@/utils/supabase/server');
-    const supabase = await createClient();
-    const workspaceId = await LocationsService.resolveWorkspaceId(supabase);
-    if (!workspaceId) {
-      return NextResponse.json({ success: false, error: 'Sin workspace disponible.' }, { status: 404 });
-    }
-
+    const workspaceId = auth.ctx.workspaceId;
     const overview = await OverviewService.getOverview(workspaceId, filter);
 
     return NextResponse.json({

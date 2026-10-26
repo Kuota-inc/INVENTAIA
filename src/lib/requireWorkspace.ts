@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { SessionManager } from '@/lib/session';
+import { createClient } from '@/utils/supabase/server';
 
 export interface AuthContext {
   workspaceId: string;
@@ -40,7 +41,6 @@ export async function requireWorkspace(): Promise<
       ? custom.workspaceId
       : ((nextAuth?.user as any)?.workspace_id as string | undefined);
 
-  const { createClient } = await import('@/utils/supabase/server');
   const supabase = await createClient();
 
   if (sessionWs) {

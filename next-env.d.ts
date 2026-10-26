@@ -1,6 +1,5 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
-/// <reference types="next/navigation-types/compat/navigation" />
 import "./web/types/routes.d.ts";
 import "./web/types/root-params.d.ts";
 

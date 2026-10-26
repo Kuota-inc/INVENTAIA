@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import {
   ShoppingCart, Plus, Send, Search, CheckCircle2, Building2,
   Package, Truck, ExternalLink, Minus, Trash2, ChevronRight,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { apiFetch } from '@/lib/apiFetch';
 
 // ── Datos Mock ────────────────────────────────────────────────────────────────
 const MOCK_PROVIDERS = [
@@ -85,6 +86,34 @@ function ComprasContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [ocSent, setOcSent] = useState(false);
   const [selectedOC, setSelectedOC] = useState<any>(null);
+  const [ordersList, setOrdersList] = useState(MOCK_ORDERS);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        const res = await apiFetch('/api/dashboard/ordenes');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.orders && Array.isArray(data.orders) && data.orders.length > 0) {
+            const mapped = data.orders.map((o: any) => ({
+              id: o.order_number || o.id,
+              provider: o.supplier_name || 'Proveedor Registrado',
+              amount: Number(o.total_amount) || 0,
+              status: o.status === 'approved' ? 'aprobada' : o.status === 'received' ? 'recibida' : 'enviada',
+              date: (o.created_at || '').substring(0, 10) || new Date().toISOString().substring(0, 10),
+              items: Number(o.lines_count) || 1,
+              paymentTerms: o.condition || '30 días',
+            }));
+            setOrdersList(mapped);
+          }
+        }
+      } catch (e) {
+        console.error('Error fetching real orders:', e);
+      }
+    }
+    loadOrders();
+  }, []);
 
   const selectedProvider = MOCK_PROVIDERS.find(p => p.id === selectedProviderId)!;
 
@@ -120,11 +149,48 @@ function ComprasContent() {
 
   const removeItem = (sku: string) => setCart(prev => prev.filter(c => c.sku !== sku));
 
-  const handleSend = () => {
-    if (cart.length === 0 || !meetsMinOrder) return;
-    // In production: POST /api/dashboard/ordenes
-    setOcSent(true);
-    setTimeout(() => { setOcSent(false); setCart([]); setActiveTab('historial'); }, 2000);
+  const handleSend = async () => {
+    if (cart.length === 0 || !meetsMinOrder || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        supplierId: selectedProvider.id,
+        condition: selectedProvider.payment_terms || '30 días',
+        estimatedArrival: new Date(Date.now() + (selectedProvider.lead_time_days || 3) * 86400000).toISOString(),
+        lines: cart.map(item => ({
+          sku: item.sku,
+          productName: item.name,
+          quantity: item.qty,
+          unitPrice: item.unitPrice,
+        })),
+      };
+      await apiFetch('/api/dashboard/ordenes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const newOrder = {
+        id: `OC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        provider: selectedProvider.name,
+        amount: totalAmount,
+        status: 'enviada',
+        date: new Date().toISOString().substring(0, 10),
+        items: cart.length,
+        paymentTerms: selectedProvider.payment_terms || '30 días'
+      };
+      setOrdersList(prev => [newOrder, ...prev]);
+      setOcSent(true);
+      setTimeout(() => {
+        setOcSent(false);
+        setCart([]);
+        setActiveTab('historial');
+      }, 1500);
+    } catch (err) {
+      console.error('Error al generar orden:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -151,7 +217,7 @@ function ComprasContent() {
           Nueva Orden
         </button>
         <button className={activeTab === 'historial' ? 'active' : ''} onClick={() => setActiveTab('historial')}>
-          Historial ({MOCK_ORDERS.length})
+          Historial ({ordersList.length})
         </button>
       </div>
 
@@ -412,8 +478,8 @@ function ComprasContent() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-fog)]">
-                  {MOCK_ORDERS.map(order => {
-                    const status = STATUS_CONFIG[order.status];
+                  {ordersList.map(order => {
+                    const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.enviada;
                     return (
                       <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">

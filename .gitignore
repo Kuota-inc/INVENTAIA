@@ -40,6 +40,10 @@ web/
 .data
 *.tsbuildinfo
 
+# Android SDK local configuration
+*.properties
+local.properties
+
 # Scratch scripts: leen .env.local para extraer API keys en runtime.
 # No son parte del proyecto y filtran secretos si se commitean.
 /script.js

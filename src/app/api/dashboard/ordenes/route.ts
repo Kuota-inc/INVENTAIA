@@ -10,7 +10,7 @@ export async function GET() {
     const auth = await requireWorkspace();
     if (auth.error) return auth.error;
     const orders = await PurchaseOrderService.getAllOrders();
-    const metrics = await PurchaseOrderService.getMetrics();
+    const metrics = PurchaseOrderService.calculateMetrics(orders);
     
     const supabase = await createClient();
     const { data: suppliers } = await supabase.from('suppliers').select('*');

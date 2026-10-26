@@ -17,13 +17,7 @@ export async function GET(req: NextRequest) {
       params.get('location_id') || params.get('locationId') || params.get('location'),
       params.get('branch')
     );
-    const customSession = await SessionManager.getSession();
-    const nextAuthSession = await getServerSession(authOptions);
-
-    const workspaceId =
-      customSession?.workspaceId ||
-      (nextAuthSession?.user as any)?.workspace_id ||
-      'ws-default';
+    const workspaceId = auth.ctx.workspaceId;
 
     const dashboardData = await DashboardService.getExecutiveMetrics(workspaceId, filter);
 

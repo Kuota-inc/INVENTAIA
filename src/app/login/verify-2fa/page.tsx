@@ -10,11 +10,11 @@ import landingStyles from '@/components/landing/AccessLanding.module.css';
 import styles from './page.module.css';
 
 const CAPABILITIES = [
-  'inventario',
-  'Pronóstico',
-  'Reabastecimiento',
-  'Financiamiento',
-  'Analítica',
+  'Factoring QR',
+  'Cuotas Semanales',
+  'Cobros Digitales 1%',
+  'Línea de Crédito',
+  'Scoring en Vivo',
 ];
 
 function VerifyContent() {
@@ -76,9 +76,13 @@ function VerifyContent() {
 
   return (
     <AccessLanding
-      tagline="inventario, pronóstico, reabastecimiento y finanzas"
-      headline="Gestione todo el inventario, no solo el almacén."
-      description="KUOTA conecta inventario, pronóstico, órdenes de compra y financiamiento en cada sucursal y proveedor. Un único registro en vivo, desde la orden de compra hasta el cobro."
+      tagline="Financiamiento en cuotas y pagos digitales"
+      headline={
+        <>
+          Seguridad y control para tu negocio, <span style={{ color: 'var(--color-dodger-blue)', fontWeight: 400 }}>en cada operación</span>.
+        </>
+      }
+      description="Protege el acceso a tus compras a cuotas, pagos y cobros digitales con verificación de doble factor."
       capabilities={CAPABILITIES}
       topbar={null}
       eyebrow="Seguridad de la cuenta"
@@ -105,7 +109,7 @@ function VerifyContent() {
           ← Volver al inicio de sesión
         </Link>
       }
-      footerLeft="KUOTA Operaciones"
+      footerLeft="Kuota Technologies Inc."
       footerLinks={[
         { href: '/ayuda/guia', label: 'Ayuda' },
         { href: '/ayuda/soporte', label: 'Soporte' },

@@ -6,13 +6,13 @@ import { NextAuthProvider } from '@/components/providers/NextAuthProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'KUOTA | Compras Inteligentes para Empresas',
+  title: 'Kuota — Financiamiento en cuotas para tu negocio',
   description:
-    'Anticipa la demanda, evita quiebres de stock y financia inventario con inteligencia predictiva.',
+    'Compra a tus proveedores en cuotas semanales sin intereses abusivos o cobra con tarjeta con la comisión más baja del mercado.',
   openGraph: {
-    title: 'KUOTA — Compras Inteligentes para Empresas',
+    title: 'Kuota — Financiamiento en cuotas para tu negocio',
     description:
-      'Anticipa la demanda, evita quiebres de stock y financia inventario con inteligencia predictiva.',
+      'Compra a tus proveedores en cuotas semanales sin intereses abusivos o cobra con tarjeta con la comisión más baja del mercado.',
     type: 'website',
     locale: 'es_PE',
   },
@@ -28,13 +28,13 @@ export const metadata: Metadata = {
 const ORG_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: 'KUOTA',
-  applicationCategory: 'BusinessApplication',
-  operatingSystem: 'Web',
+  name: 'Kuota',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Android, Web',
   description:
-    'Compras Inteligentes para Empresas.',
+    'Financiamiento de inventario y aceptación de pagos para emprendedores.',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'PEN' },
-  provider: { '@type': 'Organization', name: 'KUOTA Technologies Inc.' },
+  provider: { '@type': 'Organization', name: 'Kuota Technologies Inc.' },
 };
 
 // Corre ANTES del primer paint: lee la preferencia persistida y deja <html>
@@ -49,7 +49,7 @@ export default function RootLayout({
   return (
     // suppressHydrationWarning: el SSR siempre es light; el script puede
     // haber dejado dark antes de hidratar. Sin esto React emite warning.
-    <html lang="es" data-theme="light" suppressHydrationWarning>
+    <html lang="es-PE" data-theme="light" suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light dark" />
         <script id="inventa-theme-init" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

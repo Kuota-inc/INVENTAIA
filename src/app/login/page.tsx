@@ -25,11 +25,11 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 const CAPABILITIES = [
-  'Inventario',
-  'Pronóstico',
-  'Reabastecimiento',
-  'Financiamiento',
-  'Analítica',
+  'Factoring QR',
+  'Cuotas Semanales',
+  'Cobros Digitales 1%',
+  'Línea de Crédito',
+  'Scoring en Vivo',
 ];
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
@@ -162,9 +162,13 @@ function LoginContent() {
 
   return (
     <AccessLanding
-      tagline="Inventario, pronóstico, reabastecimiento y finanzas"
-      headline="Gestione todo el inventario, no solo el almacén."
-      description="KUOTA conecta inventario, pronóstico, órdenes de compra y financiamiento en cada sucursal y proveedor. Un único registro en vivo, desde la orden de compra hasta el cobro."
+      tagline="Financiamiento en cuotas y pagos digitales"
+      headline={
+        <>
+          El financiamiento que tu negocio merece, <span style={{ color: 'var(--color-dodger-blue)', fontWeight: 400 }}>sin presiones</span>.
+        </>
+      }
+      description="Conectamos a proveedores y comercios con financiamiento transparente en cuotas semanales y cobros con tarjeta con la comisión más baja del mercado."
       capabilities={CAPABILITIES}
       topbar={
         <Link href="/ayuda/guia" className={landingStyles.pill}>
@@ -175,7 +179,7 @@ function LoginContent() {
       eyebrow="Plataforma de operaciones"
       eyebrowError={errorMessage !== null}
       title="Iniciar sesión"
-      subtitle="Use su cuenta de KUOTA. El acceso depende de su empresa y su rol."
+      subtitle="Usa tu cuenta de Kuota para gestionar tus órdenes, compras a cuotas o cobros con tarjeta."
       alert={
         errorMessage ? (
           <div className={landingStyles.alert} role="alert" aria-live="assertive">
@@ -212,7 +216,7 @@ function LoginContent() {
           .
         </>
       }
-      footerLeft="KUOTA Operaciones"
+      footerLeft="Kuota Technologies Inc."
       footerLinks={[
         { href: '/ayuda/guia', label: 'Ayuda' },
         { href: '/ayuda/soporte', label: 'Soporte' },

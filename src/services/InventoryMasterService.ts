@@ -102,9 +102,7 @@ export class InventoryMasterService {
     });
   }
 
-  static async getInventoryMetrics(filter?: LocationFilter): Promise<InventoryMetrics> {
-    const items = await this.getInventoryItems(filter);
-    
+  static calculateMetricsFromItems(items: InventoryMasterItem[]): InventoryMetrics {
     const totalSkus = items.length;
     let totalValue = 0;
     let totalMargin = 0;
@@ -129,5 +127,10 @@ export class InventoryMasterService {
       criticalStockCount,
       globalGmroi: `${globalGmroi.toFixed(1)}%`
     };
+  }
+
+  static async getInventoryMetrics(filter?: LocationFilter, existingItems?: InventoryMasterItem[]): Promise<InventoryMetrics> {
+    const items = existingItems || await this.getInventoryItems(filter);
+    return this.calculateMetricsFromItems(items);
   }
 }

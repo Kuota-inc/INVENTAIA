@@ -1,77 +1,66 @@
-# Wise — Style Reference
-> deep moss with lime voltage. Lime sparks on a near-black forest floor, with massive blocky display type announcing every move.
+# Kuota — Style Reference
+> Mission control under open skies
 
-**Theme:** light
+**Theme:** light (single theme — no dark mode)
 
 Source measurements are normalized; roles and recommendations are interpreted. Font summary lists are independent, not paired by position. HTML examples are reconstructions, not source components.
 
-Wise speaks in a confident, slightly loud voice: a deep forest green (#163300) carries most of the surface area — text, nav, dark sections, icons — while a single electric lime (#9fe870) acts as functional punctuation on CTAs, active tabs, and key highlights. The display type is almost aggressive: Wise Sans at weight 900, tightly tracked, shouted across the hero in 100px+ block letters. The rest of the system stays restrained on a near-white canvas with soft gray surfaces (#e8ebe6). Components are pill-shaped by default — buttons, nav segments, flag thumbnails, image masks — with gentle 10px radii reserved for cards and inputs. Color rarely gradients; instead, the lime–forest pairing inverts cleanly when sections go dark, creating rhythm without decoration.
+Kuota lives on a pale-sky canvas — a bright, airy blue field where Crayola Blue type reads like clear instrument labels and one vivid Dodger Blue acts as the signal accent. The system is deliberately sparse: hairline navy-tinted borders define structure instead of heavy shadows, product UI is shown as white cards resting on the sky, and code blocks are treated as first-class content in JetBrains Mono. Plus Jakarta Sans at weight 300 gives headlines a whisper-quiet authority that lets the subject matter do the talking, while weight 500–600 carries operational UI. The overall feel is mission control under open skies — minimal chrome, maximal legibility, one accent doing all the semantic work. There is only one theme: light. Dark surfaces and dark mode are not part of the system.
 
 ## Tokens — Colors
 
 | Name | Value | Token | Role |
 |------|-------|-------|------|
-| Forest Ink | `#163300` | `--color-forest-ink` | Dominant brand dark — nav text, dark section backgrounds, primary copy on light surfaces, icon strokes, filled navigation pills. This is the brand's gravity: wherever you need weight or authority, you reach for Forest Ink |
-| Lime Voltage | `#9fe870` | `--color-lime-voltage` | Green supporting accent for decorative details and low-frequency emphasis. Do not promote it to the primary CTA color |
-| Spruce | `#054d28` | `--color-spruce` | Secondary dark green for card surfaces, supporting iconography, and tonal depth on dark sections where Forest Ink is too heavy |
-| Linen Mist | `#e2f6d5` | `--color-linen-mist` | Pale green wash for soft highlight surfaces, tinted card backgrounds, nav hover states. A whisper of the brand green for low-emphasis containers |
-| Signal Blue | `#0b4c72` | `--color-signal-blue` | Blue supporting accent for decorative details and low-frequency emphasis |
-| Alarm Red | `#cb272f` | `--color-alarm-red` | Red supporting accent for decorative details and low-frequency emphasis. Use as a supporting accent, not as a status color |
-| Charcoal | `#454745` | `--color-charcoal` | Primary text, body copy, dense UI — slightly warm black that feels softer than pure #000 against white |
-| Obsidian | `#0e0f0c` | `--color-obsidian` | Display headlines, high-contrast headings, pure-black moments in nav and hero. Slightly green-tinted black, not neutral gray |
-| Pebble | `#868685` | `--color-pebble` | Muted secondary text, placeholder copy, icon strokes, input borders. The mid-gray that recedes |
-| Slate | `#6a6c6a` | `--color-slate` | Supporting body text, helper labels, subdued iconography. One step darker than Pebble for slightly more emphasis |
-| Fog | `#e8ebe6` | `--color-fog` | Card surfaces, section dividers, subtle panel backgrounds on the white canvas. Green-tinted off-white, not pure neutral |
-| Paper | `#ffffff` | `--color-paper` | Page canvas, inverted card surfaces, button text on lime fill |
+| Pale Sky | `#CBE5FE` | `--color-pale-sky` | Page background, hero canvas, section bands — the bright base on which all other UI rests |
+| Dodger Blue | `#0391FD` | `--color-dodger-blue` | Accent for links, icon strokes, tags, and emphasized short phrases. Do not promote it to the primary CTA color |
+| Crayola Blue | `#2F7AEF` | `--color-crayola-blue` | All text (headings, body, labels, nav, code base), outlined-button borders, and hover/active states for buttons and interactive elements |
+| Deep Navy | `#00235C` | `--color-deep-navy` | Primary CTA fill, logo wordmark, badge fills, and the base for hairline borders (at 15% opacity) |
+| Hairline | `rgba(0, 35, 92, 0.15)` | `--color-hairline` | Borders on cards and panels, dividers between sections — the dominant structural line color |
+| Text Muted | `rgba(47, 122, 239, 0.7)` | `--color-text-muted` | Helper text, captions, tertiary metadata — Crayola Blue at 70% so it drops below the primary read |
+| Pure White | `#ffffff` | `--color-pure-white` | Card surfaces, text on filled buttons, product screenshot cards — a bright layer lifted off the sky |
+| Status Green | `#4ade80` | `--color-status-green` | Background for 'passing/available' pills and status dots, with Deep Navy text. Do not use as text color on light surfaces |
 
 ## Tokens — Typography
 
-### Inter — Body, UI, labels, and sub-headings across the entire product. The 700 weight handles mid-tier headings (36–45px), 500–600 for subheadings and labels, 400 for body and captions. Inter does the quiet work while Wise Sans shouts. · `--font-inter`
-- **Substitute:** Inter (native Google Fonts)
-- **Weights:** 400,500,600,700
-- **Sizes:** 12px, 14px, 16px, 18px, 20px, 22px, 25px, 36px, 45px, 61px, 300px
-- **Line height:** 0.72, 1.00, 1.10, 1.25, 1.30, 1.40, 1.43, 1.44, 1.50, 1.55, 1.63, 1.71, 1.86, 2.17
-- **Letter spacing:** -0.030em at 105px, -0.015em at 61px, -0.011em at 36px, -0.009em at 25px, -0.007em at 18px, -0.006em at 16px, -0.005em at 14px, -0.003em at 12px
-- **OpenType features:** `"calt"`
-- **Role:** Body, UI, labels, and sub-headings across the entire product. The 700 weight handles mid-tier headings (36–45px), 500–600 for subheadings and labels, 400 for body and captions. Inter does the quiet work while Wise Sans shouts.
+### Plus Jakarta Sans — Primary UI and heading typeface. Weight 300 for display headlines creates whisper-quiet authority; weight 400 for body; weight 500–600 for nav, buttons, and labels. · `--font-plus-jakarta-sans`
+- **Substitute:** Plus Jakarta Sans (Google Fonts)
+- **Weights:** 300, 400, 500, 600, 700
+- **Sizes:** 10, 12, 14, 16, 18, 20, 24, 30, 32, 48, 60
+- **Line height:** 1.20–1.63 (display 1.20, body 1.50, small 1.43)
+- **Letter spacing:** -0.0400em at 60px, -0.0250em at 48px, 0.0500em at 10–12px (tracked-out micro-labels)
+- **Role:** Primary UI and heading typeface. Weight 300 for display headlines creates whisper-quiet authority; weight 400 for body; weight 500–600 for nav, buttons, and labels.
 
-### Wise Sans — Display headlines — the brand's signature shout. Ultra-heavy weight 900 at 89–105px with tight -0.03em tracking makes every headline a block-letter announcement. Used sparingly: hero, section openers, campaign moments. · `--font-wise-sans`
-- **Substitute:** Inter Black (900) with -0.04em tracking
-- **Weights:** 900
-- **Sizes:** 40px, 52px, 59px, 89px, 105px, 300px
-- **Line height:** 0.85, 1.50
-- **Letter spacing:** -0.0020em
-- **OpenType features:** `"calt"`
-- **Role:** Display headlines — the brand's signature shout. Ultra-heavy weight 900 at 89–105px with tight -0.03em tracking makes every headline a block-letter announcement. Used sparingly: hero, section openers, campaign moments.
-
-### monospace — monospace — detected in extracted data but not described by AI · `--font-monospace`
+### JetBrains Mono — Code blocks, terminal output, CLI commands like `npx kuota init`. The custom font signal 'this is executable'. · `--font-jetbrains-mono`
+- **Substitute:** JetBrains Mono (JetBrains), or Fira Code
 - **Weights:** 400
-- **Sizes:** 300px
-- **Line height:** 
-- **OpenType features:** `"calt"`
-- **Role:** monospace — detected in extracted data but not described by AI
+- **Sizes:** 10, 12, 16
+- **Line height:** 1.50–1.63
+- **Role:** Code blocks, terminal output, CLI commands like `npx kuota init`. The custom font signal 'this is executable'.
 
-### sans-serif — sans-serif — detected in extracted data but not described by AI · `--font-sans-serif`
+### ui-monospace — System monospace fallback for inline code, tab indicators, secondary code contexts · `--font-ui-monospace`
+- **Substitute:** SF Mono, Menlo, Consolas, monospace
+- **Weights:** 400, 500
+- **Sizes:** 11, 12, 14
+- **Line height:** 1.33–1.63
+- **Role:** System monospace fallback for inline code, tab indicators, secondary code contexts
+
+### Consolas — Consolas — detected in extracted data but not described by AI · `--font-consolas`
 - **Weights:** 400
-- **Sizes:** 300px
-- **Line height:** 
-- **OpenType features:** `"calt"`
-- **Role:** sans-serif — detected in extracted data but not described by AI
+- **Sizes:** 10px
+- **Line height:** 1.5
+- **Role:** Consolas — detected in extracted data but not described by AI
 
 ### Type Scale
 
 | Role | Family | Weight | Size | Line Height | Letter Spacing | Token |
 |------|--------|--------|------|-------------|----------------|-------|
-| micro | — | — | 12px | 1.63 | -0.036px | `--text-micro` |
-| caption | — | — | 14px | 1.55 | -0.07px | `--text-caption` |
-| body-sm | — | — | 16px | 1.5 | -0.096px | `--text-body-sm` |
-| body | — | — | 18px | 1.5 | -0.126px | `--text-body` |
-| body-lg | — | — | 25px | 1.3 | -0.225px | `--text-body-lg` |
-| subheading | — | — | 36px | 1.25 | -0.396px | `--text-subheading` |
-| heading-sm | — | — | 45px | 1.1 | -0.495px | `--text-heading-sm` |
-| heading | — | — | 61px | 1.1 | -0.915px | `--text-heading` |
-| heading-lg | — | — | 89px | 0.85 | -2.67px | `--text-heading-lg` |
-| display | — | — | 105px | 0.85 | -3.15px | `--text-display` |
+| caption | — | — | 10px | 1.5 | 0.5px | `--text-caption` |
+| body | — | — | 16px | 1.5 | 0px | `--text-body` |
+| subheading | — | — | 20px | 1.4 | 0px | `--text-subheading` |
+| heading-sm | — | — | 24px | 1.33 | 0px | `--text-heading-sm` |
+| heading | — | — | 32px | 1.25 | 0px | `--text-heading` |
+| heading-lg | — | — | 48px | 1.2 | -1.2px | `--text-heading-lg` |
+| display | — | — | 60px | 1 | -2.4px | `--text-display` |
 
 ## Tokens — Spacing & Shapes
 
@@ -89,184 +78,175 @@ Wise speaks in a confident, slightly loud voice: a deep forest green (#163300) c
 | 16 | 16px | `--spacing-16` |
 | 20 | 20px | `--spacing-20` |
 | 24 | 24px | `--spacing-24` |
-| 28 | 28px | `--spacing-28` |
 | 32 | 32px | `--spacing-32` |
 | 40 | 40px | `--spacing-40` |
-| 44 | 44px | `--spacing-44` |
 | 48 | 48px | `--spacing-48` |
 | 56 | 56px | `--spacing-56` |
 | 64 | 64px | `--spacing-64` |
-| 100 | 100px | `--spacing-100` |
-| 124 | 124px | `--spacing-124` |
+| 72 | 72px | `--spacing-72` |
+| 80 | 80px | `--spacing-80` |
+| 96 | 96px | `--spacing-96` |
+| 104 | 104px | `--spacing-104` |
+| 144 | 144px | `--spacing-144` |
 
 ### Border Radius
 
 | Element | Value |
 |---------|-------|
 | tags | 9999px |
-| cards | 10px |
-| inputs | 10px |
-| buttons | 9999px |
-| imageMasks | 1000px |
-| largeCards | 28px |
-| navSegments | 9999px |
+| cards | 12px |
+| inputs | 8px |
+| buttons | 8px |
+| code-blocks | 12px |
 
 ### Shadows
 
 | Name | Value | Token |
 |------|-------|-------|
-| subtle | `rgba(14, 15, 12, 0.12) 0px 0px 0px 1px` | `--shadow-subtle` |
-| subtle-2 | `rgb(134, 134, 133) 0px 0px 0px 1px inset` | `--shadow-subtle-2` |
-| xl | `rgba(0, 0, 0, 0.15) 0px 10px 32px 0px, rgba(0, 0, 0, 0.04...` | `--shadow-xl` |
-| lg | `rgba(0, 0, 0, 0.08) 0px 6px 20px 0px` | `--shadow-lg` |
+| md | `rgba(0, 35, 92, 0.10) 0px 10px 15px -3px, rgba(0, 35, 92, 0.10) 0px 4px 6px -4px` | `--shadow-md` |
+| xl | `rgba(0, 35, 92, 0.20) 0px 25px 50px -12px` | `--shadow-xl` |
+| xl-2 | `rgb(3, 145, 253) 0px 25px 50px -12px` | `--shadow-xl-2` |
+| md-2 | `rgba(0, 35, 92, 0.15) 0px 4px 12px 0px, rgba(0, 35, 92, 0.10) 0px 1px 3px 0px` | `--shadow-md-2` |
+| subtle | `rgba(0, 35, 92, 0.05) 0px 1px 2px 0px` | `--shadow-subtle` |
 
 ### Layout
 
 - **Page max-width:** 1200px
-- **Section gap:** 64-80px
+- **Section gap:** 80px
 - **Card padding:** 24px
-- **Element gap:** 8-12px
+- **Element gap:** 12px
 
 ## Components
 
-### Primary CTA Pill Button
-**Role:** The signature action element — filled lime pill that signals "do this next."
+### Primary CTA Button (Deep Navy Filled)
+**Role:** Main conversion action — 'Start for free', 'Book a demo'
 
-Fully rounded (9999px radius) button with Lime Voltage (#9fe870) fill and Charcoal (#454745) or Forest Ink (#163300) text. Padding 11px vertical, 24px horizontal. Inter weight 500 at 16px. No border, no shadow — the fill does all the work.
+Deep Navy (#00235C) background, white (#ffffff) text, 8px radius, Plus Jakarta Sans weight 500 at 14–16px, padding 10px 20px. Hover/active state fills with Crayola Blue (#2F7AEF). The strongest-contrast element on the pale-sky canvas.
 
-### Outlined Pill Button
-**Role:** Secondary action in the nav and inline CTAs.
+### Secondary CTA Button (Outlined)
+**Role:** Alternative action alongside primary CTA
 
-White fill, 1px Forest Ink border, 9999px radius. Same padding as primary. Used for "Sign up" in the header and non-primary calls to action where the lime would compete with a primary action nearby.
+Transparent background, 1px border in Crayola Blue (#2F7AEF), Crayola Blue text, 8px radius, padding 10px 20px. Hover fills with white (#ffffff). Low-emphasis companion that defers to the filled button.
 
-### Text Link Button
-**Role:** Inline secondary action with low visual weight.
+### Pill Badge / Status Tag
+**Role:** Environment labels, status indicators, inline tags
 
-Underlined Forest Ink text at 16px Inter weight 500, no background, no border. Pairs with the primary CTA when two adjacent actions are needed (e.g. "Open an account" + "Send money now").
+9999px radius, 4–8px vertical padding, 10–12px horizontal padding. Background varies: green (#4ade80) with Deep Navy text for 'passing/available', Deep Navy with white text for 'test/staging/prod', white with a hairline border and Crayola Blue text for category labels. Plus Jakarta Sans at 10–12px weight 500, letter-spacing 0.05em.
 
-### Top Navigation Bar
-**Role:** Persistent header with brand, section switcher, and account access.
+### Code Block / CLI Block
+**Role:** Code snippets, install commands, config examples
 
-White background, 64px height. Logo left, three-segment pill nav (Personal / Business / Platform) with 9999px radius and Forest Ink text, right cluster has language flag, Help, Log in, and outlined Sign up pill.
+White (#ffffff) background, 1px hairline border, 12px radius, padding 16–24px. JetBrains Mono at 12–16px, line-height 1.63. Base text in Crayola Blue with syntax accents (see Code Syntax Token). Often prefixed with a copy icon in Dodger Blue.
 
-### Segmented Tab Control
-**Role:** In-page section switcher — single active state in lime.
+### Embedded Product Screenshot Card
+**Role:** Dashboard previews, feature demonstrations, product evidence
 
-Pill container (9999px radius) holding multiple text labels. Active tab: Lime Voltage fill with Charcoal text. Inactive tabs: transparent with Charcoal text. ~40px height, 12px horizontal padding per segment.
+White (#ffffff) background, 12–16px radius, 1px hairline border, shadow rgba(0,35,92,0.20) 0px 25px 50px -12px. Rests on the pale-sky canvas as a bright window into the product. Contains light-themed UI (charts, tables, status badges in green/red).
 
-### Display Headline
-**Role:** The brand's voice — used in hero and major section openers.
+### Navigation Bar
+**Role:** Top-level site navigation
 
-Wise Sans weight 900 at 89–105px, line-height 0.85, letter-spacing -3.15px. Charcoal (#454745) or Obsidian (#0e0f0c) on light, Lime Voltage on dark sections. Set as block text, often in ALL CAPS for hero moments.
+Pale Sky (#CBE5FE) background with a 1px hairline bottom border, Plus Jakarta Sans weight 500 at 14px, Crayola Blue text, 24px horizontal padding on nav items, 8px vertical padding. Logo left in Deep Navy, links center, auth actions right. Sticky on scroll.
 
-### Feature Row
-**Role:** Three-column trust signal block — icon + heading + supporting line.
+### Section Heading with Blue Accent Words
+**Role:** Display-level section titles
 
-Single-column-on-mobile, three-column-on-desktop. Icon (24px, Charcoal stroke) at top, heading in Inter 700 at 18px, body in Inter 400 at 16px Pebble. Generous 24px vertical gap between icon and heading.
+Plus Jakarta Sans weight 300 at 48–60px, Crayola Blue (#2F7AEF), letter-spacing -0.025em to -0.04em. Select words rendered in Dodger Blue (#0391FD) to create semantic emphasis without underlining. Line-height 1.00–1.20.
 
-### Country Grid Item
-**Role:** Flag thumbnail + country name link in a 5-column grid.
+### Feature Card
+**Role:** Three-column feature highlights, capability summaries
 
-Circular flag thumbnail (1000px radius, ~56px diameter), 12px gap to country name in Inter 500 at 16px Forest Ink. Name is a text link with no underline at rest, underline on hover. Items sit in a generous grid with ~32px row gap.
+White (#ffffff) background, 12px radius, 24px padding, 1px hairline border. Heading in Crayola Blue weight 500 at 20–24px, body in Crayola Blue at 16px (secondary lines in Text Muted).
 
-### Dark Section Card
-**Role:** Inverted surface for emphasis — used for the send-money CTA block.
+### Trust Logo Bar
+**Role:** Social proof — customer/partner logos
 
-Forest Ink (#163300) background, 28px radius, 40px padding. Lime Voltage text for headline, Paper for body. Contains an inset white card (10px radius, 16px padding) for the currency selector.
+Single row or two-row grid of company logos rendered as monochrome Deep Navy (or Crayola Blue) on the pale-sky background. Logos desaturated to a single color. No borders or containers — logos float directly on the section.
 
-### Currency Selector Pill
-**Role:** Interactive country/currency picker with a "Change" action.
+### Code Syntax Token
+**Role:** Inline and block code highlighting
 
-White pill inside a dark section card. Left: circular flag (24px) + country name in Charcoal Inter 500. Right: outlined "Change" button in Forest Ink. 9999px radius, 8px vertical padding.
+Colored tokens within code blocks, tuned for a white background: keywords in #7c3aed (purple), strings in #15803d (green), numbers in #b45309 (amber), function names in #00235C (Deep Navy), comments in #6094c1 (muted blue). Base text in Crayola Blue.
 
-### Input Field
-**Role:** Form input — used for amounts, emails, references.
+### Command Input Pill
+**Role:** CLI install command display in hero
 
-10px radius, 1px Pebble (#868685) border, 12px vertical and 16px horizontal padding. Inter 400 at 16px. Focus state: Forest Ink border, no glow ring.
+White rounded container with a copy affordance, monospace text showing the install command. Centered below hero CTAs as a secondary call-to-action. 12px radius, 1px hairline border.
 
-### Floating QR Badge
-**Role:** Persistent "Get the Wise app" download prompt.
+### Chat Widget Bubble
+**Role:** Support chat launcher (bottom-right)
 
-Forest Ink (#163300) rounded square (16px radius), fixed bottom-right, 120px wide. QR code in Paper at top, "Get the Wise app" label in Lime Voltage Inter 500 at 12px below.
-
-### Badge / Tag
-**Role:** Small status labels and category tags.
-
-9999px radius, 8px vertical and 12px horizontal padding. Linen Mist (#e2f6d5) background with Forest Ink text, or Forest Ink background with Lime Voltage text. Inter 500 at 12px.
+Dodger Blue (#0391FD) circular button with white icon and a blue glow shadow rgb(3,145,253) 0px 25px 50px -12px. Fixed position bottom-right corner.
 
 ## Do's and Don'ts
 
 ### Do
-- Set display headlines in Wise Sans weight 900 with letter-spacing -3.15px at 105px; the extreme heaviness is the brand's signature — don't soften it to 700.
-- Use Lime Voltage (#9fe870) exclusively for primary action fills and active states; one lime element per visible viewport section is usually enough.
-- Default to 9999px radius for all buttons, tags, and nav segments — pill shapes are foundational, not decorative.
-- Use Forest Ink (#163300) for text and dark surfaces, not pure black; the green-tinted near-black is warmer and more on-brand.
-- Apply tight negative letter-spacing at large sizes (-0.030em at 100px+ down to -0.003em at 12px); headings should feel compact, not airy.
-- Pair a filled primary CTA with an underlined text link as the secondary action — never two filled buttons side by side.
-- Invert section backgrounds from white to Forest Ink to create rhythm; the lime text on dark green is the system's built-in emphasis.
+- Use weight 300 Plus Jakarta Sans at 48–60px for display headlines — the whisper-weight is the signature
+- Use Crayola Blue #2F7AEF for all text; use Text Muted (Crayola at 70%) for tertiary information
+- Use Dodger Blue #0391FD exclusively for accent words, icon strokes, and interactive links — never for backgrounds (the chat bubble is the single exception)
+- Use 9999px radius for all status pills, environment tags, and inline badges
+- Use 8px radius for all buttons and 12px for cards — the 8/12 split is consistent across the system
+- Use Deep Navy at 15% opacity (--color-hairline) for borders instead of heavy shadows
+- Use JetBrains Mono for any code, CLI commands, or terminal output — never let Plus Jakarta Sans render code
+- Use Deep Navy filled buttons as the primary CTA on the pale-sky canvas — they read as the 'switched on' control
+- Use white cards to lift content off the Pale Sky background
 
 ### Don't
-- Don't use Charcoal (#454745) for display headlines — reserve Obsidian (#0e0f0c) or Forest Ink for maximum contrast at large sizes.
-- Don't introduce gradients, drop shadows beyond hairline borders, or decorative blurs — the system is flat by design.
-- Don't use Lime Voltage as text color on light backgrounds; its contrast is too low. It only works as fill or on dark green.
-- Don't use sharp corners (0–4px radius) on buttons, tags, or nav elements; pills are the default shape language.
-- Don't set display headlines in Inter — Wise Sans 900 is the only acceptable voice for 60px+ type.
-- Don't stack multiple lime elements close together; space them so the accent reads as a single punctuation mark.
-- Don't use #000000 for body text; Charcoal (#454745) at 18px on white is the baseline that keeps the page from feeling harsh.
+- Don't ship a dark theme or dark surfaces — the system is light only
+- Don't use shadows as the primary structural method — use hairline borders instead
+- Don't use Dodger Blue as a large filled background — it's an accent, not a surface
+- Don't use weight 700 or 800 for headlines — the system speaks at weight 300, not weight 900
+- Don't use rounded radii above 16px on cards or panels — the 8/12/16 progression is the system
+- Don't introduce new chromatic colors beyond the four palette blues, Status Green, and syntax-token colors
+- Don't use Plus Jakarta Sans for code — always JetBrains Mono or system monospace
+- Don't add gradients to UI surfaces — the system is flat with one subtle white-to-blue wash as the only gradient
 
 ## Surfaces
 
 | Level | Name | Value | Purpose |
 |-------|------|-------|---------|
-| 0 | Paper | `#ffffff` | Page canvas — the default background for all content sections |
-| 1 | Fog | `#e8ebe6` | Card surfaces, soft panels, and section backgrounds on the white canvas |
-| 2 | Linen Mist | `#e2f6d5` | Tinted highlight surfaces — pale green wash for accent containers and hover states |
-| 3 | Lime Voltage | `#9fe870` | Active surface — selected tabs, primary CTA fill, emphasis zones |
-| 4 | Forest Ink | `#163300` | Inverted surface — dark section backgrounds, nav, high-contrast blocks |
+| 0 | Sky | `#CBE5FE` | Page and section background — the bright base |
+| 1 | Card | `#ffffff` | Cards, code blocks, product screenshot cards, input pills |
+| 2 | Panel | `rgba(203, 229, 254, 0.4)` over white | Nested panels inside cards, tab content backgrounds |
 
 ## Elevation
 
-- **Cards:** `rgba(0, 0, 0, 0.15) 0px 10px 32px 0px, rgba(0, 0, 0, 0.04) 0px 40px 40px 0px`
-- **Elevated panels:** `rgba(0, 0, 0, 0.08) 0px 6px 20px 0px`
-- **Input/button focus:** `rgb(134, 134, 133) 0px 0px 0px 1px inset`
-- **Icon containers:** `rgba(14, 15, 12, 0.12) 0px 0px 0px 1px`
+- **Embedded product card:** `rgba(0, 35, 92, 0.20) 0px 25px 50px -12px`
+- **Standard surface card:** `rgba(0, 35, 92, 0.10) 0px 10px 15px -3px, rgba(0, 35, 92, 0.10) 0px 4px 6px -4px`
+- **Chat widget:** `rgb(3, 145, 253) 0px 25px 50px -12px`
+- **Inset card:** `rgba(0, 35, 92, 0.15) 0px 4px 12px 0px, rgba(0, 35, 92, 0.10) 0px 1px 3px 0px`
 
 ## Imagery
 
-Painted 3D-style illustrations of a globe with gold coins establish the brand's visual world — tactile, slightly surreal, rendered with soft gradients and warm light. Photography is minimal; when used, it's high-key and lifestyle-casual. Country flags appear as circular thumbnails in a 5-column grid — the only "icon" system is national identity. No abstract graphics, no stock patterns. The globe and coins are the recurring mascot motif, signaling global reach through a single warm, optimistic object rather than a montage.
+The visual language is predominantly iconographic and abstract rather than photographic. The hero features a stylized Kuota brand illustration at the center of a network of curved connection lines radiating outward to floating tool/tech icons (integration and browser logos). Customer logos appear as monochrome Deep Navy wordmarks in a trust bar. Product evidence comes from embedded light-themed dashboard screenshots that rest as white cards on the pale-sky canvas. No lifestyle photography, no human faces, no real-world environments — the aesthetic is diagrammatic and infrastructural.
 
 ## Layout
 
-Max-width 1200px centered container, with hero and dark sections going full-bleed. Hero pattern: centered massive display headline over white space, with a large illustration (globe) breaking the lower edge of the viewport. Section rhythm alternates white → light green band → dark Forest Ink section, creating a natural color cadence. Content arrangement is predominantly centered stacks in the hero, then 2-column text+visual or 3-column feature rows in supporting sections. A 5-column flag grid handles the country directory. Navigation is a single sticky top bar with a segmented pill switcher. The QR badge floats fixed in the bottom-right corner across all scroll positions.
+The page is full-bleed Pale Sky with max-width 1200px content containers centered within sections. The hero is a centered text stack (headline → subhead → dual CTA → CLI command) with the Kuota illustration radiating connection lines as the visual anchor. Below the hero, sections alternate between text-left/visual-right 2-column patterns and 3-column feature card grids. Product screenshots are embedded as white cards spanning 2/3 to full width. The trust logo bar sits as a full-width band. Navigation is a top bar with logo left, links center, auth actions right. The overall rhythm is generous vertical breathing room (80px section gaps) with dense information packed into each section. Sections are separated by slight shifts between Pale Sky and white bands, or by a hairline, rather than hard dividers.
 
 ## Agent Prompt Guide
 
-Quick Color Reference
-- text: #454745 (Charcoal) for body, #0e0f0c (Obsidian) for display
-- background: #ffffff (Paper) canvas, #e8ebe6 (Fog) cards
-- border: #868685 (Pebble) for hairlines, #163300 (Forest Ink) for emphasis
-- accent: #9fe870 (Lime Voltage) for active states and highlights
-- primary action: no distinct CTA color
-- dark surface: #163300 (Forest Ink) for inverted sections
+**Quick Color Reference**
+- text: #2F7AEF (primary), rgba(47,122,239,0.7) (muted), #ffffff (on filled buttons)
+- background: #CBE5FE (page), #ffffff (card), rgba(203,229,254,0.4) (nested panel)
+- border: rgba(0,35,92,0.15) (hairline)
+- accent: #0391FD
+- primary action: #00235C (filled action, white text)
 
-Example Component Prompts
+**Example Component Prompts**
+1. *Hero section*: #CBE5FE background. Display headline at 60px Plus Jakarta Sans weight 300, #2F7AEF, letter-spacing -2.4px, with one or two accent words in #0391FD. Subhead at 18px Plus Jakarta Sans weight 400, rgba(47,122,239,0.7). Deep Navy filled button (8px radius, 10px 20px padding, #00235C background, #ffffff text) beside an outlined button (1px #2F7AEF border, #2F7AEF text). CLI command in a white pill below using JetBrains Mono 14px.
 
-No distinct primary action color was observed; use the extracted neutral button treatments instead of inventing a filled CTA color.
+2. *Feature card grid*: 3-column grid on #CBE5FE background. Each card: #ffffff background, 12px radius, 24px padding, 1px rgba(0,35,92,0.15) border. Heading at 20px Plus Jakarta Sans weight 500, #2F7AEF. Body at 16px Plus Jakarta Sans weight 400, #2F7AEF.
 
-2. Feature row (3-column): icon at 24px stroke #454745, 24px gap to heading at 18px Inter 700 in #0e0f0c, 8px gap to body at 16px Inter 400 in #868685. Column gap 32px, centered max-width 1200px.
+3. *Code block*: #ffffff background, 1px rgba(0,35,92,0.15) border, 12px radius, 16px padding. JetBrains Mono 12px, line-height 1.63. Keywords in #7c3aed, strings in #15803d, function names in #00235C, base text #2F7AEF.
 
-3. Country grid item: circular flag thumbnail at 56px diameter (1000px radius), 12px vertical gap to country name in Inter 500 at 16px #163300. Arranged in a 5-column grid with 32px row gap and 24px column gap. Hover state: underline appears on the country name.
+4. *Embedded product screenshot card*: #ffffff background, 16px radius, 1px hairline border, shadow rgba(0,35,92,0.20) 0px 25px 50px -12px. Contains light-themed dashboard UI with green (#4ade80) status bars and gray data tables.
 
-4. Dark section card: Forest Ink (#163300) background, 28px radius, 40px padding. Headline in Lime Voltage (#9fe870) at 36px Inter 700. Body text in #ffffff at 16px Inter 400. Contains an inset white card (10px radius) for a currency selector: circular flag + country name in Charcoal + outlined "Change" button.
+5. *Status pill badge*: 9999px radius, 4px 10px padding, #4ade80 background with #00235C text for 'passing' or #00235C background with #ffffff text for 'test/staging/prod'. Plus Jakarta Sans 10px weight 500, letter-spacing 0.5px.
 
-5. Outlined nav button: white fill, 1px solid #163300 border, 9999px radius, 8px 16px padding, Inter 500 at 16px in #163300. Used in the top-right nav cluster for secondary account actions.
+## Gradient System
 
-## Similar Brands
-
-- **Revolut** — Same dual-brand color strategy — deep brand color as dominant surface and text, one bright accent for CTAs and highlights, with pill-shaped buttons and large confident headlines.
-- **Monzo** — Bright single-accent color system on a neutral canvas, pill-shaped interactive elements, friendly rounded geometry, and display type that speaks directly to the user.
-- **Cash App** — High-contrast near-black text on white with a single vivid brand accent, oversized bold headlines as the primary brand expression, minimal decoration.
-- **N26** — Flat surfaces, hairline borders instead of shadows, generous white space, and a single saturated accent color driving all interactive emphasis.
+The system uses exactly one gradient: a subtle white-to-blue wash (linear-gradient(rgb(255,255,255), rgba(47,122,239,0.2))) applied as a soft atmospheric overlay. No other gradients are used in UI surfaces. Dodger Blue (#0391FD) is always rendered as a solid color, never as a gradient fill. This restraint is intentional — the pale-sky canvas should feel open and airy, not decorated.
 
 ## Quick Start
 
@@ -275,63 +255,57 @@ No distinct primary action color was observed; use the extracted neutral button 
 ```css
 :root {
   /* Colors */
-  --color-forest-ink: #163300;
-  --color-lime-voltage: #9fe870;
-  --color-spruce: #054d28;
-  --color-linen-mist: #e2f6d5;
-  --color-signal-blue: #0b4c72;
-  --color-alarm-red: #cb272f;
-  --color-charcoal: #454745;
-  --color-obsidian: #0e0f0c;
-  --color-pebble: #868685;
-  --color-slate: #6a6c6a;
-  --color-fog: #e8ebe6;
-  --color-paper: #ffffff;
+  --color-pale-sky: #CBE5FE;
+  --color-dodger-blue: #0391FD;
+  --color-crayola-blue: #2F7AEF;
+  --color-deep-navy: #00235C;
+  --color-hairline: rgba(0, 35, 92, 0.15);
+  --color-text-muted: rgba(47, 122, 239, 0.7);
+  --color-pure-white: #ffffff;
+  --color-status-green: #4ade80;
+
+  /* Syntax tokens (light) */
+  --color-syntax-keyword: #7c3aed;
+  --color-syntax-string: #15803d;
+  --color-syntax-number: #b45309;
+  --color-syntax-function: #00235C;
+  --color-syntax-comment: #6094c1;
 
   /* Typography — Font Families */
-  --font-inter: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-wise-sans: 'Wise Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-monospace: 'monospace', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --font-sans-serif: 'sans-serif', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-plus-jakarta-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-jetbrains-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-ui-monospace: 'ui-monospace', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-consolas: 'Consolas', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Typography — Scale */
-  --text-micro: 12px;
-  --leading-micro: 1.63;
-  --tracking-micro: -0.036px;
-  --text-caption: 14px;
-  --leading-caption: 1.55;
-  --tracking-caption: -0.07px;
-  --text-body-sm: 16px;
-  --leading-body-sm: 1.5;
-  --tracking-body-sm: -0.096px;
-  --text-body: 18px;
+  --text-caption: 10px;
+  --leading-caption: 1.5;
+  --tracking-caption: 0.5px;
+  --text-body: 16px;
   --leading-body: 1.5;
-  --tracking-body: -0.126px;
-  --text-body-lg: 25px;
-  --leading-body-lg: 1.3;
-  --tracking-body-lg: -0.225px;
-  --text-subheading: 36px;
-  --leading-subheading: 1.25;
-  --tracking-subheading: -0.396px;
-  --text-heading-sm: 45px;
-  --leading-heading-sm: 1.1;
-  --tracking-heading-sm: -0.495px;
-  --text-heading: 61px;
-  --leading-heading: 1.1;
-  --tracking-heading: -0.915px;
-  --text-heading-lg: 89px;
-  --leading-heading-lg: 0.85;
-  --tracking-heading-lg: -2.67px;
-  --text-display: 105px;
-  --leading-display: 0.85;
-  --tracking-display: -3.15px;
+  --tracking-body: 0px;
+  --text-subheading: 20px;
+  --leading-subheading: 1.4;
+  --tracking-subheading: 0px;
+  --text-heading-sm: 24px;
+  --leading-heading-sm: 1.33;
+  --tracking-heading-sm: 0px;
+  --text-heading: 32px;
+  --leading-heading: 1.25;
+  --tracking-heading: 0px;
+  --text-heading-lg: 48px;
+  --leading-heading-lg: 1.2;
+  --tracking-heading-lg: -1.2px;
+  --text-display: 60px;
+  --leading-display: 1;
+  --tracking-display: -2.4px;
 
   /* Typography — Weights */
+  --font-weight-light: 300;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  --font-weight-black: 900;
 
   /* Spacing */
   --spacing-unit: 4px;
@@ -341,54 +315,48 @@ No distinct primary action color was observed; use the extracted neutral button 
   --spacing-16: 16px;
   --spacing-20: 20px;
   --spacing-24: 24px;
-  --spacing-28: 28px;
   --spacing-32: 32px;
   --spacing-40: 40px;
-  --spacing-44: 44px;
   --spacing-48: 48px;
   --spacing-56: 56px;
   --spacing-64: 64px;
-  --spacing-100: 100px;
-  --spacing-124: 124px;
+  --spacing-72: 72px;
+  --spacing-80: 80px;
+  --spacing-96: 96px;
+  --spacing-104: 104px;
+  --spacing-144: 144px;
 
   /* Layout */
   --page-max-width: 1200px;
-  --section-gap: 64-80px;
+  --section-gap: 80px;
   --card-padding: 24px;
-  --element-gap: 8-12px;
+  --element-gap: 12px;
 
   /* Border Radius */
-  --radius-sm: 2px;
-  --radius-lg: 10px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --radius-2xl: 16px;
-  --radius-2xl-2: 18.7693px;
-  --radius-3xl: 28.1539px;
-  --radius-3xl-2: 32px;
-  --radius-3xl-3: 37.5385px;
-  --radius-full: 1000px;
-  --radius-full-2: 9999px;
+  --radius-full: 9999px;
 
   /* Named Radii */
   --radius-tags: 9999px;
-  --radius-cards: 10px;
-  --radius-inputs: 10px;
-  --radius-buttons: 9999px;
-  --radius-imagemasks: 1000px;
-  --radius-largecards: 28px;
-  --radius-navsegments: 9999px;
+  --radius-cards: 12px;
+  --radius-inputs: 8px;
+  --radius-buttons: 8px;
+  --radius-code-blocks: 12px;
 
   /* Shadows */
-  --shadow-subtle: rgba(14, 15, 12, 0.12) 0px 0px 0px 1px;
-  --shadow-subtle-2: rgb(134, 134, 133) 0px 0px 0px 1px inset;
-  --shadow-xl: rgba(0, 0, 0, 0.15) 0px 10px 32px 0px, rgba(0, 0, 0, 0.04) 0px 40px 40px 0px;
-  --shadow-lg: rgba(0, 0, 0, 0.08) 0px 6px 20px 0px;
+  --shadow-md: rgba(0, 35, 92, 0.10) 0px 10px 15px -3px, rgba(0, 35, 92, 0.10) 0px 4px 6px -4px;
+  --shadow-xl: rgba(0, 35, 92, 0.20) 0px 25px 50px -12px;
+  --shadow-xl-2: rgb(3, 145, 253) 0px 25px 50px -12px;
+  --shadow-md-2: rgba(0, 35, 92, 0.15) 0px 4px 12px 0px, rgba(0, 35, 92, 0.10) 0px 1px 3px 0px;
+  --shadow-subtle: rgba(0, 35, 92, 0.05) 0px 1px 2px 0px;
 
   /* Surfaces */
-  --surface-paper: #ffffff;
-  --surface-fog: #e8ebe6;
-  --surface-linen-mist: #e2f6d5;
-  --surface-lime-voltage: #9fe870;
-  --surface-forest-ink: #163300;
+  --surface-sky: #CBE5FE;
+  --surface-card: #ffffff;
+  --surface-panel: rgba(203, 229, 254, 0.4);
 }
 ```
 
@@ -397,56 +365,50 @@ No distinct primary action color was observed; use the extracted neutral button 
 ```css
 @theme {
   /* Colors */
-  --color-forest-ink: #163300;
-  --color-lime-voltage: #9fe870;
-  --color-spruce: #054d28;
-  --color-linen-mist: #e2f6d5;
-  --color-signal-blue: #0b4c72;
-  --color-alarm-red: #cb272f;
-  --color-charcoal: #454745;
-  --color-obsidian: #0e0f0c;
-  --color-pebble: #868685;
-  --color-slate: #6a6c6a;
-  --color-fog: #e8ebe6;
-  --color-paper: #ffffff;
+  --color-pale-sky: #CBE5FE;
+  --color-dodger-blue: #0391FD;
+  --color-crayola-blue: #2F7AEF;
+  --color-deep-navy: #00235C;
+  --color-hairline: rgba(0, 35, 92, 0.15);
+  --color-text-muted: rgba(47, 122, 239, 0.7);
+  --color-pure-white: #ffffff;
+  --color-status-green: #4ade80;
+
+  /* Syntax tokens (light) */
+  --color-syntax-keyword: #7c3aed;
+  --color-syntax-string: #15803d;
+  --color-syntax-number: #b45309;
+  --color-syntax-function: #00235C;
+  --color-syntax-comment: #6094c1;
 
   /* Typography */
-  --font-inter: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-wise-sans: 'Wise Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-monospace: 'monospace', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  --font-sans-serif: 'sans-serif', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-plus-jakarta-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-jetbrains-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-ui-monospace: 'ui-monospace', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-consolas: 'Consolas', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Typography — Scale */
-  --text-micro: 12px;
-  --leading-micro: 1.63;
-  --tracking-micro: -0.036px;
-  --text-caption: 14px;
-  --leading-caption: 1.55;
-  --tracking-caption: -0.07px;
-  --text-body-sm: 16px;
-  --leading-body-sm: 1.5;
-  --tracking-body-sm: -0.096px;
-  --text-body: 18px;
+  --text-caption: 10px;
+  --leading-caption: 1.5;
+  --tracking-caption: 0.5px;
+  --text-body: 16px;
   --leading-body: 1.5;
-  --tracking-body: -0.126px;
-  --text-body-lg: 25px;
-  --leading-body-lg: 1.3;
-  --tracking-body-lg: -0.225px;
-  --text-subheading: 36px;
-  --leading-subheading: 1.25;
-  --tracking-subheading: -0.396px;
-  --text-heading-sm: 45px;
-  --leading-heading-sm: 1.1;
-  --tracking-heading-sm: -0.495px;
-  --text-heading: 61px;
-  --leading-heading: 1.1;
-  --tracking-heading: -0.915px;
-  --text-heading-lg: 89px;
-  --leading-heading-lg: 0.85;
-  --tracking-heading-lg: -2.67px;
-  --text-display: 105px;
-  --leading-display: 0.85;
-  --tracking-display: -3.15px;
+  --tracking-body: 0px;
+  --text-subheading: 20px;
+  --leading-subheading: 1.4;
+  --tracking-subheading: 0px;
+  --text-heading-sm: 24px;
+  --leading-heading-sm: 1.33;
+  --tracking-heading-sm: 0px;
+  --text-heading: 32px;
+  --leading-heading: 1.25;
+  --tracking-heading: 0px;
+  --text-heading-lg: 48px;
+  --leading-heading-lg: 1.2;
+  --tracking-heading-lg: -1.2px;
+  --text-display: 60px;
+  --leading-display: 1;
+  --tracking-display: -2.4px;
 
   /* Spacing */
   --spacing-4: 4px;
@@ -455,31 +417,29 @@ No distinct primary action color was observed; use the extracted neutral button 
   --spacing-16: 16px;
   --spacing-20: 20px;
   --spacing-24: 24px;
-  --spacing-28: 28px;
   --spacing-32: 32px;
   --spacing-40: 40px;
-  --spacing-44: 44px;
   --spacing-48: 48px;
   --spacing-56: 56px;
   --spacing-64: 64px;
-  --spacing-100: 100px;
-  --spacing-124: 124px;
+  --spacing-72: 72px;
+  --spacing-80: 80px;
+  --spacing-96: 96px;
+  --spacing-104: 104px;
+  --spacing-144: 144px;
 
   /* Border Radius */
-  --radius-sm: 2px;
-  --radius-lg: 10px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --radius-2xl: 16px;
-  --radius-2xl-2: 18.7693px;
-  --radius-3xl: 28.1539px;
-  --radius-3xl-2: 32px;
-  --radius-3xl-3: 37.5385px;
-  --radius-full: 1000px;
-  --radius-full-2: 9999px;
+  --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-subtle: rgba(14, 15, 12, 0.12) 0px 0px 0px 1px;
-  --shadow-subtle-2: rgb(134, 134, 133) 0px 0px 0px 1px inset;
-  --shadow-xl: rgba(0, 0, 0, 0.15) 0px 10px 32px 0px, rgba(0, 0, 0, 0.04) 0px 40px 40px 0px;
-  --shadow-lg: rgba(0, 0, 0, 0.08) 0px 6px 20px 0px;
+  --shadow-md: rgba(0, 35, 92, 0.10) 0px 10px 15px -3px, rgba(0, 35, 92, 0.10) 0px 4px 6px -4px;
+  --shadow-xl: rgba(0, 35, 92, 0.20) 0px 25px 50px -12px;
+  --shadow-xl-2: rgb(3, 145, 253) 0px 25px 50px -12px;
+  --shadow-md-2: rgba(0, 35, 92, 0.15) 0px 4px 12px 0px, rgba(0, 35, 92, 0.10) 0px 1px 3px 0px;
+  --shadow-subtle: rgba(0, 35, 92, 0.05) 0px 1px 2px 0px;
 }
 ```

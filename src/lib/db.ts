@@ -675,7 +675,11 @@ function initDb(): DatabaseStore {
 
 let store: DatabaseStore = initDb();
 
-function persistStore() {
+// --- Debounced persistence: coalesce rapid mutations into a single write ---
+let persistTimer: ReturnType<typeof setTimeout> | null = null;
+const PERSIST_DELAY_MS = 100; // ms to wait before flushing to disk
+
+function flushStore() {
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -684,6 +688,11 @@ function persistStore() {
   } catch (err) {
     // In serverless read-only contexts, retain in memory
   }
+}
+
+function persistStore() {
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = setTimeout(flushStore, PERSIST_DELAY_MS);
 }
 
 export const db = {
@@ -825,13 +834,20 @@ export const db = {
 
   getProductsWithInventory: (): Array<ProductRecord & { physical_stock: number; safety_stock: number; last_synced_at: string }> => {
     const products = Object.values(store.products || {});
+    // Build a product_id → InventoryLevelRecord index for O(1) lookups
+    // instead of scanning all inventory records per product (was O(n*m)).
+    const invByProduct = new Map<string, InventoryLevelRecord>();
+    for (const inv of Object.values(store.inventory_levels || {})) {
+      invByProduct.set(inv.product_id, inv);
+    }
+    const fallbackTs = new Date().toISOString();
     return products.map(p => {
-      const inv = Object.values(store.inventory_levels || {}).find(i => i.product_id === p.id);
+      const inv = invByProduct.get(p.id);
       return {
         ...p,
         physical_stock: inv?.physical_stock ?? 0,
         safety_stock: inv?.safety_stock ?? 0,
-        last_synced_at: inv?.last_synced_at || new Date().toISOString(),
+        last_synced_at: inv?.last_synced_at || fallbackTs,
       };
     });
   },
