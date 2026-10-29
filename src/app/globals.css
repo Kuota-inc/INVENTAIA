@@ -461,6 +461,7 @@ textarea:focus-visible {
   height: auto;
 }
 
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
