@@ -183,14 +183,14 @@ p {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Touch targets mínimos de 44px en mobile */
+/* Touch targets mínimos de 44px en mobile (fuera del nuevo landing #inicio) */
 @media (max-width: 768px) {
-  button,
-  a[role="button"],
-  [role="tab"],
-  select,
-  input[type="checkbox"],
-  input[type="radio"] {
+  button:not(#inicio *),
+  a[role="button"]:not(#inicio *),
+  [role="tab"]:not(#inicio *),
+  select:not(#inicio *),
+  input[type="checkbox"]:not(#inicio *),
+  input[type="radio"]:not(#inicio *) {
     min-height: 44px;
     min-width: 44px;
   }
@@ -391,4 +391,107 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+/* ─── Preflight base para Kuota Unified Landing (#inicio) antes de @tailwind utilities ─── */
+:where(#inicio),
+:where(#inicio *),
+:where(#inicio *::before),
+:where(#inicio *::after) {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #00235C;
+}
+
+:where(#inicio) {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+:where(
+    #inicio h1,
+    #inicio h2,
+    #inicio h3,
+    #inicio h4,
+    #inicio h5,
+    #inicio h6,
+    #inicio p,
+    #inicio ul,
+    #inicio ol,
+    #inicio li,
+    #inicio figure,
+    #inicio blockquote
+  ) {
+  margin: 0;
+  padding: 0;
+}
+
+:where(#inicio ul, #inicio ol) {
+  list-style: none;
+}
+
+:where(#inicio a) {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+:where(#inicio button, #inicio input, #inicio select, #inicio textarea) {
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  background-image: none;
+}
+
+:where(#inicio button, #inicio [role='button']) {
+  cursor: pointer;
+}
+
+:where(#inicio img, #inicio svg, #inicio video, #inicio canvas, #inicio iframe) {
+  display: block;
+  vertical-align: middle;
+}
+
+:where(#inicio img, #inicio video) {
+  max-width: 100%;
+  height: auto;
+}
+
+@tailwind components;
 @tailwind utilities;
+
+.bg-grid-pattern {
+  background-image: radial-gradient(rgba(0, 35, 92, 0.1) 1.25px, transparent 1.25px);
+  background-size: 22px 22px;
+}
+
+.placeholder-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(0, 35, 92, 0.04),
+    rgba(0, 35, 92, 0.04) 10px,
+    rgba(3, 145, 253, 0.07) 10px,
+    rgba(3, 145, 253, 0.07) 20px
+  );
+}
+
+#inicio *:focus-visible {
+  outline: 3px solid #0391FD;
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #inicio *,
+  #inicio *::before,
+  #inicio *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
