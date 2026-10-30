@@ -6,22 +6,28 @@ import { NextAuthProvider } from '@/components/providers/NextAuthProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Kuota — Financiamiento en cuotas para tu negocio',
+  title: 'Kuota — Financia tu crecimiento sin apuros | Compra mercadería a kuotas',
   description:
     'Compra a tus proveedores en cuotas semanales sin intereses abusivos o cobra con tarjeta con la comisión más baja del mercado.',
   openGraph: {
-    title: 'Kuota — Financiamiento en cuotas para tu negocio',
+    title: 'Kuota — Financia tu crecimiento sin apuros',
     description:
       'Compra a tus proveedores en cuotas semanales sin intereses abusivos o cobra con tarjeta con la comisión más baja del mercado.',
     type: 'website',
     locale: 'es_PE',
+    images: [{ url: '/logos/kuota-logo-light.png' }],
   },
   robots: {
     index: true,
     follow: true,
   },
   icons: {
-    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+    icon: [
+      { url: '/logos/kuota-icon.png', type: 'image/png' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    shortcut: [{ url: '/logos/kuota-icon.png', type: 'image/png' }],
+    apple: [{ url: '/logos/kuota-icon.png', type: 'image/png' }],
   },
 };
 
@@ -47,13 +53,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    // suppressHydrationWarning: el SSR siempre es light; el script puede
-    // haber dejado dark antes de hidratar. Sin esto React emite warning.
     <html lang="es-PE" data-theme="light" suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="light dark" />
-        <script id="inventa-theme-init" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        <script id="inventa-org-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }} />
+        <link rel="icon" type="image/png" href="/logos/kuota-icon.png" />
+        <link rel="shortcut icon" type="image/png" href="/logos/kuota-icon.png" />
+        <link rel="apple-touch-icon" href="/logos/kuota-icon.png" />
+        <script
+          id="inventa-theme-init"
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
+        <script
+          id="inventa-org-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSON_LD) }}
+        />
       </head>
       <body className={inter.className}>
         <NextAuthProvider>{children}</NextAuthProvider>
