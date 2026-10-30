@@ -1,489 +1,76 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-
-:root {
-  /* ─── KUOTA Official Design System Tokens (DESIGN.md) ─── */
-  --color-pale-sky: #CBE5FE;
-  --color-dodger-blue: #0391FD;
-  --color-crayola-blue: #2F7AEF;
-  --color-deep-navy: #00235C;
-  --color-hairline: rgba(0, 35, 92, 0.15);
-  --color-text-muted: rgba(47, 122, 239, 0.7);
-  --color-pure-white: #ffffff;
-  --color-status-green: #4ade80;
-
-  /* Tipografías Kuota */
-  --font-plus-jakarta-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-jetbrains-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-  /* ─── KUOTA Brand Tokens ─── */
-  --color-forest-ink: #1B4332; /* Primary Dark Green (KUOTA) */
-  --color-lime-voltage: #95D5B2; /* Accent Light Green (KUOTA) */
-  --color-lime-hover: #74C69D; /* Hover Accent (KUOTA) */
-  --color-spruce: #081C15; /* Secondary Dark (KUOTA) */
-  --color-linen-mist: #D8F3DC; /* Muted Background (KUOTA) */
-  --color-signal-blue: #0b4c72;
-  --color-alarm-red: #cb272f;
-  --color-charcoal: #454745;
-  --color-obsidian: #0e0f0c;
-  --color-pebble: #868685;
-  --color-slate: #6a6c6a;
-  --color-fog: #e8ebe6;
-  --color-paper: #ffffff;
-
-  /* Equivalencias forest/lime para el resto de la app */
-  --forest: var(--color-forest-ink);
-  --lime: var(--color-lime-voltage);
-  --on-lime: var(--color-forest-ink);
-
-  /* Radios Wise: pills por defecto, 10px cards/inputs, 28px largeCards */
-  --radius-pill: 9999px;
-  --radius-mask: 1000px;
-
-  --shadow-subtle: rgba(14, 15, 12, 0.12) 0px 0px 0px 1px;
-  --shadow-wise-lg: rgba(0, 0, 0, 0.08) 0px 6px 20px 0px;
-  --shadow-wise-xl: rgba(0, 0, 0, 0.15) 0px 10px 32px 0px, rgba(0, 0, 0, 0.04) 0px 40px 40px 0px;
-
-  --font-wise-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-
-  /* Mapeo legacy → Wise (canvas claro) */
-  --bg: var(--color-paper);
-  --bg2: var(--color-fog);
-  --card: var(--color-paper);
-  --ink: var(--color-forest-ink);
-  --muted: var(--color-slate);
-  --line: #dde3da;
-
-  --primary: var(--color-forest-ink);
-  --primary-hover: var(--color-spruce);
-
-  --accent: var(--color-forest-ink);
-  --ok: var(--color-spruce);
-  --warn: #b45309;
-  --bad: var(--color-alarm-red);
-
-  /* Texto semántico sobre superficies (pasa WCAG en ambos temas) */
-  --success: var(--color-spruce);
-  --danger: var(--color-alarm-red);
-
-  --shadow-sm: var(--shadow-subtle);
-  --shadow: var(--shadow-wise-lg);
-  --shadow-lg: var(--shadow-wise-xl);
-
-  --radius: 10px;
-  --radius-lg: 10px;
-  --radius-largecard: 28px;
-  
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-
-  /* ─── Sistema de Tipografía Fluida (clamp) ─── */
-  --text-xs:   clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);     /* ~11px → 12px */
-  --text-sm:   clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);       /* ~12px → 13px */
-  --text-base: clamp(0.8125rem, 0.75rem + 0.25vw, 0.9375rem);   /* ~13px → 15px */
-  --text-lg:   clamp(1rem, 0.9rem + 0.35vw, 1.125rem);          /* ~16px → 18px */
-  --text-xl:   clamp(1.125rem, 1rem + 0.5vw, 1.5rem);           /* ~18px → 24px */
-  --text-2xl:  clamp(1.5rem, 1.25rem + 0.75vw, 2rem);           /* ~24px → 32px */
-
-  /* ─── Espaciado Fluido ─── */
-  --space-xs:  clamp(0.25rem, 0.2rem + 0.15vw, 0.5rem);
-  --space-sm:  clamp(0.5rem, 0.4rem + 0.25vw, 0.75rem);
-  --space-md:  clamp(0.75rem, 0.6rem + 0.5vw, 1.25rem);
-  --space-lg:  clamp(1rem, 0.8rem + 0.75vw, 1.5rem);
-  --space-xl:  clamp(1.5rem, 1rem + 1.25vw, 2.5rem);
-  --space-2xl: clamp(2rem, 1.25rem + 2vw, 3rem);
-}
-
-[data-theme="dark"] {
-  /* Wise invertido: superficies Forest, acento Lime, texto Paper */
-  --bg: var(--color-forest-ink);
-  --bg2: var(--color-spruce);
-  --card: #1d4200;
-  --ink: #f2f7ec;
-  --muted: #c4d3b8;
-  --line: #2c5a1a;
-
-  --primary: var(--color-lime-voltage);
-  --primary-hover: var(--color-lime-hover);
-
-  --accent: var(--color-lime-voltage);
-  --ok: var(--color-lime-voltage);
-  --warn: #fbbf24;
-  --bad: #f87171;
-
-  --success: var(--color-lime-voltage);
-  --danger: #fecaca;
-
-  --shadow-sm: rgba(0, 0, 0, 0.35) 0px 0px 0px 1px;
-}
-
-/* Alias de clase para compatibilidad con variante Tailwind `dark:` y libs */
-.dark {
-  color-scheme: dark;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-  background: var(--bg);
-  /* Prevenir scroll horizontal en toda la app */
-  overflow-x: hidden;
-}
-
-body {
-  margin: 0;
-  font-family: var(--font-sans);
-  background: var(--bg);
-  color: var(--ink);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* Prevenir scroll horizontal */
-  overflow-x: hidden;
-  width: 100%;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-button {
-  font-family: inherit;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-p {
-  margin: 0;
-}
-
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ─── Utilidades Responsivas Globales ─── */
-
-/* Contenedor máximo para evitar estiramiento infinito en pantallas ultra-anchas */
-.app-container {
-  max-width: 1920px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-/* Tablas responsivas: envolver cualquier tabla con esta clase para scroll horizontal */
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Touch targets mínimos de 44px en mobile (fuera del nuevo landing #inicio) */
-@media (max-width: 768px) {
-  button:not(#inicio *),
-  a[role="button"]:not(#inicio *),
-  [role="tab"]:not(#inicio *),
-  select:not(#inicio *),
-  input[type="checkbox"]:not(#inicio *),
-  input[type="radio"]:not(#inicio *) {
-    min-height: 44px;
-    min-width: 44px;
-  }
-}
-
-/* Prevenir zoom en input en iOS */
-@media (max-width: 768px) {
-  input, select, textarea {
-    font-size: max(16px, 1em);
-  }
-}
-
-/* ─── Wise — Componentes (DESIGN.md) · pills 9999px, cards 10px/28px ─── */
-
-.wise-btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 11px 24px;
-  background: var(--color-lime-voltage);
-  color: var(--color-forest-ink);
-  border: none;
-  border-radius: 9999px;
-  font-size: 16px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  text-decoration: none;
-  transition: filter 0.15s ease, transform 0.15s ease;
-}
-
-.wise-btn-primary:hover {
-  filter: brightness(0.96);
-}
-
-.wise-btn-primary:active {
-  transform: scale(0.98);
-}
-
-.wise-btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.wise-btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 11px 24px;
-  background: var(--color-paper);
-  color: var(--color-forest-ink);
-  border: 1px solid var(--color-forest-ink);
-  border-radius: 9999px;
-  font-size: 16px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.15s ease;
-}
-
-.wise-btn-outline:hover {
-  background: var(--color-linen-mist);
-}
-
-.wise-text-link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--color-forest-ink);
-  font-size: 16px;
-  font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.wise-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 9999px;
-  background: var(--color-linen-mist);
-  color: var(--color-forest-ink);
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.wise-badge-dark {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 9999px;
-  background: var(--color-forest-ink);
-  color: var(--color-lime-voltage);
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.wise-input {
-  width: 100%;
-  padding: 12px 16px;
-  background: var(--color-paper);
-  border: 1px solid var(--color-pebble);
-  border-radius: 10px;
-  font-size: 16px;
-  font-family: inherit;
-  color: var(--color-charcoal);
-  outline: none;
-  transition: border-color 0.15s ease;
-  box-sizing: border-box;
-}
-
-.wise-input:focus {
-  border-color: var(--color-forest-ink);
-}
-
-.wise-input::placeholder {
-  color: var(--color-pebble);
-}
-
-.wise-card {
-  background: var(--color-paper);
-  border: 1px solid var(--shadow-subtle);
-  border-radius: 10px;
-  padding: 24px;
-  box-shadow: var(--shadow-wise-lg);
-}
-
-.wise-card-dark {
-  background: var(--color-forest-ink);
-  border-radius: 28px;
-  padding: 40px;
-  color: var(--color-paper);
-}
-
-.wise-card-dark h1,
-.wise-card-dark h2,
-.wise-card-dark h3 {
-  color: var(--color-lime-voltage);
-}
-
-.wise-segmented {
-  display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 9999px;
-  background: var(--color-fog);
-}
-
-.wise-segmented > * {
-  border: none;
-  background: transparent;
-  color: var(--color-charcoal);
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 16px;
-  min-height: 40px;
-  border-radius: 9999px;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.wise-segmented > [data-active="true"],
-.wise-segmented > .active {
-  background: var(--color-lime-voltage);
-  color: var(--color-forest-ink);
-  font-weight: 600;
-}
-
-.wise-spinner {
-  width: 40px;
-  height: 40px;
-  border-radius: 9999px;
-  border: 4px solid var(--color-linen-mist);
-  border-top-color: var(--color-forest-ink);
-  animation: wise-spin 0.8s linear infinite;
-}
-
-@keyframes wise-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Foco accesible global con Forest, sin glows azules legacy */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--color-forest-ink);
-  outline-offset: 2px;
-}
-
-/* ─── Preflight base para Kuota Unified Landing (#inicio) antes de @tailwind utilities ─── */
-:where(#inicio),
-:where(#inicio *),
-:where(#inicio *::before),
-:where(#inicio *::after) {
-  box-sizing: border-box;
-  border-width: 0;
-  border-style: solid;
-  border-color: #00235C;
-}
-
-:where(#inicio) {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
-  -webkit-text-size-adjust: 100%;
-}
-
-:where(
-    #inicio h1,
-    #inicio h2,
-    #inicio h3,
-    #inicio h4,
-    #inicio h5,
-    #inicio h6,
-    #inicio p,
-    #inicio ul,
-    #inicio ol,
-    #inicio li,
-    #inicio figure,
-    #inicio blockquote
-  ) {
-  margin: 0;
-  padding: 0;
-}
-
-:where(#inicio ul, #inicio ol) {
-  list-style: none;
-}
-
-:where(#inicio a) {
-  color: inherit;
-  text-decoration: inherit;
-}
-
-:where(#inicio button, #inicio input, #inicio select, #inicio textarea) {
-  font-family: inherit;
-  font-size: 100%;
-  font-weight: inherit;
-  line-height: inherit;
-  color: inherit;
-  margin: 0;
-  padding: 0;
-  background-color: transparent;
-  background-image: none;
-}
-
-:where(#inicio button, #inicio [role='button']) {
-  cursor: pointer;
-}
-
-:where(#inicio img, #inicio svg, #inicio video, #inicio canvas, #inicio iframe) {
-  display: block;
-  vertical-align: middle;
-}
-
-:where(#inicio img, #inicio video) {
-  max-width: 100%;
-  height: auto;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-.bg-grid-pattern {
-  background-image: radial-gradient(rgba(0, 35, 92, 0.1) 1.25px, transparent 1.25px);
-  background-size: 22px 22px;
+@layer base {
+  html {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #CBE5FE;
+    color: #2F7AEF;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Optimización táctil móvil: elimina retraso de 300ms y mejora respuesta al toque */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="tab"],
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(3, 145, 253, 0.14);
+  }
+
+  /* Slider táctil cómodo en pantallas móviles */
+  input[type="range"] {
+    touch-action: pan-y;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    background: #0391FD;
+    border: 2px solid #00235C;
+    cursor: pointer;
+    -webkit-appearance: none;
+    box-shadow: 2px 2px 0px 0px #00235C;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    background: #0391FD;
+    border: 2px solid #00235C;
+    cursor: pointer;
+    box-shadow: 2px 2px 0px 0px #00235C;
+  }
+
+  /* Accesibilidad: estados de foco visibles en Deep Navy y Dodger Blue (PRD §7) */
+  *:focus-visible {
+    outline: 3px solid #0391FD;
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
 }
 
-.placeholder-stripes {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(0, 35, 92, 0.04),
-    rgba(0, 35, 92, 0.04) 10px,
-    rgba(3, 145, 253, 0.07) 10px,
-    rgba(3, 145, 253, 0.07) 20px
-  );
-}
+@layer utilities {
+  .bg-grid-pattern {
+    background-image: radial-gradient(rgba(0, 35, 92, 0.1) 1.25px, transparent 1.25px);
+    background-size: 22px 22px;
+  }
 
-#inicio *:focus-visible {
-  outline: 3px solid #0391FD;
-  outline-offset: 2px;
-  border-radius: 0.375rem;
+  .placeholder-stripes {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(0, 35, 92, 0.04),
+      rgba(0, 35, 92, 0.04) 10px,
+      rgba(3, 145, 253, 0.07) 10px,
+      rgba(3, 145, 253, 0.07) 20px
+    );
+  }
 }
 
 @keyframes kuotaSectionArrive {
