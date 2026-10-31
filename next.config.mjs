@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs/config';
+
 /** @type {import('next').NextConfig} */
 const securityHeaders = [
   // Clickjacking: solo la propia app puede embeberse (OAuth usa redirects, no iframes).
@@ -18,7 +20,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://*.supabase.co https://*.groq.com https://*.googleapis.com https://accounts.google.com https://oauth2.googleapis.com",
+      "connect-src 'self' https://*.supabase.co https://*.groq.com https://*.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
       "frame-src 'self' https://accounts.google.com",
       "frame-ancestors 'self'",
       "object-src 'none'",
@@ -35,4 +37,15 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: 'kuota-cp',
+  project: '5136976',
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  reactComponentAnnotation: {
+    enabled: true,
+  },
+  tunnelRoute: '/monitoring',
+  disableLogger: true,
+  automaticVercelMonitors: true,
+});
